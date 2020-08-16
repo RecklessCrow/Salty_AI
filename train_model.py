@@ -6,7 +6,7 @@ import keras
 import numpy as np
 import pandas as pd
 import tensorflow as tf
-from keras.layers import Dense, BatchNormalization, Dropout, SimpleRNN, SeparableConv1D
+from keras.layers import Dense, BatchNormalization, Dropout, Conv1D
 from keras.models import Sequential
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelBinarizer
@@ -34,11 +34,15 @@ labels = label_encoder.transform(labels)
 
 data = []
 for i in range(len(red_data)):
-    data.append([red_data[i], blue_data[i]])
+    temp = list(red_data[i])
+    temp.extend(blue_data[i])
+    data.append(temp)
 
 data = np.array(data)
 
 x_train, x_val, y_train, y_val = train_test_split(data, labels, test_size=0.2, shuffle=False)
+
+print(x_train.shape)
 
 character_lookup = pd.read_csv(os.path.join('data', 'character_lookup.csv'))
 
@@ -50,78 +54,22 @@ del data
 def encode_input(red, blue):
     a = character_lookup.loc[character_lookup['character'] == red].to_numpy()
     b = character_lookup.loc[character_lookup['character'] == blue].to_numpy()
-    a = a[:, 2:].astype('float64')
-    b = b[:, 2:].astype('float64')
-    print(a)
-    print(b)
+
+    if a.size == 0:
+        return None, None
+    if b.size == 0:
+        return None, None
+
+    a = np.array(a[:, 2:]).astype('float64')
+    b = np.array(b[:, 2:]).astype('float64')
     a = preprocessor.transform(a)
     b = preprocessor.transform(b)
 
-    return np.array([a, b])
+    return a, b
 
 
 def make_model():
     model = Sequential()
-
-    model.add(SeparableConv1D(
-        filters=32,
-        kernel_size=3,
-        activation='relu',
-        padding='same'
-    ))
-
-    model.add(BatchNormalization())
-    model.add(Dropout(0.4))
-
-    model.add(SeparableConv1D(
-        filters=32,
-        kernel_size=3,
-        activation='relu',
-        padding='same'
-    ))
-
-    model.add(BatchNormalization())
-    model.add(Dropout(0.4))
-
-    model.add(SeparableConv1D(
-        filters=32,
-        kernel_size=5,
-        activation='relu',
-        padding='same'
-    ))
-
-    model.add(BatchNormalization())
-    model.add(Dropout(0.4))
-
-    model.add(SeparableConv1D(
-        filters=64,
-        kernel_size=3,
-        activation='relu',
-        padding='same'
-    ))
-
-    model.add(BatchNormalization())
-    model.add(Dropout(0.4))
-
-    model.add(SeparableConv1D(
-        filters=64,
-        kernel_size=3,
-        activation='relu',
-        padding='same'
-    ))
-
-    model.add(BatchNormalization())
-    model.add(Dropout(0.4))
-
-    model.add(SeparableConv1D(
-        filters=64,
-        kernel_size=5,
-        activation='relu',
-        padding='same'
-    ))
-
-    model.add(BatchNormalization())
-    model.add(Dropout(0.4))
 
     model.add(Dense(
         units=256,

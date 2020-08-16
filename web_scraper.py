@@ -1,11 +1,11 @@
-import os
+
 from time import sleep
-from dotenv import load_dotenv
+import dotenv
 from selenium import webdriver
 
-load_dotenv()
-EMAIL = os.getenv('email')
-TOKEN = os.getenv('password')
+env = dotenv.DotEnv()
+EMAIL = env.get('email')
+TOKEN = 'I7L9w#a@LVRklg9'
 driver = webdriver.Chrome('chromedriver.exe')
 driver.get("https://www.saltybet.com/authenticate?signin=1")
 assert "Salty" in driver.title
@@ -46,7 +46,7 @@ def get_bet_status():
     if 'Blue.' in status.split(' '):
         return "Blue"
 
-    return status
+    return None
 
 
 if __name__ == '__main__':
