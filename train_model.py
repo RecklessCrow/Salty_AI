@@ -35,14 +35,12 @@ labels = label_encoder.transform(labels)
 data = []
 for i in range(len(red_data)):
     temp = list(red_data[i])
-    temp.extend(blue_data[i])
+    temp.extend(list(blue_data[i]))
     data.append(temp)
 
 data = np.array(data)
 
 x_train, x_val, y_train, y_val = train_test_split(data, labels, test_size=0.2, shuffle=False)
-
-print(x_train.shape)
 
 character_lookup = pd.read_csv(os.path.join('data', 'character_lookup.csv'))
 
@@ -65,7 +63,10 @@ def encode_input(red, blue):
     a = preprocessor.transform(a)
     b = preprocessor.transform(b)
 
-    return a, b
+    X = list(a[0])
+    X.extend(list(b[0]))
+
+    return X
 
 
 def make_model():
@@ -166,9 +167,10 @@ def data_generator(batch_size):
             winner = ''
             while web_scraper.get_bet_status() is None:
                 winner = web_scraper.get_bet_status()
-                winner = label_encoder.transform(winner)
             y.append(winner)
             match_num += 1
+
+        yield x
 
 
 def train_live(epochs=25, steps_per_epoch=25, batch_size=10, load_file=None, save_to=None):
@@ -200,4 +202,4 @@ def train_live(epochs=25, steps_per_epoch=25, batch_size=10, load_file=None, sav
 
 
 if __name__ == '__main__':
-    train()
+    train_live(load_file='checkpoints/2020-08-16_00-14')
