@@ -1,5 +1,6 @@
 import os
 from datetime import datetime
+from sqlite3 import connect
 
 import keras
 import numpy as np
@@ -7,12 +8,15 @@ import tensorflow as tf
 from keras.callbacks import LearningRateScheduler, ModelCheckpoint, TensorBoard
 from keras.layers import Dense, BatchNormalization, Dropout, LSTM
 from keras.models import Sequential
-from sklearn.preprocessing import OneHotEncoder
+from sklearn.preprocessing import OneHotEncoder, Normalizer
+import database_handler
 
 physical_devices = tf.config.list_physical_devices('GPU')
 tf.config.experimental.set_memory_growth(physical_devices[0], True)
 
+normalizer = Normalizer()
 label_encoder = OneHotEncoder()
+label_encoder.fit([[0], [1]])
 
 
 def make_model():
@@ -80,15 +84,34 @@ def scheduler(epoch):
     return 0.001 * np.exp(0.1 * (3 - epoch))
 
 
+def encode_match(cur, red, blue):
+    red = list(database_handler.select_character(cur, red))
+    blue = list(database_handler.select_character(cur, blue))
+    red.extend(blue)
+    X = [0 if element is None else element for element in red]
+    return np.array(X)
+
+
 def data_generator(batch_size):
+
     while True:
+        db_file = os.path.join('data', 'salty.db')
+        connection = connect(db_file)
+        cur = connection.cursor()
         x = []
         y = []
 
-        for i in range(batch_size):
-            pass
+        for red, blue, winner in database_handler.select_rand_match(cur, batch_size):
 
-        yield x, y
+            x.append(encode_match(cur, red, blue))
+
+            y.append([winner])
+
+        x = normalizer.transform(x)
+        x = x.reshape((-1, 2, 8))
+        y = label_encoder.transform(y).toarray()
+
+        yield np.array(x), y
 
 
 def train(load_file=None, save_to=None):
@@ -109,13 +132,16 @@ def train(load_file=None, save_to=None):
         model = keras.models.load_model(load_file)
 
     epochs = 50
+    steps_per_epoch = 100
+    batch_size = 1000
 
     # Train model
+
     model.fit(
-        data_generator(batch_size=50),
+        data_generator(batch_size=batch_size),
         epochs=epochs,
+        steps_per_epoch=steps_per_epoch,
         callbacks=[tensorboard_callback, checkpoint_callback, scheduler_callback],
-        batch_size=10000
     )
 
     if save_to is None:
