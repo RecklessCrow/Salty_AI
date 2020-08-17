@@ -2,6 +2,7 @@ import os
 import sqlite3
 from sqlite3 import connect
 
+import numpy as np
 import pandas as pd
 from tqdm import tqdm
 
@@ -262,7 +263,6 @@ def get_next_character_id():
 
 
 def create_database(drop=False):
-
     character_info = pd.read_csv(os.path.join('data', 'character_information.csv'))
     match_info = pd.read_csv(os.path.join('data', 'match_data.csv'))
     match_info.dropna(axis=0, inplace=True)
@@ -322,8 +322,8 @@ def select_rand_match(limit):
 def select_all_matches():
     cur.execute(
         f"""
-        select  r.id, r.num_wins, r.num_matches, ra.id, ra.num_wins, ra.num_matches, r.x, r.y,
-                b.id, b.num_wins, b.num_matches, ba.id, ba.num_wins, ba.num_matches, b.x, b.y,
+        select  r.id, r.num_wins * 100.0 / r.num_matches, ra.id, ra.num_wins * 100.0 / ra.num_matches, r.x + r.y / 2,
+                b.id, b.num_wins * 100.0 / b.num_matches, ba.id, ba.num_wins * 100.0 / ba.num_matches, b.x + b.y / 2,
                 winner
         from characters as r
         inner join matches
@@ -340,6 +340,28 @@ def select_all_matches():
     char = cur.fetchall()
 
     return char
+
+
+def encode_match(red, blue):
+    cur.execute(
+        f"""
+        select  r.id, r.num_wins * 100.0 / r.num_matches, ra.id, ra.num_wins * 100.0 / ra.num_matches, r.x + r.y / 2,
+                b.id, b.num_wins * 100.0 / b.num_matches, ba.id, ba.num_wins * 100.0 / ba.num_matches, b.x + b.y / 2
+        from characters as r
+        inner join characters as b
+        left join authors as ra
+        on ra.name = r.author
+        left join authors as ba
+        on ba.name = b.author
+        where r.name = ?
+        and b.name = ?
+        """,
+        (red, blue)
+    )
+
+    char = cur.fetchone()
+    char = [0 if element is None else element for element in char]
+    return np.array(char).astype('float64').reshape((-1, 2, len(char) // 2))
 
 
 if __name__ == '__main__':

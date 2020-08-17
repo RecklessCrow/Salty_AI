@@ -11,14 +11,6 @@ import web_scraper
 some_file = os.path.join('checkpoints', '2020-08-17_06-00')
 
 
-def encode_input(red, blue):
-    red = list(database_handler.select_character(red))
-    blue = list(database_handler.select_character(blue))
-    red.extend(blue)
-    X = [0 if element is None else element for element in red]
-    return np.array(X).reshape((-1, 2, 8))
-
-
 # TODO fix busy wait(s)
 def main():
     web_scraper.login()
@@ -43,7 +35,7 @@ def main():
         last_red = red
         last_blue = blue
 
-        X = encode_input(red, blue)
+        X = database_handler.encode_match(red, blue)
 
         probability = my_model.predict(X)
         prediction = train_model.label_encoder.inverse_transform(probability)[0][0]
