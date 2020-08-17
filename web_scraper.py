@@ -61,8 +61,8 @@ def data_collector():
             time.sleep(1)
             continue
 
-        print(f'Red: {red}\n'
-              f'Blue: {blue}\n')
+        # print(f'Red: {red}\n'
+        #       f'Blue: {blue}\n')
 
         winner = None
         while winner is None:
@@ -70,8 +70,7 @@ def data_collector():
             time.sleep(1)
             pass
 
-        print(f'Winner: {winner}\n')
-
+        # print(f'Winner: {winner}\n')
         w = 1
         if winner == 'Red':
             w = 0

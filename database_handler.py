@@ -23,6 +23,8 @@ def drop_tables():
 def create_tables():
     cur.executescript(
         """
+        pragma foreign_keys = on;
+        
         create table if not exists authors(
             name text primary key,
             id int not null,
@@ -38,7 +40,7 @@ def create_tables():
             num_matches integer,
             x integer,
             y integer,
-            foreign key (author) references authors (name)
+            foreign key(author) references authors(name)
         );
         
         create table if not exists matches(
@@ -46,8 +48,8 @@ def create_tables():
             red text not null,
             blue text not null,
             winner bool not null,
-            foreign key (red) references characters (name),
-            foreign key (blue) references characters (name)
+            foreign key(red) references characters(name),
+            foreign key(blue) references characters(name)
         );
         """
     )
@@ -116,12 +118,26 @@ def add_match(red, blue, winner):
         """,
         (red, blue, winner)
     )
-    red_info = select_character(red)
-    blue_info = select_character(blue)
-    if red_info[3] is not None:
-        update_match_info('authors', red_info[3], not winner)
-    if blue_info[3] is not None:
-        update_match_info('authors', blue_info[3], winner)
+
+    def select_char_info(name):
+        cur.execute(f'''
+            select characters.name, authors.name
+            from characters
+            left join authors
+            on characters.author = authors.name
+            where characters.name = ?
+        ''', (name,))
+
+        return cur.fetchone()
+
+    red_info = select_char_info(red)
+    blue_info = select_char_info(blue)
+    if red_info[1] is not None:
+        red_author = select_author(red_info[1])[0]
+        update_match_info('authors', red_author, not winner)
+    if blue_info[1] is not None:
+        blue_author = select_author(blue_info[1])[0]
+        update_match_info('authors', blue_author, winner)
     update_match_info('characters', red, not winner)
     update_match_info('characters', blue, winner)
 
@@ -137,10 +153,6 @@ def select_author(author):
     )
 
     authors = cur.fetchone()
-
-    if not authors:
-        add_author(author)
-        return select_author(author)
 
     return authors
 
@@ -285,8 +297,18 @@ def create_database(drop=False):
 def select_rand_match(limit):
     cur.execute(
         f"""
-        select red, blue, winner
-        from matches
+        select  r.id, r.num_wins, r.num_matches, ra.id, ra.num_wins, ra.num_matches, r.x, r.y,
+                b.id, b.num_wins, b.num_matches, ba.id, ba.num_wins, ba.num_matches, b.x, b.y,
+                winner
+        from characters as r
+        inner join matches
+        on r.name = matches.red
+        inner join characters as b
+        on b.name = matches.blue
+        left join authors as ra
+        on ra.name = r.author
+        left join authors as ba
+        on ba.name = b.author
         order by random()
         limit {limit}
         """
@@ -300,8 +322,18 @@ def select_rand_match(limit):
 def select_all_matches():
     cur.execute(
         f"""
-        select red, blue, winner
-        from matches
+        select  r.id, r.num_wins, r.num_matches, ra.id, ra.num_wins, ra.num_matches, r.x, r.y,
+                b.id, b.num_wins, b.num_matches, ba.id, ba.num_wins, ba.num_matches, b.x, b.y,
+                winner
+        from characters as r
+        inner join matches
+        on r.name = matches.red
+        inner join characters as b
+        on b.name = matches.blue
+        left join authors as ra
+        on ra.name = r.author
+        left join authors as ba
+        on ba.name = b.author
         """
     )
 
@@ -312,5 +344,4 @@ def select_all_matches():
 
 if __name__ == '__main__':
     create_database(True)
-
     connection.commit()
