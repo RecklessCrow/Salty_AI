@@ -1,7 +1,6 @@
 import os
 import random
 from datetime import datetime
-from sqlite3 import connect
 
 import keras
 import numpy as np
@@ -9,10 +8,12 @@ import tensorflow as tf
 from keras.callbacks import LearningRateScheduler, ModelCheckpoint, TensorBoard
 from keras.layers import Dense, BatchNormalization, Dropout, LSTM
 from keras.models import Sequential
+from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import OneHotEncoder, Normalizer
 from tqdm import tqdm
 
 import database_handler
+import web_scraper
 
 physical_devices = tf.config.list_physical_devices('GPU')
 tf.config.experimental.set_memory_growth(physical_devices[0], True)
@@ -95,14 +96,19 @@ def encode_input(red, blue):
     return np.array(X)
 
 
-def data_generator_db(batch_size):
+def data_generator_live(batch_size):
+    """
+    train off of live salty bet matches
+    :param batch_size:
+    :return:
+    """
 
     while True:
         x = []
         y = []
 
-        for red, blue, winner in database_handler.select_rand_match(batch_size):
-
+        for i in range(batch_size):
+            red, blue, winner = web_scraper.data_collector()
             x.append(encode_input(red, blue))
 
             y.append([winner])
@@ -111,28 +117,65 @@ def data_generator_db(batch_size):
         x = x.reshape((-1, 2, 8))
         y = label_encoder.transform(y).toarray()
 
-        yield np.array(x), y
+        yield x, y
 
 
-def data_generator(batch_size):
-    inputs = []
-    labels = []
-    matches = np.array(database_handler.select_all_matches())
-    for r, b, winner in tqdm(matches, total=len(matches)):
-        inputs.append(encode_input(r, b))
-        labels.append(np.array([winner]).astype('float64'))
-    inputs = np.array(inputs).astype('float64')
-    inputs = inputs.reshape((-1, 2, 8))
-    labels = label_encoder.transform(labels).toarray()
+def data_generator_db(batch_size):
+    """
+    train directly off the data base, really slow
+    :param batch_size:
+    :return:
+    """
+    while True:
+        x = []
+        y = []
 
+        for red, blue, winner in database_handler.select_rand_match(batch_size):
+            x.append(encode_input(red, blue))
+
+            y.append([winner])
+
+        x = normalizer.transform(x)
+        x = x.reshape((-1, 2, 8))
+        y = label_encoder.transform(y).toarray()
+
+        yield x, y
+
+
+inputs = []
+labels = []
+matches = np.array(database_handler.select_all_matches())
+for r, b, winner in tqdm(matches, total=len(matches)):
+    inputs.append(encode_input(r, b))
+    labels.append(np.array([winner]).astype('float64'))
+inputs = np.array(inputs).astype('float64')
+inputs = inputs.reshape((-1, 2, 8))
+labels = label_encoder.transform(labels).toarray()
+
+x_train, x_val, y_train, y_val = train_test_split(inputs, labels, test_size=0.2)
+
+
+def data_generator(batch_size, train=True):
+    """
+    train off memory
+    :param batch_size:
+    :param train:
+    :return:
+    """
     while True:
         x = []
         y = []
 
         for i in range(batch_size):
-            idx = random.randrange(0, len(inputs))
-            x.append(inputs[idx])
-            y.append(labels[idx])
+            if train:
+                idx = random.randrange(0, len(x_train))
+                x.append(x_train[idx])
+                y.append(y_train[idx])
+                continue
+
+            idx = random.randrange(0, len(x_val))
+            x.append(x_val[idx])
+            y.append(y_val[idx])
 
         yield np.array(x), np.array(y)
 
@@ -164,6 +207,8 @@ def train(load_file=None, save_to=None):
         data_generator(batch_size=batch_size),
         epochs=epochs,
         steps_per_epoch=steps_per_epoch,
+        validation_data=data_generator(batch_size=batch_size // 10, train=False),
+        validation_steps=steps_per_epoch // 10,
         callbacks=[tensorboard_callback, checkpoint_callback, scheduler_callback],
     )
 

@@ -8,43 +8,7 @@ import database_handler
 import train_model
 import web_scraper
 
-some_file = os.path.join('checkpoints', '2020-08-17_05-05')
-
-
-def data_collector():
-    web_scraper.login()
-
-    last_red = ''
-    last_blue = ''
-
-    while True:
-        red, blue = web_scraper.get_reb_blue()
-
-        if last_red == red and last_blue == blue:
-            time.sleep(1)
-            continue
-
-        last_red = red
-        last_blue = blue
-        print(f'Red: {red}\n'
-              f'Blue: {blue}\n')
-
-        winner = None
-        while winner is None:
-            winner = web_scraper.get_bet_status()
-            time.sleep(1)
-            pass
-
-        print(f'Winner: {winner}\n')
-
-        w = 1
-        if winner == 'Red':
-            w = 0
-
-        database_handler.add_match(red, blue, w)
-        database_handler.connection.commit()
-
-        time.sleep(10)
+some_file = os.path.join('checkpoints', '2020-08-17_06-00')
 
 
 # TODO fix busy wait(s)
@@ -59,6 +23,10 @@ def main():
 
     while True:
         red, blue = web_scraper.get_reb_blue()
+
+        if 'Team' in red.split(' ') or 'Team' in blue.split(' '):
+            time.sleep(1)
+            continue
 
         if last_red == red and last_blue == blue:
             time.sleep(1)
@@ -107,7 +75,7 @@ def main():
         database_handler.add_match(red, blue, w)
         database_handler.connection.commit()
 
-        time.sleep(10)
+        time.sleep(5)
 
 
 if __name__ == '__main__':

@@ -1,5 +1,9 @@
+import time
+
 import dotenv
 from selenium import webdriver
+
+import database_handler
 
 env = dotenv.DotEnv()
 EMAIL = env.get('email')
@@ -45,3 +49,40 @@ def get_bet_status():
         return "Blue"
 
     return None
+
+
+def data_collector():
+    login()
+
+    while True:
+        red, blue = get_reb_blue()
+
+        if 'Team' in red.split(' ') or 'Team' in blue.split(' '):
+            time.sleep(1)
+            continue
+
+        print(f'Red: {red}\n'
+              f'Blue: {blue}\n')
+
+        winner = None
+        while winner is None:
+            winner = get_bet_status()
+            time.sleep(1)
+            pass
+
+        print(f'Winner: {winner}\n')
+
+        w = 1
+        if winner == 'Red':
+            w = 0
+
+        database_handler.add_match(red, blue, w)
+        database_handler.connection.commit()
+
+        time.sleep(5)
+
+        return red, blue, w
+
+
+if __name__ == '__main__':
+    data_collector()
