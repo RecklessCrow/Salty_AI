@@ -7,8 +7,6 @@ import numpy as np
 import train_model
 import web_scraper
 
-import threading
-
 some_file = os.path.join('checkpoints', '2020-08-16_21-01')
 
 
