@@ -6,7 +6,7 @@ import keras
 import numpy as np
 import pandas as pd
 import tensorflow as tf
-from keras.callbacks import LearningRateScheduler
+from keras.callbacks import LearningRateScheduler, ModelCheckpoint, TensorBoard
 from keras.layers import Dense, BatchNormalization, Dropout, LSTM
 from keras.models import Sequential
 from sklearn.model_selection import train_test_split
@@ -61,10 +61,14 @@ def encode_input(red, blue):
     if b.size == 0:
         return None, None
 
-    a = np.array(a[:, 2:]).astype('float64')
-    b = np.array(b[:, 2:]).astype('float64')
-    a = preprocessor.transform(a)
-    b = preprocessor.transform(b)
+    try:
+        a = np.array(a[:, 2:]).astype('float64')
+        b = np.array(b[:, 2:]).astype('float64')
+        a = preprocessor.transform(a)
+        b = preprocessor.transform(b)
+
+    except Exception:
+        return None, None
 
     X = list(a[0])
     X.extend(list(b[0]))
@@ -73,7 +77,6 @@ def encode_input(red, blue):
 
 
 def make_model():
-
     model = Sequential()
 
     model.add(LSTM(
@@ -124,36 +127,38 @@ def make_model():
     ))
 
     model.compile(
-        optimizer='nadam',
-        loss='mse',
-        metrics=['categorical_accuracy', 'mse']
+        optimizer='adam',
+        loss='msle',
+        metrics=['categorical_accuracy']
     )
 
     return model
+
+
+def scheduler(epoch):
+    if epoch < 3:
+        return 0.001
+    return 0.001 * np.exp(0.1 * (3 - epoch))
 
 
 def train(load_file=None, save_to=None):
     # Create callbacks
     curr_date = datetime.now().strftime("%Y-%m-%d_%H-%M")
     log_dir = os.path.join('logs', 'scalars', curr_date)
-    tensorboard_callback = keras.callbacks.TensorBoard(log_dir=log_dir)
+    tensorboard_callback = TensorBoard(log_dir=log_dir)
     checkpoint_file = os.path.join('checkpoints', curr_date)
-    checkpoint_callback = keras.callbacks.ModelCheckpoint(filepath=checkpoint_file, monitor='val_categorical_accuracy',
-                                                          verbose=1, save_best_only=True, mode='max')
-
-    epochs = 50
+    checkpoint_callback = ModelCheckpoint(filepath=checkpoint_file, monitor='val_categorical_accuracy',
+                                          verbose=0, save_best_only=True, mode='max')
+    scheduler_callback = LearningRateScheduler(scheduler, verbose=0)
 
     # Create model
     # Load checkpoint if exists
-    if load_file is not None:
-        model = keras.models.load_model(load_file)
-    else:
+    if load_file is None:
         model = make_model()
+    else:
+        model = keras.models.load_model(load_file)
 
-    def scheduler(epoch):
-        if epoch < 3:
-            return 0.001
-        return 0.001 * np.exp(0.1 * (3 - epoch))
+    epochs = 50
 
     # Train model
     model.fit(
@@ -161,7 +166,7 @@ def train(load_file=None, save_to=None):
         y=y_train,
         epochs=epochs,
         validation_data=(x_val, y_val),
-        callbacks=[tensorboard_callback, checkpoint_callback, LearningRateScheduler(scheduler, verbose=True)],
+        callbacks=[tensorboard_callback, checkpoint_callback, scheduler_callback],
         batch_size=10000
     )
 
