@@ -4,15 +4,51 @@ import time
 import keras
 import numpy as np
 
+import database_handler
 import train_model
 import web_scraper
 
 some_file = os.path.join('checkpoints', '2020-08-16_21-01')
 
 
+def data_collector():
+    web_scraper.login()
+
+    last_red = ''
+    last_blue = ''
+
+    while True:
+        red, blue = web_scraper.get_reb_blue()
+
+        if last_red == red and last_blue == blue:
+            time.sleep(1)
+            continue
+
+        last_red = red
+        last_blue = blue
+        print(f'Red: {red}\n'
+              f'Blue: {blue}\n')
+
+        winner = None
+        while winner is None:
+            winner = web_scraper.get_bet_status()
+            time.sleep(1)
+            pass
+
+        print(f'Winner: {winner}\n')
+
+        w = 1
+        if winner == 'Red':
+            w = 0
+
+        database_handler.add_match(red, blue, w)
+        database_handler.connection.commit()
+
+        time.sleep(10)
+
+
 # TODO fix busy wait(s)
 def main():
-
     web_scraper.login()
     my_model = keras.models.load_model(some_file)
     last_red = ''
@@ -37,7 +73,6 @@ def main():
             print('Character not found.\n')
             continue
 
-        X = [X]
         X = np.array(X).reshape((-1, 2, 8))
 
         probability = my_model.predict(X)
@@ -61,8 +96,16 @@ def main():
             print('Wrong prediction.')
         print(f'Current accuracy {correct / matches * 100:.2f}\n')
 
+        w = 1
+        if winner == 'Red':
+            w = 0
+
+        database_handler.add_match(red, blue, w)
+        database_handler.connection.commit()
+
         time.sleep(10)
 
 
 if __name__ == '__main__':
-    main()
+    data_collector()
+    # main()

@@ -1,4 +1,5 @@
 import os
+import random
 from datetime import datetime
 from sqlite3 import connect
 
@@ -9,6 +10,8 @@ from keras.callbacks import LearningRateScheduler, ModelCheckpoint, TensorBoard
 from keras.layers import Dense, BatchNormalization, Dropout, LSTM
 from keras.models import Sequential
 from sklearn.preprocessing import OneHotEncoder, Normalizer
+from tqdm import tqdm
+
 import database_handler
 
 physical_devices = tf.config.list_physical_devices('GPU')
@@ -84,26 +87,23 @@ def scheduler(epoch):
     return 0.001 * np.exp(0.1 * (3 - epoch))
 
 
-def encode_match(cur, red, blue):
-    red = list(database_handler.select_character(cur, red))
-    blue = list(database_handler.select_character(cur, blue))
+def encode_input(red, blue):
+    red = list(database_handler.select_character(red))
+    blue = list(database_handler.select_character(blue))
     red.extend(blue)
     X = [0 if element is None else element for element in red]
     return np.array(X)
 
 
-def data_generator(batch_size):
+def data_generator_db(batch_size):
 
     while True:
-        db_file = os.path.join('data', 'salty.db')
-        connection = connect(db_file)
-        cur = connection.cursor()
         x = []
         y = []
 
-        for red, blue, winner in database_handler.select_rand_match(cur, batch_size):
+        for red, blue, winner in database_handler.select_rand_match(batch_size):
 
-            x.append(encode_match(cur, red, blue))
+            x.append(encode_input(red, blue))
 
             y.append([winner])
 
@@ -112,6 +112,29 @@ def data_generator(batch_size):
         y = label_encoder.transform(y).toarray()
 
         yield np.array(x), y
+
+
+def data_generator(batch_size):
+    inputs = []
+    labels = []
+    matches = np.array(database_handler.select_all_matches())
+    for r, b, winner in tqdm(matches, total=len(matches)):
+        inputs.append(encode_input(r, b))
+        labels.append(np.array([winner]).astype('float64'))
+    inputs = np.array(inputs).astype('float64')
+    inputs = inputs.reshape((-1, 2, 8))
+    labels = label_encoder.transform(labels).toarray()
+
+    while True:
+        x = []
+        y = []
+
+        for i in range(batch_size):
+            idx = random.randint(0, len(inputs))
+            x.append(inputs[idx])
+            y.append(labels[idx])
+
+        yield np.array(x), np.array(y)
 
 
 def train(load_file=None, save_to=None):
@@ -132,7 +155,7 @@ def train(load_file=None, save_to=None):
         model = keras.models.load_model(load_file)
 
     epochs = 50
-    steps_per_epoch = 100
+    steps_per_epoch = 1000
     batch_size = 1000
 
     # Train model
@@ -142,6 +165,7 @@ def train(load_file=None, save_to=None):
         epochs=epochs,
         steps_per_epoch=steps_per_epoch,
         callbacks=[tensorboard_callback, checkpoint_callback, scheduler_callback],
+        use_multiprocessing=True
     )
 
     if save_to is None:

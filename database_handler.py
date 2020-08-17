@@ -6,10 +6,11 @@ import pandas as pd
 from tqdm import tqdm
 
 db_file = os.path.join('data', 'salty.db')
+connection = connect(db_file, check_same_thread=False)
+cur = connection.cursor()
 
 
-def drop_tables(cur):
-
+def drop_tables():
     cur.executescript(
         """
         drop table if exists authors;
@@ -19,8 +20,7 @@ def drop_tables(cur):
     )
 
 
-def create_tables(cur):
-
+def create_tables():
     cur.executescript(
         """
         create table if not exists authors(
@@ -53,10 +53,9 @@ def create_tables(cur):
     )
 
 
-def add_author(cur, name, my_id=None, num_wins=None, num_matches=None):
-
+def add_author(name, my_id=None, num_wins=None, num_matches=None):
     if my_id is None:
-        my_id = get_next_author_id(cur)
+        my_id = get_next_author_id()
 
     if num_wins is None:
         num_wins = 0
@@ -78,10 +77,9 @@ def add_author(cur, name, my_id=None, num_wins=None, num_matches=None):
     )
 
 
-def add_character(cur, name, my_id=None, author=None, num_wins=None, num_matches=None, hitbox_x=None, hitbox_y=None):
-
+def add_character(name, my_id=None, author=None, num_wins=None, num_matches=None, hitbox_x=None, hitbox_y=None):
     if my_id is None:
-        my_id = get_next_character_id(cur)
+        my_id = get_next_character_id()
 
     if num_wins is None:
         num_wins = 0
@@ -106,8 +104,7 @@ def add_character(cur, name, my_id=None, author=None, num_wins=None, num_matches
     )
 
 
-def add_match(cur, red, blue, winner):
-
+def add_match(red, blue, winner):
     cur.execute(
         """
         insert into matches(
@@ -119,18 +116,17 @@ def add_match(cur, red, blue, winner):
         """,
         (red, blue, winner)
     )
-    red_info = select_character(cur, red)
-    blue_info = select_character(cur, blue)
+    red_info = select_character(red)
+    blue_info = select_character(blue)
     if red_info[3] is not None:
-        update_match_info(cur, 'authors', red_info[3], not winner)
+        update_match_info('authors', red_info[3], not winner)
     if blue_info[3] is not None:
-        update_match_info(cur, 'authors', blue_info[3], winner)
-    update_match_info(cur, 'characters', red, not winner)
-    update_match_info(cur, 'characters', blue, winner)
+        update_match_info('authors', blue_info[3], winner)
+    update_match_info('characters', red, not winner)
+    update_match_info('characters', blue, winner)
 
 
-def select_author(cur, author):
-
+def select_author(author):
     cur.execute(
         """
         select *
@@ -143,14 +139,13 @@ def select_author(cur, author):
     authors = cur.fetchone()
 
     if not authors:
-        add_author(cur, author)
-        return select_author(cur, author)
+        add_author(author)
+        return select_author(author)
 
     return authors
 
 
-def select_character(cur, character):
-
+def select_character(character):
     cur.execute(
         """
         select characters.id, characters.num_wins, characters.num_matches, 
@@ -166,14 +161,13 @@ def select_character(cur, character):
     characters = cur.fetchone()
 
     if not characters:
-        add_character(cur, character)
-        return select_character(cur, character)
+        add_character(character)
+        return select_character(character)
 
     return characters
 
 
-def select_matches(cur, player_1, player_2):
-
+def select_matches(player_1, player_2):
     cur.execute(
         """
         select *
@@ -191,8 +185,7 @@ def select_matches(cur, player_1, player_2):
     return matches
 
 
-def select_all(cur, table):
-
+def select_all(table):
     cur.execute(
         f"""
         select *
@@ -203,8 +196,7 @@ def select_all(cur, table):
     return cur.fetchall()
 
 
-def update_match_info(cur, table, name, win):
-
+def update_match_info(table, name, win):
     if win:
         cur.execute(
             f"""
@@ -225,8 +217,7 @@ def update_match_info(cur, table, name, win):
     )
 
 
-def get_next_author_id(cur):
-
+def get_next_author_id():
     cur.execute(
         """
         select max(id)
@@ -242,7 +233,7 @@ def get_next_author_id(cur):
     return next_id + 1
 
 
-def get_next_character_id(cur):
+def get_next_character_id():
     cur.execute(
         """
         select max(id)
@@ -258,27 +249,26 @@ def get_next_character_id(cur):
     return next_id + 1
 
 
-def create_database(connection, drop=False):
-    cur = connection.cursor()
+def create_database(drop=False):
 
     character_info = pd.read_csv(os.path.join('data', 'character_information.csv'))
     match_info = pd.read_csv(os.path.join('data', 'match_data.csv'))
     match_info.dropna(axis=0, inplace=True)
 
     if drop:
-        drop_tables(cur)
-    create_tables(cur)
+        drop_tables()
+    create_tables()
 
     for i, (char_id, char_name, char_author, hit_x, hit_y) in tqdm(character_info.iterrows(),
                                                                    desc='Populating characters and authors',
                                                                    total=len(character_info)):
         try:
-            add_author(cur, char_author)
+            add_author(char_author)
         except sqlite3.IntegrityError:
             pass
 
         try:
-            add_character(cur, char_name, my_id=char_id, author=char_author, hitbox_x=hit_x, hitbox_y=hit_y)
+            add_character(char_name, my_id=char_id, author=char_author, hitbox_x=hit_x, hitbox_y=hit_y)
         except sqlite3.IntegrityError:
             pass
 
@@ -289,10 +279,10 @@ def create_database(connection, drop=False):
             winner = 0
         else:
             winner = 1
-        add_match(cur, red, blue, winner)
+        add_match(red, blue, winner)
 
 
-def select_rand_match(cur, limit):
+def select_rand_match(limit):
     cur.execute(
         f"""
         select red, blue, winner
@@ -307,9 +297,20 @@ def select_rand_match(cur, limit):
     return char
 
 
-if __name__ == '__main__':
-    connection = connect(db_file)
+def select_all_matches():
+    cur.execute(
+        f"""
+        select red, blue, winner
+        from matches
+        """
+    )
 
-    create_database(connection)
+    char = cur.fetchall()
+
+    return char
+
+
+if __name__ == '__main__':
+    create_database(True)
 
     connection.commit()
