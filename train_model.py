@@ -8,6 +8,7 @@ from keras.callbacks import LearningRateScheduler, ModelCheckpoint, TensorBoard
 from keras.layers import Dense, BatchNormalization, Dropout, LSTM
 from keras.models import Sequential
 from sklearn.preprocessing import OneHotEncoder, Normalizer
+from sklearn.model_selection import train_test_split
 from tqdm import tqdm
 
 import database_handler
@@ -29,9 +30,13 @@ for output in tqdm(matches, total=len(matches)):
     x.append(matchup)
     y.append([winner])
 
-x = normalizer.transform(x)
-x = x.reshape((-1, 2, 8))
+# x = normalizer.transform(x)
+x = np.array(x).astype('float64').reshape((-1, 2, 8))
 y = label_encoder.transform(y).toarray()
+
+x_train, x_val, y_train, y_val = train_test_split(x, y, test_size=0.2)
+
+del x, y
 
 
 def make_model():
@@ -99,6 +104,25 @@ def scheduler(epoch):
     return 0.001 * np.exp(0.1 * (3 - epoch))
 
 
+def data_generator(batch_size=50):
+    while True:
+        x = []
+        y = []
+
+        for matchup in database_handler.select_rand_match(batch_size):
+            char_info = matchup[:16]
+            label = matchup[16]
+            char_info = [0 if element is None else element for element in char_info]
+            x.append(char_info)
+            y.append([label])
+
+        # x = normalizer.transform(x)
+        x = np.array(x).astype('float64').reshape((-1, 2, 8))
+        y = label_encoder.transform(y).toarray()
+
+        yield x, y
+
+
 def train(load_file=None, save_to=None):
     # Create callbacks
     curr_date = datetime.now().strftime("%Y-%m-%d_%H-%M")
@@ -117,15 +141,26 @@ def train(load_file=None, save_to=None):
         model = keras.models.load_model(load_file)
 
     epochs = 100
+    steps_per_epoch = 1000
+    batch_size = 5000
 
     # Train model
+
     model.fit(
-        x=x,
-        y=y,
+        x=x_train,
+        y=y_train,
         epochs=epochs,
-        validation_split=0.2,
+        validation_data=(x_val, y_val),
         callbacks=[tensorboard_callback, checkpoint_callback, scheduler_callback],
     )
+
+    # model.fit(
+    #     data_generator(batch_size=batch_size),
+    #     epochs=epochs,
+    #     steps_per_epoch=steps_per_epoch,
+    #     validation_data=(x_val, y_val),
+    #     callbacks=[tensorboard_callback, checkpoint_callback, scheduler_callback],
+    # )
 
     if save_to is None:
         keras.models.save_model(model, os.path.join('models', curr_date))
