@@ -297,8 +297,8 @@ def create_database(drop=False):
 def select_rand_match(limit):
     cur.execute(
         f"""
-        select  r.id, r.num_wins, r.num_matches, ra.id, ra.num_wins, ra.num_matches, r.x, r.y,
-                b.id, b.num_wins, b.num_matches, ba.id, ba.num_wins, ba.num_matches, b.x, b.y,
+        select  r.num_wins, r.num_matches, ra.id, ra.num_wins, ra.num_matches, r.x, r.y,
+                b.num_wins, b.num_matches, ba.id, ba.num_wins, ba.num_matches, b.x, b.y,
                 winner
         from characters as r
         inner join matches
@@ -322,8 +322,8 @@ def select_rand_match(limit):
 def select_all_matches():
     cur.execute(
         f"""
-        select  r.id, r.num_wins * 100.0 / r.num_matches, ra.id, ra.num_wins * 100.0 / ra.num_matches, r.x + r.y / 2,
-                b.id, b.num_wins * 100.0 / b.num_matches, ba.id, ba.num_wins * 100.0 / ba.num_matches, b.x + b.y / 2,
+        select  r.num_wins * 100.0 / r.num_matches, ra.id, ra.num_wins * 100.0 / ra.num_matches, r.x + r.y / 2,
+                b.num_wins * 100.0 / b.num_matches, ba.id, ba.num_wins * 100.0 / ba.num_matches, b.x + b.y / 2,
                 winner
         from characters as r
         inner join matches
@@ -345,8 +345,8 @@ def select_all_matches():
 def encode_match(red, blue):
     cur.execute(
         f"""
-        select  r.id, r.num_wins * 100.0 / r.num_matches, ra.id, ra.num_wins * 100.0 / ra.num_matches, r.x + r.y / 2,
-                b.id, b.num_wins * 100.0 / b.num_matches, ba.id, ba.num_wins * 100.0 / ba.num_matches, b.x + b.y / 2
+        select  r.num_wins * 100.0 / r.num_matches, ra.id, ra.num_wins * 100.0 / ra.num_matches, r.x + r.y / 2,
+                b.num_wins * 100.0 / b.num_matches, ba.id, ba.num_wins * 100.0 / ba.num_matches, b.x + b.y / 2
         from characters as r
         inner join characters as b
         left join authors as ra

@@ -31,7 +31,6 @@ for output in tqdm(matches, total=len(matches)):
     x.append(matchup)
     y.append([winner])
 
-x = normalizer.transform(x)
 x = np.array(x).astype('float64').reshape((-1, 2, len(x[0]) // 2))
 y = label_encoder.transform(y).toarray()
 
@@ -120,7 +119,6 @@ def data_generator_db(batch_size=50):
             x.append(char_info)
             y.append([label])
 
-        # x = normalizer.transform(x)
         x = np.array(x).astype('float64').reshape((-1, 2, len(x[0]) // 2))
         y = label_encoder.transform(y).toarray()
 
@@ -170,8 +168,8 @@ def train(load_file=None, save_to=None):
         model = keras.models.load_model(load_file)
 
     epochs = 100
-    steps_per_epoch = 10
-    batch_size = 5
+    steps_per_epoch = 50
+    batch_size = 5000
 
     # Train model
 
