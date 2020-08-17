@@ -8,7 +8,7 @@ import database_handler
 import train_model
 import web_scraper
 
-some_file = os.path.join('checkpoints', '2020-08-16_21-01')
+some_file = os.path.join('checkpoints', '2020-08-17_05-05')
 
 
 def data_collector():
@@ -77,6 +77,10 @@ def main():
 
         probability = my_model.predict(X)
         prediction = train_model.label_encoder.inverse_transform(probability)[0][0]
+        if prediction:
+            prediction = 'Blue'
+        else:
+            prediction = 'Red'
         print(f'Red: {red}\n'
               f'Blue: {blue}\n'
               f'Predicted outcome: {prediction} {np.max(probability) * 100:.2f}%')
@@ -107,5 +111,5 @@ def main():
 
 
 if __name__ == '__main__':
-    data_collector()
-    # main()
+    # data_collector()
+    main()

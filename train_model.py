@@ -156,7 +156,7 @@ def train(load_file=None, save_to=None):
 
     epochs = 50
     steps_per_epoch = 1000
-    batch_size = 1000
+    batch_size = 5000
 
     # Train model
 
@@ -165,7 +165,6 @@ def train(load_file=None, save_to=None):
         epochs=epochs,
         steps_per_epoch=steps_per_epoch,
         callbacks=[tensorboard_callback, checkpoint_callback, scheduler_callback],
-        use_multiprocessing=True
     )
 
     if save_to is None:
