@@ -1,14 +1,13 @@
-import math
 import os
 import time
 
 import keras
 import numpy as np
-import data_generator
+
 import train_model
 import web_scraper
 
-some_file = os.path.join('checkpoints', '2020-08-16_00-14')
+some_file = os.path.join('checkpoints', '2020-08-16_02-33')
 
 
 def main():
@@ -21,13 +20,9 @@ def main():
 
     while True:
         red, blue = web_scraper.get_reb_blue()
-        if red == "" and blue == "":
-            print('Ongoing match.')
-            time.sleep(15)
-            continue
 
-        # if last_red == red and last_blue == blue:
-        #     continue
+        if last_red == red and last_blue == blue:
+            continue
 
         last_red = red
         last_blue = blue
@@ -38,7 +33,6 @@ def main():
 
         if None in X:
             print('Character not found.')
-            time.sleep(15)
             continue
 
         probability = my_model.predict(X)

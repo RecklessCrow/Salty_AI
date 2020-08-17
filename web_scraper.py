@@ -1,11 +1,9 @@
-
-from time import sleep
 import dotenv
 from selenium import webdriver
 
 env = dotenv.DotEnv()
 EMAIL = env.get('email')
-TOKEN = 'I7L9w#a@LVRklg9'
+TOKEN = env.get('password')
 driver = webdriver.Chrome('chromedriver.exe')
 driver.get("https://www.saltybet.com/authenticate?signin=1")
 assert "Salty" in driver.title
@@ -47,16 +45,3 @@ def get_bet_status():
         return "Blue"
 
     return None
-
-
-if __name__ == '__main__':
-    login()
-    previous_red = ''
-    previous_blue = ''
-    while True:
-        red, blue = get_reb_blue()
-        if previous_red != red or previous_blue != blue:
-            previous_red = red
-            previous_blue = blue
-            print(f'{red} vs. {blue}')
-        sleep(10)

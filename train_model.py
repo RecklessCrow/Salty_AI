@@ -6,17 +6,18 @@ import keras
 import numpy as np
 import pandas as pd
 import tensorflow as tf
-from keras.layers import Dense, BatchNormalization, Dropout, Conv1D
+from keras.callbacks import LearningRateScheduler
+from keras.layers import Dense, BatchNormalization, Dropout, LSTM
 from keras.models import Sequential
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import LabelBinarizer
+from sklearn.preprocessing import OneHotEncoder
 
 from data_generator import preprocessor
 
 physical_devices = tf.config.list_physical_devices('GPU')
 tf.config.experimental.set_memory_growth(physical_devices[0], True)
 
-label_encoder = LabelBinarizer()
+label_encoder = OneHotEncoder()
 
 red_data = pd.read_csv(os.path.join('data', 'red_data.csv'))
 red_data = np.array(red_data)
@@ -29,8 +30,8 @@ blue_data = blue_data[:, 1:]
 labels = pd.read_csv(os.path.join('data', 'labels.csv'))
 labels = np.array(labels)
 labels = labels[:, 1:]
-label_encoder.fit_transform(labels)
-labels = label_encoder.transform(labels)
+label_encoder.fit(labels)
+labels = label_encoder.transform(labels).toarray()
 
 data = []
 for i in range(len(red_data)):
@@ -40,7 +41,9 @@ for i in range(len(red_data)):
 
 data = np.array(data)
 
-x_train, x_val, y_train, y_val = train_test_split(data, labels, test_size=0.2, shuffle=False)
+data = data.reshape((-1, 2, 8))
+
+x_train, x_val, y_train, y_val = train_test_split(data, labels, test_size=0.2, shuffle=True, random_state=1)
 
 character_lookup = pd.read_csv(os.path.join('data', 'character_lookup.csv'))
 
@@ -70,11 +73,22 @@ def encode_input(red, blue):
 
 
 def make_model():
+
     model = Sequential()
 
-    model.add(Dense(
-        units=256,
+    model.add(LSTM(
+        units=64,
         activation='relu',
+        return_sequences=True
+    ))
+
+    model.add(BatchNormalization())
+    model.add(Dropout(0.4))
+
+    model.add(LSTM(
+        units=64,
+        activation='relu',
+        return_sequences=False
     ))
 
     model.add(BatchNormalization())
@@ -97,14 +111,22 @@ def make_model():
     model.add(Dropout(0.4))
 
     model.add(Dense(
-        units=1,
-        activation='sigmoid'
+        units=512,
+        activation='relu',
+    ))
+
+    model.add(BatchNormalization())
+    model.add(Dropout(0.4))
+
+    model.add(Dense(
+        units=2,
+        activation='softmax'
     ))
 
     model.compile(
-        optimizer='adam',
-        loss='binary_crossentropy',
-        metrics=['accuracy']
+        optimizer='nadam',
+        loss='mse',
+        metrics=['categorical_accuracy', 'mse']
     )
 
     return model
@@ -116,8 +138,8 @@ def train(load_file=None, save_to=None):
     log_dir = os.path.join('logs', 'scalars', curr_date)
     tensorboard_callback = keras.callbacks.TensorBoard(log_dir=log_dir)
     checkpoint_file = os.path.join('checkpoints', curr_date)
-    checkpoint_callback = keras.callbacks.ModelCheckpoint(filepath=checkpoint_file, monitor='val_accuracy',
-                                                          verbose=1, save_best_only=True, mode='max')
+    checkpoint_callback = keras.callbacks.ModelCheckpoint(filepath=checkpoint_file, monitor='loss',
+                                                          verbose=1, save_best_only=True, mode='min')
 
     epochs = 25
 
@@ -128,14 +150,21 @@ def train(load_file=None, save_to=None):
     else:
         model = make_model()
 
-    # Train model
+    def scheduler(epoch):
+        if epoch < 3:
+            return 0.001
+        return 0.001 * np.exp(0.1 * (3 - epoch))
+
+        # Train model
     model.fit(
         x=x_train,
         y=y_train,
         epochs=epochs,
         validation_data=(x_val, y_val),
-        callbacks=[tensorboard_callback, checkpoint_callback]
+        callbacks=[tensorboard_callback, checkpoint_callback, LearningRateScheduler(scheduler, verbose=True)],
     )
+
+    model.predict()
 
     if save_to is not None:
         keras.models.save_model(model, save_to)
@@ -202,4 +231,4 @@ def train_live(epochs=25, steps_per_epoch=25, batch_size=10, load_file=None, sav
 
 
 if __name__ == '__main__':
-    train_live(load_file='checkpoints/2020-08-16_00-14')
+    train(save_to=os.path.join('models', 'my_model'))
