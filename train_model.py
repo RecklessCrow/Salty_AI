@@ -130,7 +130,7 @@ def data_generator(batch_size):
         y = []
 
         for i in range(batch_size):
-            idx = random.randint(0, len(inputs))
+            idx = random.randrange(0, len(inputs))
             x.append(inputs[idx])
             y.append(labels[idx])
 
