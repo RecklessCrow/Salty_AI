@@ -322,8 +322,8 @@ def select_rand_match(limit):
 def select_all_matches():
     cur.execute(
         f"""
-        select  r.num_wins * 100.0 / r.num_matches, ra.id, ra.num_wins * 100.0 / ra.num_matches, r.x + r.y / 2,
-                b.num_wins * 100.0 / b.num_matches, ba.id, ba.num_wins * 100.0 / ba.num_matches, b.x + b.y / 2,
+        select  r.num_wins * 100.0 / r.num_matches, r.num_matches, ra.num_wins * 100.0 / ra.num_matches, ra.num_matches, r.x, r.y,
+                b.num_wins * 100.0 / b.num_matches, b.num_matches, ba.num_wins * 100.0 / ba.num_matches, ba.num_matches, b.x, b.y,
                 winner
         from characters as r
         inner join matches

@@ -25,12 +25,12 @@ x = []
 y = []
 matches = database_handler.select_all_matches()
 for output in tqdm(matches, total=len(matches)):
-    matchup = output[:len(output)-1]
-    winner = output[len(output)-1]
-    matchup = [0 if element is None else element for element in matchup]
+    matchup = output[:-1]
+    winner = output[-1]
     x.append(matchup)
     y.append([winner])
 
+x = np.nan_to_num(x)
 x = np.array(x).astype('float64').reshape((-1, 2, len(x[0]) // 2))
 y = label_encoder.transform(y).toarray()
 
@@ -44,7 +44,7 @@ del x, y
 def make_model():
     model = Sequential()
 
-    model.add(Input((2, 5)))
+    # model.add(Input((2, 5)))
 
     model.add(LSTM(
         units=256,
@@ -173,14 +173,14 @@ def train(load_file=None, save_to=None):
 
     # Train model
 
-    # model.fit(
-    #     x=x_train,
-    #     y=y_train,
-    #     epochs=epochs,
-    #     batch_size=batch_size,
-    #     validation_data=(x_val, y_val),
-    #     callbacks=[tensorboard_callback, checkpoint_callback, scheduler_callback],
-    # )
+    model.fit(
+        x=x_train,
+        y=y_train,
+        epochs=epochs,
+        batch_size=batch_size,
+        validation_data=(x_val, y_val),
+        callbacks=[tensorboard_callback, checkpoint_callback, scheduler_callback],
+    )
 
     # model.fit(
     #     data_generator_db(batch_size=batch_size),
@@ -189,14 +189,14 @@ def train(load_file=None, save_to=None):
     #     callbacks=[tensorboard_callback, checkpoint_callback, scheduler_callback],
     # )
 
-    model.fit(
-        data_generator(batch_size=batch_size),
-        epochs=epochs,
-        steps_per_epoch=steps_per_epoch,
-        validation_data=data_generator(train=False, batch_size=batch_size // 4),
-        validation_steps=steps_per_epoch // 4,
-        callbacks=[tensorboard_callback, checkpoint_callback, scheduler_callback],
-    )
+    # model.fit(
+    #     data_generator(batch_size=batch_size),
+    #     epochs=epochs,
+    #     steps_per_epoch=steps_per_epoch,
+    #     validation_data=data_generator(train=False, batch_size=batch_size // 4),
+    #     validation_steps=steps_per_epoch // 4,
+    #     callbacks=[tensorboard_callback, checkpoint_callback, scheduler_callback],
+    # )
 
     if save_to is None:
         keras.models.save_model(model, os.path.join('models', curr_date))
