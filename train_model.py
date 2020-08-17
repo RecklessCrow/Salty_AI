@@ -77,7 +77,7 @@ def make_model():
     model = Sequential()
 
     model.add(LSTM(
-        units=64,
+        units=128,
         activation='relu',
         return_sequences=True
     ))
@@ -86,7 +86,7 @@ def make_model():
     model.add(Dropout(0.4))
 
     model.add(LSTM(
-        units=64,
+        units=128,
         activation='relu',
         return_sequences=False
     ))
@@ -138,10 +138,10 @@ def train(load_file=None, save_to=None):
     log_dir = os.path.join('logs', 'scalars', curr_date)
     tensorboard_callback = keras.callbacks.TensorBoard(log_dir=log_dir)
     checkpoint_file = os.path.join('checkpoints', curr_date)
-    checkpoint_callback = keras.callbacks.ModelCheckpoint(filepath=checkpoint_file, monitor='loss',
-                                                          verbose=1, save_best_only=True, mode='min')
+    checkpoint_callback = keras.callbacks.ModelCheckpoint(filepath=checkpoint_file, monitor='val_categorical_accuracy',
+                                                          verbose=1, save_best_only=True, mode='max')
 
-    epochs = 25
+    epochs = 50
 
     # Create model
     # Load checkpoint if exists
@@ -155,16 +155,15 @@ def train(load_file=None, save_to=None):
             return 0.001
         return 0.001 * np.exp(0.1 * (3 - epoch))
 
-        # Train model
+    # Train model
     model.fit(
         x=x_train,
         y=y_train,
         epochs=epochs,
         validation_data=(x_val, y_val),
         callbacks=[tensorboard_callback, checkpoint_callback, LearningRateScheduler(scheduler, verbose=True)],
+        batch_size=10000
     )
-
-    model.predict()
 
     if save_to is not None:
         keras.models.save_model(model, save_to)
