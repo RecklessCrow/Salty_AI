@@ -82,7 +82,8 @@ def add_author(name, my_id=None, num_wins=None, num_matches=None):
     )
 
 
-def add_character(name, my_id=None, author=None, num_wins=None, num_matches=None, hitbox_x=None, hitbox_y=None):
+def add_character(name, my_id=None, author=None, num_wins=None, num_matches=None,
+                  hitbox_x=None, hitbox_y=None, life=1000, meter=None):
     if my_id is None:
         my_id = get_next_character_id()
 
@@ -101,11 +102,13 @@ def add_character(name, my_id=None, author=None, num_wins=None, num_matches=None
             num_wins,
             num_matches,
             x,
-            y
+            y,
+            life,
+            meter
         )
-        values (?, ?, ?, ?, ?, ?, ?)
+        values (?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
-        (name, my_id, author, num_wins, num_matches, hitbox_x, hitbox_y)
+        (name, my_id, author, num_wins, num_matches, hitbox_x, hitbox_y, life, meter)
     )
 
 
@@ -135,6 +138,15 @@ def add_match(red, blue, winner):
 
     red_info = select_char_info(red)
     blue_info = select_char_info(blue)
+
+    if red_info is None:
+        add_character(red)
+        red_info = select_char_info(red)
+
+    if blue_info is None:
+        add_character(blue)
+        blue_info = select_char_info(blue)
+
     if red_info[1] is not None:
         red_author = select_author(red_info[1])[0]
         update_match_info('authors', red_author, not winner)
@@ -163,8 +175,9 @@ def select_author(author):
 def select_character(character):
     cur.execute(
         """
-        select characters.id, characters.num_wins, characters.num_matches, 
-        authors.id, authors.num_wins, authors.num_matches, characters.x, characters.y
+        select  characters.id, characters.num_wins, characters.num_matches, 
+                authors.id, authors.num_wins, authors.num_matches, 
+                characters.x, characters.y, characters.life, characters.meter
         from characters
         left join authors
         on characters.author = authors.name
@@ -209,6 +222,107 @@ def select_all(table):
     )
 
     return cur.fetchall()
+
+
+def update_character(info):
+    name, matches, winrate, life, meter, author = info
+    _, old_wins, old_matches, author_id, author_wins, author_matches, x, y, old_life, old_meter = select_character(name)
+
+    new_matches = matches - old_matches
+    new_wins = int(matches * winrate) - old_wins
+
+    cur.execute(
+        '''
+        update characters
+        set num_wins = ?
+        where name = ?
+        ;
+        ''',
+        (int(matches * winrate), name)
+    )
+
+    cur.execute(
+        '''
+        update characters
+        set num_matches = ?
+        where name = ?
+        ;
+        ''',
+       (matches, name)
+    )
+
+    if old_life is None:
+        cur.execute(
+            '''
+            update characters
+            set life = ?
+            where name = ?
+            ;
+            ''',
+            (life, name)
+        )
+
+    if old_meter is None:
+        cur.execute(
+            '''
+            update characters
+            set meter = ?
+            where name = ?
+            ;
+            ''',
+            (meter, name)
+        )
+
+    if author_id is None:
+        try:
+            add_author(author, num_wins=int(matches * winrate), num_matches=matches)
+        except sqlite3.IntegrityError:
+            cur.execute(
+                '''
+                update authors
+                set num_wins = num_wins + ?
+                where name = ?
+                ''',
+                (author, new_wins)
+            )
+
+            cur.execute(
+                '''
+                update authors
+                set num_matches = num_matches + ?
+                where name = ?
+                ''',
+                (author, new_matches)
+            )
+
+        cur.execute(
+            '''
+            update characters
+            set author = ?
+            where name = ?
+            ;
+            ''',
+            (author, name)
+        )
+
+    else:
+        cur.execute(
+            '''
+            update authors
+            set num_wins = num_wins + ?
+            where name = ?
+            ''',
+            (author, new_wins)
+        )
+
+        cur.execute(
+            '''
+            update authors
+            set num_matches = num_matches + ?
+            where name = ?
+            ''',
+            (author, new_matches)
+        )
 
 
 def update_match_info(table, name, win):
@@ -379,5 +493,4 @@ def encode_match(red, blue):
 if __name__ == '__main__':
     # create_database(True)
     # connection.commit()
-
-    encode_match('A-rachel', 'Aaaaaaaaaaaahhhhhh!!!')
+    pass

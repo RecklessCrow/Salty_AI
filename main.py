@@ -35,6 +35,10 @@ def main():
         last_red = red
         last_blue = blue
 
+        red_info, blue_info = web_scraper.get_stats()
+        database_handler.update_character(red_info)
+        database_handler.update_character(blue_info)
+
         X = database_handler.encode_match(red, blue)
 
         probability = my_model.predict(X)

@@ -2,6 +2,8 @@ import time
 
 import dotenv
 from selenium import webdriver
+from selenium.webdriver import ActionChains
+from selenium.webdriver.common.keys import Keys
 
 import database_handler
 
@@ -9,20 +11,20 @@ env = dotenv.DotEnv()
 EMAIL = env.get('email')
 TOKEN = env.get('password')
 driver = webdriver.Chrome('chromedriver.exe')
+driver.get("https://www.saltybet.com/authenticate?signin=1")
+assert "Salty" in driver.title
 
 
-def login(a_driver=driver):
-    a_driver.get("https://www.saltybet.com/authenticate?signin=1")
-    assert "Salty" in driver.title
-    username = a_driver.find_element_by_id("email")
+def login():
+    username = driver.find_element_by_id("email")
     username.clear()
     username.send_keys("jmcc2646@gmail.com")
 
-    password = a_driver.find_element_by_name("pword")
+    password = driver.find_element_by_name("pword")
     password.clear()
     password.send_keys(TOKEN)
 
-    a_driver.find_element_by_class_name('graybutton').click()
+    driver.find_element_by_class_name('graybutton').click()
 
 
 def get_balance():
@@ -52,44 +54,57 @@ def get_bet_status():
 
 
 def get_stats():
-    temp_driver = webdriver.Chrome('chromedriver.exe')
-    login(temp_driver)
-    temp_driver.get('https://www.saltybet.com/stats')
+    driver.execute_script("window.open('');")
+    driver.switch_to.window(driver.window_handles[1])
+    driver.get('https://www.saltybet.com/stats')
 
-    time.sleep(2)
+    time.sleep(1)
 
-    red_stats = {
-        'name': temp_driver.find_element_by_id('p1namestats').text,
-        'num_matches': temp_driver.find_element_by_id('p1totalmatches').text,
-        'win_rate': temp_driver.find_element_by_id('p1winrate').text,
-        'life': temp_driver.find_element_by_id('p1life').text,
-        'meter': temp_driver.find_element_by_id('p1meter').text,
-        'author': temp_driver.find_element_by_id('p1author').text,
-    }
+    red_stats = (
+        driver.find_element_by_id('p1namestats').text,
+        int(driver.find_element_by_id('p1totalmatches').text),
+        int(driver.find_element_by_id('p1winrate').text[:-1]),
+        int(driver.find_element_by_id('p1life').text),
+        int(driver.find_element_by_id('p1meter').text),
+        driver.find_element_by_id('p1author').text,
+    )
 
-    blue_stats = {
-        'name': temp_driver.find_element_by_id('p2namestats').text,
-        'num_matches': temp_driver.find_element_by_id('p2totalmatches').text,
-        'win_rate': temp_driver.find_element_by_id('p2winrate').text,
-        'life': temp_driver.find_element_by_id('p2life').text,
-        'meter': temp_driver.find_element_by_id('p2meter').text,
-        'author': temp_driver.find_element_by_id('p2author').text,
-    }
+    blue_stats = (
+        driver.find_element_by_id('p2namestats').text,
+        int(driver.find_element_by_id('p2totalmatches').text),
+        int(driver.find_element_by_id('p2winrate').text[:-1]),
+        int(driver.find_element_by_id('p2life').text),
+        int(driver.find_element_by_id('p2meter').text),
+        driver.find_element_by_id('p2author').text,
+    )
 
-    temp_driver.close()
-
+    driver.close()
+    driver.switch_to.window(driver.window_handles[0])
     return red_stats, blue_stats
 
 
 def data_collector():
     login()
 
+    last_red = ''
+    last_blue = ''
+
     while True:
         red, blue = get_reb_blue()
+
+        if (red is None or blue is None) or (red == last_red and blue == last_blue):
+            continue
+
+        last_red = red
+        last_blue = blue
 
         if 'Team' in red.split(' ') or 'Team' in blue.split(' '):
             time.sleep(1)
             continue
+
+        red_info, blue_info = get_stats()
+        database_handler.update_character(red_info)
+        database_handler.update_character(blue_info)
 
         winner = None
         while winner is None:
@@ -106,8 +121,6 @@ def data_collector():
         database_handler.connection.commit()
 
         time.sleep(5)
-
-        return red, blue, w
 
 
 def bet(probability, prediction):
@@ -127,6 +140,4 @@ def bet(probability, prediction):
 
 
 if __name__ == '__main__':
-    login()
-    get_stats()
-    driver.close()
+    data_collector()
