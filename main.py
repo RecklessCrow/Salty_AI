@@ -5,10 +5,10 @@ import keras
 import numpy as np
 
 import database_handler
-import train_model
 import web_scraper
 
-some_file = os.path.join('models', '2020-08-17_19-19')
+some_file = os.path.join('checkpoints', '2020-08-18_15-42')
+np.set_printoptions(precision=2, suppress=True)
 
 
 # TODO fix busy wait(s)
@@ -36,13 +36,16 @@ def main():
         last_blue = blue
 
         red_info, blue_info = web_scraper.get_stats()
+        print(database_handler.select_character(red))
+        print(red, red_info)
         database_handler.update_character(red_info)
         database_handler.update_character(blue_info)
+        print(database_handler.select_character(red))
 
         X = database_handler.encode_match(red, blue)
 
         probability = my_model.predict(X)
-        prediction = train_model.label_encoder.inverse_transform(probability)[0][0]
+        prediction = database_handler.label_encoder.inverse_transform(probability)[0][0]
         probability = np.max(probability)
         if prediction:
             prediction = 'Blue'

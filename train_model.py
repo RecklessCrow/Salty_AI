@@ -17,10 +17,9 @@ tf.config.experimental.set_memory_growth(physical_devices[0], True)
 
 np.set_printoptions(precision=2, suppress=True)
 
-
 x, y = database_handler.select_all_matches()
 
-x_train, x_val, y_train, y_val = train_test_split(x, y, test_size=0.2)
+x_train, x_val, y_train, y_val = train_test_split(x, y, test_size=0.2, shuffle=True)
 
 print(x_train.shape)
 
@@ -31,8 +30,6 @@ def make_model():
     model = Sequential()
 
     # model.add(Input((2, 5)))
-
-    model.add(BatchNormalization())
 
     model.add(LSTM(
         units=128,
@@ -82,15 +79,9 @@ def data_generator_db(batch_size=50):
     while True:
         x = []
         y = []
-        for matchup in database_handler.select_rand_match(batch_size):
-            char_info = matchup[:len(matchup) - 1]
-            label = matchup[len(matchup) - 1]
-            char_info = [0 if element is None else element for element in char_info]
+        for char_info, label in database_handler.select_rand_match(batch_size):
             x.append(char_info)
             y.append([label])
-
-        x = np.array(x).astype('float64').reshape((-1, 2, len(x[0]) // 2))
-        y = label_encoder.transform(y).toarray()
 
         yield x, y
 
@@ -167,9 +158,20 @@ def train(load_file=None, save_to=None):
     #     callbacks=[tensorboard_callback, checkpoint_callback, scheduler_callback],
     # )
 
+    upset = 0
+    incorrect = 0
     for idx, pred in enumerate(model.predict(x_val)):
+
+        if np.argmax(pred) == np.argmax(y_val[idx]):
+            continue
+        incorrect += 1
+        if np.max(pred) < 0.7:
+            continue
+
         print(x_val[idx])
         print(pred, y_val[idx], '\n')
+        upset += 1
+    print(f'Percent upset to incorrect pred: {upset / incorrect:.2%}')
 
     if save_to is None:
         keras.models.save_model(model, os.path.join('models', curr_date))

@@ -259,27 +259,27 @@ def update_character(info):
         (matches, name)
     )
 
-    if old_life is None:
-        cur.execute(
-            '''
-            update characters
-            set life = ?
-            where name = ?
-            ;
-            ''',
-            (life, name)
-        )
 
-    if old_meter is None:
-        cur.execute(
-            '''
-            update characters
-            set meter = ?
-            where name = ?
-            ;
-            ''',
-            (meter, name)
-        )
+    cur.execute(
+        '''
+        update characters
+        set life = ?
+        where name = ?
+        ;
+        ''',
+        (life, name)
+    )
+
+
+    cur.execute(
+        '''
+        update characters
+        set meter = ?
+        where name = ?
+        ;
+        ''',
+        (meter, name)
+    )
 
     if author_id is None:
         try:
@@ -418,33 +418,6 @@ def create_database(drop=False):
         add_match(red, blue, winner)
 
 
-def select_rand_match(limit):
-    cur.execute(
-        f"""
-        select  r.num_wins  * 100.0 / r.num_matches,  r.num_matches, 
-                ra.num_wins * 100.0 / ra.num_matches, ra.num_matches, r.x, r.y, r.life, r.meter,
-                b.num_wins  * 100.0 / b.num_matches,  b.num_matches, 
-                ba.num_wins * 100.0 / ba.num_matches, ba.num_matches, b.x, b.y, b.life, b.meter,
-                winner
-        from characters as r
-        inner join matches
-        on r.name = matches.red
-        inner join characters as b
-        on b.name = matches.blue
-        left join authors as ra
-        on ra.name = r.author
-        left join authors as ba
-        on ba.name = b.author
-        order by random()
-        limit {limit}
-        """
-    )
-
-    matchup = cur.fetchall()
-
-    return format_match_output(matchup)
-
-
 def select_all_matches():
     cur.execute(
         f"""
@@ -496,10 +469,36 @@ def encode_match(red, blue):
         select_character(blue)
         return encode_match(red, blue)
 
-    return format_match_output(matchup, False)
+    def format_characters(match):
+        global imp
+
+        if not isinstance(match, list):
+            match = list(match)
+
+        if match[2] is None:
+            match[2] = match[0]
+            match[3] = match[1]
+
+        if match[10] is None:
+            match[10] = match[8]
+            match[11] = match[9]
+
+        match = np.array(match).reshape(1, -1)
+        print(match)
+
+        try:
+            match = imp.transform(match).reshape((-1, 2, len(match[0]) // 2))
+        except NotFittedError:
+            select_all_matches()
+            match = imp.transform(match).reshape((-1, 2, len(match[0]) // 2))
+
+        return match
+
+    return format_characters(matchup)
 
 
-def format_match_output(matchup, output=True):
+def format_match_output(matchup):
+    global imp
 
     if not isinstance(matchup, list):
         matchup = list(matchup)
@@ -513,40 +512,25 @@ def format_match_output(matchup, output=True):
         matchup[10] = matchup[8]
         matchup[11] = matchup[9]
 
-    if output:
-        x = [match[:-1] for match in matchup]
-    else:
-        x = np.array(matchup)
-
-    x = np.array(x).astype('float64')
+    x = np.array([match[:-1] for match in matchup]).astype('float64')
 
     try:
-        x = imp.transform(x)
+        x = imp.transform(x).reshape((-1, 2, len(matchup[0]) // 2))
     except NotFittedError:
         imp.fit(x)
-        x = imp.transform(x)
+        print('yes')
+        x = imp.transform(x).reshape((-1, 2, len(matchup[0]) // 2))
 
-    x = x.reshape((-1, 2, len(matchup[0]) // 2))
+    y = [[winner[-1]] for winner in matchup]
+    y = label_encoder.transform(y).toarray()
 
-    if output:
-        y = [[winner[-1]] for winner in matchup]
-        y = label_encoder.transform(y).toarray()
-        return x, y
-    else:
-        return x
+    return x, y
 
 
 if __name__ == '__main__':
+    np.set_printoptions(precision=2, suppress=True)
     # create_database(True)
     # connection.commit()
-    a = select_all_matches()
-    a = np.array(a).astype('float64')
-    idx = 800000
-    print(a[idx])
-    from sklearn.impute import SimpleImputer
-
-    imp = SimpleImputer(missing_values=np.nan, strategy='mean')
-    imp.fit(a)
-    a = imp.transform(a)
-    print(a[idx].astype('float32'))
-    # print(np.mean(a, axis=(1, 0)))
+    a = select_character('Eva-00')
+    print(a)
+    # update_character()

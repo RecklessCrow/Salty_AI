@@ -1,3 +1,4 @@
+import random
 import time
 
 import dotenv
@@ -101,8 +102,10 @@ def data_collector():
             continue
 
         red_info, blue_info = get_stats()
+        print(red, red_info)
         database_handler.update_character(red_info)
         database_handler.update_character(blue_info)
+        print(database_handler.select_character(red))
 
         winner = None
         while winner is None:
@@ -125,7 +128,10 @@ def bet(probability, prediction):
     probability = probability * 100
 
     if probability > 80:
-        driver.find_element_by_id('interval10').click()
+        if random.random() > 0.25:
+            driver.find_element_by_id('interval10').click()
+        else:
+            driver.find_element_by_id('interval1').click()
     elif probability > 61:
         driver.find_element_by_id('interval5').click()
     else:
