@@ -493,4 +493,4 @@ def encode_match(red, blue):
 if __name__ == '__main__':
     # create_database(True)
     # connection.commit()
-    pass
+    print(select_all('characters'))

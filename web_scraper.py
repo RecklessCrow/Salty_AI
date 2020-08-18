@@ -2,8 +2,6 @@ import time
 
 import dotenv
 from selenium import webdriver
-from selenium.webdriver import ActionChains
-from selenium.webdriver.common.keys import Keys
 
 import database_handler
 
@@ -58,7 +56,7 @@ def get_stats():
     driver.switch_to.window(driver.window_handles[1])
     driver.get('https://www.saltybet.com/stats')
 
-    time.sleep(1)
+    time.sleep(3)
 
     red_stats = (
         driver.find_element_by_id('p1namestats').text,
@@ -126,9 +124,9 @@ def data_collector():
 def bet(probability, prediction):
     probability = probability * 100
 
-    if probability > 75:
+    if probability > 80:
         driver.find_element_by_id('interval10').click()
-    elif probability > 65:
+    elif probability > 61:
         driver.find_element_by_id('interval5').click()
     else:
         driver.find_element_by_id('interval1').click()

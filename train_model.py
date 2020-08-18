@@ -31,6 +31,10 @@ for output in tqdm(matches, total=len(matches)):
     y.append([winner])
 
 x = np.array(x).astype('float64').reshape((-1, 2, len(x[0]) // 2))
+# todo
+#  Replace no x, y data with avg x, y of all characters
+#  Replace no meter data with -1
+#  Replace no author win/loss with character win/loss
 x = np.nan_to_num(x)
 y = label_encoder.transform(y).toarray()
 
