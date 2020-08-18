@@ -41,6 +41,8 @@ def create_tables():
             num_matches integer,
             x integer,
             y integer,
+            life int,
+            meter int,
             foreign key(author) references authors(name)
         );
         

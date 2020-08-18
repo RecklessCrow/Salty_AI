@@ -39,13 +39,16 @@ def main():
 
         probability = my_model.predict(X)
         prediction = train_model.label_encoder.inverse_transform(probability)[0][0]
+        probability = np.max(probability)
         if prediction:
             prediction = 'Blue'
         else:
             prediction = 'Red'
         print(f'Red: {red}\n'
               f'Blue: {blue}\n'
-              f'Predicted outcome: {prediction} {np.max(probability):.2%}')
+              f'Predicted outcome: {prediction} {probability:.2%}')
+
+        web_scraper.bet(probability, prediction)
 
         winner = None
         while winner is None:
