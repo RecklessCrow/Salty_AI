@@ -6,7 +6,7 @@ import keras
 import numpy as np
 import tensorflow as tf
 from keras.callbacks import LearningRateScheduler, ModelCheckpoint, TensorBoard
-from keras.layers import Dense, BatchNormalization, Dropout, LSTM, Input
+from keras.layers import Dense, BatchNormalization, Dropout, LSTM, Conv1D
 from keras.models import Sequential
 from sklearn.preprocessing import OneHotEncoder, Normalizer
 from sklearn.model_selection import train_test_split
@@ -30,8 +30,8 @@ for output in tqdm(matches, total=len(matches)):
     x.append(matchup)
     y.append([winner])
 
-x = np.nan_to_num(x)
 x = np.array(x).astype('float64').reshape((-1, 2, len(x[0]) // 2))
+x = np.nan_to_num(x)
 y = label_encoder.transform(y).toarray()
 
 x_train, x_val, y_train, y_val = train_test_split(x, y, test_size=0.2)
@@ -46,42 +46,26 @@ def make_model():
 
     # model.add(Input((2, 5)))
 
+    model.add(BatchNormalization())
+
     model.add(LSTM(
-        units=256,
+        units=128,
         activation='relu',
         return_sequences=True,
     ))
 
     model.add(BatchNormalization())
-    model.add(Dropout(0.4))
 
     model.add(LSTM(
+        units=128,
+        activation='relu',
+        return_sequences=False,
+    ))
+
+    model.add(BatchNormalization())
+
+    model.add(Dense(
         units=256,
-        activation='relu',
-        return_sequences=False
-    ))
-
-    model.add(BatchNormalization())
-    model.add(Dropout(0.4))
-
-    model.add(Dense(
-        units=512,
-        activation='relu',
-    ))
-
-    model.add(BatchNormalization())
-    model.add(Dropout(0.4))
-
-    model.add(Dense(
-        units=512,
-        activation='relu',
-    ))
-
-    model.add(BatchNormalization())
-    model.add(Dropout(0.4))
-
-    model.add(Dense(
-        units=512,
         activation='relu',
     ))
 
@@ -95,7 +79,7 @@ def make_model():
 
     model.compile(
         optimizer='adam',
-        loss='mse',
+        loss='categorical_crossentropy',
         metrics=['categorical_accuracy']
     )
 
@@ -113,8 +97,8 @@ def data_generator_db(batch_size=50):
         x = []
         y = []
         for matchup in database_handler.select_rand_match(batch_size):
-            char_info = matchup[:len(matchup)-1]
-            label = matchup[len(matchup)-1]
+            char_info = matchup[:len(matchup) - 1]
+            label = matchup[len(matchup) - 1]
             char_info = [0 if element is None else element for element in char_info]
             x.append(char_info)
             y.append([label])
@@ -126,7 +110,6 @@ def data_generator_db(batch_size=50):
 
 
 def data_generator(train=True, batch_size=50):
-
     while True:
 
         x = []

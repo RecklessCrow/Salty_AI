@@ -297,8 +297,10 @@ def create_database(drop=False):
 def select_rand_match(limit):
     cur.execute(
         f"""
-        select  r.num_wins, r.num_matches, ra.id, ra.num_wins, ra.num_matches, r.x, r.y,
-                b.num_wins, b.num_matches, ba.id, ba.num_wins, ba.num_matches, b.x, b.y,
+        select  r.num_wins * 100.0 / r.num_matches, r.num_matches, 
+                ra.num_wins * 100.0 / ra.num_matches, ra.num_matches, r.x, r.y,
+                b.num_wins * 100.0 / b.num_matches, b.num_matches, 
+                ba.num_wins * 100.0 / ba.num_matches, ba.num_matches, b.x, b.y,
                 winner
         from characters as r
         inner join matches
@@ -322,8 +324,10 @@ def select_rand_match(limit):
 def select_all_matches():
     cur.execute(
         f"""
-        select  r.num_wins * 100.0 / r.num_matches, r.num_matches, ra.num_wins * 100.0 / ra.num_matches, ra.num_matches, r.x, r.y,
-                b.num_wins * 100.0 / b.num_matches, b.num_matches, ba.num_wins * 100.0 / ba.num_matches, ba.num_matches, b.x, b.y,
+        select  r.num_wins  * 100.0 / r.num_matches,  r.num_matches, 
+                ra.num_wins * 100.0 / ra.num_matches, ra.num_matches, r.x, r.y,
+                b.num_wins  * 100.0 / b.num_matches,  b.num_matches, 
+                ba.num_wins * 100.0 / ba.num_matches, ba.num_matches, b.x, b.y,
                 winner
         from characters as r
         inner join matches
@@ -345,8 +349,10 @@ def select_all_matches():
 def encode_match(red, blue):
     cur.execute(
         f"""
-        select  r.num_wins * 100.0 / r.num_matches, ra.id, ra.num_wins * 100.0 / ra.num_matches, r.x + r.y / 2,
-                b.num_wins * 100.0 / b.num_matches, ba.id, ba.num_wins * 100.0 / ba.num_matches, b.x + b.y / 2
+        select  r.num_wins * 100.0 / r.num_matches, r.num_matches, 
+                ra.num_wins * 100.0 / ra.num_matches, ra.num_matches, r.x, r.y,
+                b.num_wins * 100.0 / b.num_matches, b.num_matches, 
+                ba.num_wins * 100.0 / ba.num_matches, ba.num_matches, b.x, b.y
         from characters as r
         inner join characters as b
         left join authors as ra
@@ -360,10 +366,16 @@ def encode_match(red, blue):
     )
 
     char = cur.fetchone()
+    if char is None:
+        select_character(red)
+        select_character(blue)
+        return encode_match(red, blue)
     char = [0 if element is None else element for element in char]
     return np.array(char).astype('float64').reshape((-1, 2, len(char) // 2))
 
 
 if __name__ == '__main__':
-    create_database(True)
-    connection.commit()
+    # create_database(True)
+    # connection.commit()
+
+    encode_match('A-rachel', 'Aaaaaaaaaaaahhhhhh!!!')

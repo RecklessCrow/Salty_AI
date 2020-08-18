@@ -8,7 +8,7 @@ import database_handler
 import train_model
 import web_scraper
 
-some_file = os.path.join('checkpoints', '2020-08-17_06-00')
+some_file = os.path.join('models', '2020-08-17_19-19')
 
 
 # TODO fix busy wait(s)
@@ -45,7 +45,7 @@ def main():
             prediction = 'Red'
         print(f'Red: {red}\n'
               f'Blue: {blue}\n'
-              f'Predicted outcome: {prediction} {np.max(probability) * 100:.2f}%')
+              f'Predicted outcome: {prediction} {np.max(probability):.2%}')
 
         winner = None
         while winner is None:
@@ -60,7 +60,7 @@ def main():
             print('Correct prediction.')
         else:
             print('Wrong prediction.')
-        print(f'Current accuracy {correct / matches * 100:.2f}\n')
+        print(f'Current accuracy {correct / matches:.2%}\n')
 
         w = 1
         if winner == 'Red':
