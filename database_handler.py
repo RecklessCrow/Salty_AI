@@ -4,11 +4,19 @@ from sqlite3 import connect
 
 import numpy as np
 import pandas as pd
+from sklearn.exceptions import NotFittedError
+from sklearn.impute import SimpleImputer
+from sklearn.preprocessing import OneHotEncoder
+from sklearn.utils.validation import check_is_fitted
 from tqdm import tqdm
 
 db_file = os.path.join('data', 'salty.db')
 connection = connect(db_file, check_same_thread=False)
 cur = connection.cursor()
+
+imp = SimpleImputer(missing_values=np.nan, strategy='mean')
+label_encoder = OneHotEncoder()
+label_encoder.fit([[0], [1]])
 
 
 def drop_tables():
@@ -432,9 +440,9 @@ def select_rand_match(limit):
         """
     )
 
-    char = cur.fetchall()
+    matchup = cur.fetchall()
 
-    return char
+    return format_match_output(matchup)
 
 
 def select_all_matches():
@@ -457,9 +465,9 @@ def select_all_matches():
         """
     )
 
-    char = cur.fetchall()
+    matchup = cur.fetchall()
 
-    return char
+    return format_match_output(matchup)
 
 
 def encode_match(red, blue):
@@ -481,13 +489,51 @@ def encode_match(red, blue):
         (red, blue)
     )
 
-    char = cur.fetchone()
-    if char is None:
+    matchup = cur.fetchone()
+
+    if matchup is None:
         select_character(red)
         select_character(blue)
         return encode_match(red, blue)
-    char = [0 if element is None else element for element in char]
-    return np.array(char).astype('float64').reshape((-1, 2, len(char) // 2))
+
+    return format_match_output(matchup, False)
+
+
+def format_match_output(matchup, output=True):
+
+    if not isinstance(matchup, list):
+        matchup = list(matchup)
+
+    # replace missing author data with character data
+    if matchup[2] is None:
+        matchup[2] = matchup[0]
+        matchup[3] = matchup[1]
+
+    if matchup[10] is None:
+        matchup[10] = matchup[8]
+        matchup[11] = matchup[9]
+
+    if output:
+        x = [match[:-1] for match in matchup]
+    else:
+        x = np.array(matchup)
+
+    x = np.array(x).astype('float64')
+
+    try:
+        x = imp.transform(x)
+    except NotFittedError:
+        imp.fit(x)
+        x = imp.transform(x)
+
+    x = x.reshape((-1, 2, len(matchup[0]) // 2))
+
+    if output:
+        y = [[winner[-1]] for winner in matchup]
+        y = label_encoder.transform(y).toarray()
+        return x, y
+    else:
+        return x
 
 
 if __name__ == '__main__':
@@ -498,6 +544,7 @@ if __name__ == '__main__':
     idx = 800000
     print(a[idx])
     from sklearn.impute import SimpleImputer
+
     imp = SimpleImputer(missing_values=np.nan, strategy='mean')
     imp.fit(a)
     a = imp.transform(a)

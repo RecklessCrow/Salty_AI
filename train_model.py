@@ -1,6 +1,6 @@
 import os
-from random import randrange
 from datetime import datetime
+from random import randrange
 
 import keras
 import numpy as np
@@ -8,44 +8,17 @@ import tensorflow as tf
 from keras.callbacks import LearningRateScheduler, ModelCheckpoint, TensorBoard
 from keras.layers import Dense, BatchNormalization, Dropout, LSTM
 from keras.models import Sequential
-from sklearn.preprocessing import OneHotEncoder
-from sklearn.impute import SimpleImputer
 from sklearn.model_selection import train_test_split
-from tqdm import tqdm
 
 import database_handler
 
 physical_devices = tf.config.list_physical_devices('GPU')
 tf.config.experimental.set_memory_growth(physical_devices[0], True)
 
-label_encoder = OneHotEncoder()
-label_encoder.fit([[0], [1]])
-imp = SimpleImputer(missing_values=np.nan, strategy='mean')
+np.set_printoptions(precision=2, suppress=True)
 
-x = []
-y = []
-matches = database_handler.select_all_matches()
-for output in tqdm(matches, total=len(matches)):
-    matchup = list(output[:-1])
-    winner = [output[-1]]
 
-    # replace missing author data with character data
-
-    if matchup[2] is None:
-        matchup[2] = matchup[0]
-        matchup[3] = matchup[1]
-
-    if matchup[10] is None:
-        matchup[10] = matchup[8]
-        matchup[11] = matchup[9]
-
-    x.append(matchup)
-    y.append(winner)
-
-x = np.array(x).astype('float64')
-# fill missing values with the avg of the column and reshape
-x = imp.fit_transform(x).reshape((-1, 2, len(x[0]) // 2))
-y = label_encoder.transform(y).toarray()
+x, y = database_handler.select_all_matches()
 
 x_train, x_val, y_train, y_val = train_test_split(x, y, test_size=0.2)
 
@@ -163,7 +136,7 @@ def train(load_file=None, save_to=None):
     else:
         model = keras.models.load_model(load_file)
 
-    epochs = 100
+    epochs = 25
     steps_per_epoch = 50
     batch_size = 5000
 
@@ -193,6 +166,10 @@ def train(load_file=None, save_to=None):
     #     validation_steps=steps_per_epoch // 4,
     #     callbacks=[tensorboard_callback, checkpoint_callback, scheduler_callback],
     # )
+
+    for idx, pred in enumerate(model.predict(x_val)):
+        print(x_val[idx])
+        print(pred, y_val[idx], '\n')
 
     if save_to is None:
         keras.models.save_model(model, os.path.join('models', curr_date))
