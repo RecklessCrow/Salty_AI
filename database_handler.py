@@ -421,20 +421,14 @@ def create_database(drop=False):
 def select_all_matches():
     cur.execute(
         f"""
-        select  r.num_wins  * 100.0 / r.num_matches,  r.num_matches, 
-                ra.num_wins * 100.0 / ra.num_matches, ra.num_matches, r.x, r.y, r.life, r.meter,
-                b.num_wins  * 100.0 / b.num_matches,  b.num_matches, 
-                ba.num_wins * 100.0 / ba.num_matches, ba.num_matches, b.x, b.y, b.life, b.meter,
+        select  r.num_wins  * 100.0 / r.num_matches,  r.num_matches,
+                b.num_wins  * 100.0 / b.num_matches,  b.num_matches,
                 winner
         from characters as r
         inner join matches
         on r.name = matches.red
         inner join characters as b
         on b.name = matches.blue
-        left join authors as ra
-        on ra.name = r.author
-        left join authors as ba
-        on ba.name = b.author
         """
     )
 
@@ -446,16 +440,10 @@ def select_all_matches():
 def encode_match(red, blue):
     cur.execute(
         f"""
-        select  r.num_wins  * 100.0 / r.num_matches,  r.num_matches, 
-                ra.num_wins * 100.0 / ra.num_matches, ra.num_matches, r.x, r.y, r.life, r.meter,
-                b.num_wins  * 100.0 / b.num_matches,  b.num_matches, 
-                ba.num_wins * 100.0 / ba.num_matches, ba.num_matches, b.x, b.y, b.life, b.meter
+        select  r.num_wins  * 100.0 / r.num_matches,  r.num_matches, r.x, r.y, r.life, r.meter,
+                b.num_wins  * 100.0 / b.num_matches,  b.num_matches, b.x, b.y, b.life, b.meter
         from characters as r
         inner join characters as b
-        left join authors as ra
-        on ra.name = r.author
-        left join authors as ba
-        on ba.name = b.author
         where r.name = ?
         and b.name = ?
         """,
@@ -504,13 +492,13 @@ def format_match_output(matchup):
         matchup = list(matchup)
 
     # replace missing author data with character data
-    if matchup[2] is None:
-        matchup[2] = matchup[0]
-        matchup[3] = matchup[1]
-
-    if matchup[10] is None:
-        matchup[10] = matchup[8]
-        matchup[11] = matchup[9]
+    # if matchup[2] is None:
+    #     matchup[2] = matchup[0]
+    #     matchup[3] = matchup[1]
+    #
+    # if matchup[10] is None:
+    #     matchup[10] = matchup[8]
+    #     matchup[11] = matchup[9]
 
     x = np.array([match[:-1] for match in matchup]).astype('float64')
 
@@ -527,9 +515,9 @@ def format_match_output(matchup):
 
 
 if __name__ == '__main__':
-    np.set_printoptions(precision=2, suppress=True)
-    # create_database(True)
-    # connection.commit()
-    a = select_character('Eva-00')
-    print(a)
+    # np.set_printoptions(precision=2, suppress=True)
+    create_database(True)
+    connection.commit()
+    # a = select_character('Eva-00')
+    # print(a)
     # update_character()

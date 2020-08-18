@@ -32,27 +32,29 @@ def make_model():
     # model.add(Input((2, 5)))
 
     model.add(LSTM(
-        units=128,
+        units=16,
         activation='relu',
         return_sequences=True,
     ))
 
-    model.add(BatchNormalization())
+    # model.add(BatchNormalization())
+    model.add(Dropout(0.4))
 
     model.add(LSTM(
-        units=128,
+        units=32,
         activation='relu',
         return_sequences=False,
     ))
 
-    model.add(BatchNormalization())
+    # model.add(BatchNormalization())
+    model.add(Dropout(0.4))
 
     model.add(Dense(
-        units=256,
+        units=64,
         activation='relu',
     ))
 
-    model.add(BatchNormalization())
+    # model.add(BatchNormalization())
     model.add(Dropout(0.4))
 
     model.add(Dense(
@@ -62,7 +64,7 @@ def make_model():
 
     model.compile(
         optimizer='adam',
-        loss='categorical_crossentropy',
+        loss='mse',
         metrics=['categorical_accuracy']
     )
 
@@ -133,14 +135,14 @@ def train(load_file=None, save_to=None):
 
     # Train model
 
-    model.fit(
-        x=x_train,
-        y=y_train,
-        epochs=epochs,
-        batch_size=batch_size,
-        validation_data=(x_val, y_val),
-        callbacks=[tensorboard_callback, checkpoint_callback, scheduler_callback],
-    )
+    # model.fit(
+    #     x=x_train,
+    #     y=y_train,
+    #     epochs=epochs,
+    #     batch_size=batch_size,
+    #     validation_data=(x_val, y_val),
+    #     callbacks=[tensorboard_callback, checkpoint_callback, scheduler_callback],
+    # )
 
     # model.fit(
     #     data_generator_db(batch_size=batch_size),
@@ -171,6 +173,10 @@ def train(load_file=None, save_to=None):
         print(x_val[idx])
         print(pred, y_val[idx], '\n')
         upset += 1
+
+    print(f'Percent incorrect: {incorrect/len(x_val):.2%}')
+    print(f'Number incorrect: {incorrect}')
+    print(f'Number upset: {upset}')
     print(f'Percent upset to incorrect pred: {upset / incorrect:.2%}')
 
     if save_to is None:
@@ -180,4 +186,4 @@ def train(load_file=None, save_to=None):
 
 
 if __name__ == '__main__':
-    train()
+    train("models/2020-08-18_17-27")
