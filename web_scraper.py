@@ -65,6 +65,7 @@ def get_stats():
         int(driver.find_element_by_id('p1winrate').text[:-1]),
         int(driver.find_element_by_id('p1life').text),
         int(driver.find_element_by_id('p1meter').text),
+        driver.find_element_by_id(''),
         driver.find_element_by_id('p1author').text,
     )
 

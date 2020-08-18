@@ -518,7 +518,6 @@ def format_match_output(matchup):
         x = imp.transform(x).reshape((-1, 2, len(matchup[0]) // 2))
     except NotFittedError:
         imp.fit(x)
-        print('yes')
         x = imp.transform(x).reshape((-1, 2, len(matchup[0]) // 2))
 
     y = [[winner[-1]] for winner in matchup]
