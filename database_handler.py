@@ -83,7 +83,7 @@ def add_author(name, my_id=None, num_wins=None, num_matches=None):
 
 
 def add_character(name, my_id=None, author=None, num_wins=None, num_matches=None,
-                  hitbox_x=None, hitbox_y=None, life=1000, meter=None):
+                  hitbox_x=None, hitbox_y=None, life=1000, meter=-1):
     if my_id is None:
         my_id = get_next_character_id()
 
@@ -248,7 +248,7 @@ def update_character(info):
         where name = ?
         ;
         ''',
-       (matches, name)
+        (matches, name)
     )
 
     if old_life is None:
@@ -413,10 +413,10 @@ def create_database(drop=False):
 def select_rand_match(limit):
     cur.execute(
         f"""
-        select  r.num_wins * 100.0 / r.num_matches, r.num_matches, 
-                ra.num_wins * 100.0 / ra.num_matches, ra.num_matches, r.x, r.y,
-                b.num_wins * 100.0 / b.num_matches, b.num_matches, 
-                ba.num_wins * 100.0 / ba.num_matches, ba.num_matches, b.x, b.y,
+        select  r.num_wins  * 100.0 / r.num_matches,  r.num_matches, 
+                ra.num_wins * 100.0 / ra.num_matches, ra.num_matches, r.x, r.y, r.life, r.meter,
+                b.num_wins  * 100.0 / b.num_matches,  b.num_matches, 
+                ba.num_wins * 100.0 / ba.num_matches, ba.num_matches, b.x, b.y, b.life, b.meter,
                 winner
         from characters as r
         inner join matches
@@ -441,9 +441,9 @@ def select_all_matches():
     cur.execute(
         f"""
         select  r.num_wins  * 100.0 / r.num_matches,  r.num_matches, 
-                ra.num_wins * 100.0 / ra.num_matches, ra.num_matches, r.x, r.y,
+                ra.num_wins * 100.0 / ra.num_matches, ra.num_matches, r.x, r.y, r.life, r.meter,
                 b.num_wins  * 100.0 / b.num_matches,  b.num_matches, 
-                ba.num_wins * 100.0 / ba.num_matches, ba.num_matches, b.x, b.y,
+                ba.num_wins * 100.0 / ba.num_matches, ba.num_matches, b.x, b.y, b.life, b.meter,
                 winner
         from characters as r
         inner join matches
@@ -465,10 +465,10 @@ def select_all_matches():
 def encode_match(red, blue):
     cur.execute(
         f"""
-        select  r.num_wins * 100.0 / r.num_matches, r.num_matches, 
-                ra.num_wins * 100.0 / ra.num_matches, ra.num_matches, r.x, r.y,
-                b.num_wins * 100.0 / b.num_matches, b.num_matches, 
-                ba.num_wins * 100.0 / ba.num_matches, ba.num_matches, b.x, b.y
+        select  r.num_wins  * 100.0 / r.num_matches,  r.num_matches, 
+                ra.num_wins * 100.0 / ra.num_matches, ra.num_matches, r.x, r.y, r.life, r.meter,
+                b.num_wins  * 100.0 / b.num_matches,  b.num_matches, 
+                ba.num_wins * 100.0 / ba.num_matches, ba.num_matches, b.x, b.y, b.life, b.meter
         from characters as r
         inner join characters as b
         left join authors as ra
@@ -493,4 +493,13 @@ def encode_match(red, blue):
 if __name__ == '__main__':
     # create_database(True)
     # connection.commit()
-    print(select_all('characters'))
+    a = select_all_matches()
+    a = np.array(a).astype('float64')
+    idx = 800000
+    print(a[idx])
+    from sklearn.impute import SimpleImputer
+    imp = SimpleImputer(missing_values=np.nan, strategy='mean')
+    imp.fit(a)
+    a = imp.transform(a)
+    print(a[idx].astype('float32'))
+    # print(np.mean(a, axis=(1, 0)))

@@ -6,9 +6,10 @@ import keras
 import numpy as np
 import tensorflow as tf
 from keras.callbacks import LearningRateScheduler, ModelCheckpoint, TensorBoard
-from keras.layers import Dense, BatchNormalization, Dropout, LSTM, Conv1D
+from keras.layers import Dense, BatchNormalization, Dropout, LSTM
 from keras.models import Sequential
-from sklearn.preprocessing import OneHotEncoder, Normalizer
+from sklearn.preprocessing import OneHotEncoder
+from sklearn.impute import SimpleImputer
 from sklearn.model_selection import train_test_split
 from tqdm import tqdm
 
@@ -17,25 +18,33 @@ import database_handler
 physical_devices = tf.config.list_physical_devices('GPU')
 tf.config.experimental.set_memory_growth(physical_devices[0], True)
 
-normalizer = Normalizer()
 label_encoder = OneHotEncoder()
 label_encoder.fit([[0], [1]])
+imp = SimpleImputer(missing_values=np.nan, strategy='mean')
 
 x = []
 y = []
 matches = database_handler.select_all_matches()
 for output in tqdm(matches, total=len(matches)):
-    matchup = output[:-1]
-    winner = output[-1]
-    x.append(matchup)
-    y.append([winner])
+    matchup = list(output[:-1])
+    winner = [output[-1]]
 
-x = np.array(x).astype('float64').reshape((-1, 2, len(x[0]) // 2))
-# todo
-#  Replace no x, y data with avg x, y of all characters
-#  Replace no meter data with -1
-#  Replace no author win/loss with character win/loss
-x = np.nan_to_num(x)
+    # replace missing author data with character data
+
+    if matchup[2] is None:
+        matchup[2] = matchup[0]
+        matchup[3] = matchup[1]
+
+    if matchup[10] is None:
+        matchup[10] = matchup[8]
+        matchup[11] = matchup[9]
+
+    x.append(matchup)
+    y.append(winner)
+
+x = np.array(x).astype('float64')
+# fill missing values with the avg of the column and reshape
+x = imp.fit_transform(x).reshape((-1, 2, len(x[0]) // 2))
 y = label_encoder.transform(y).toarray()
 
 x_train, x_val, y_train, y_val = train_test_split(x, y, test_size=0.2)
