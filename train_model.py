@@ -1,12 +1,11 @@
 import os
 from datetime import datetime
-from random import randrange
 
 import keras
 import numpy as np
 import tensorflow as tf
 from keras.callbacks import LearningRateScheduler, ModelCheckpoint, TensorBoard
-from keras.layers import Dense, BatchNormalization, Dropout, LSTM
+from keras.layers import Dense, Dropout, LSTM
 from keras.models import Sequential
 from sklearn.model_selection import train_test_split
 

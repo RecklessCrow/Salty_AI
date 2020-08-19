@@ -7,7 +7,6 @@ import pandas as pd
 from sklearn.exceptions import NotFittedError
 from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import OneHotEncoder
-from sklearn.utils.validation import check_is_fitted
 from tqdm import tqdm
 
 db_file = os.path.join('data', 'salty.db')

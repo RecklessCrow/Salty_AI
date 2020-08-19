@@ -1,11 +1,8 @@
-import random
 import time
 
 import dotenv
 import numpy as np
 from selenium import webdriver
-
-import database_handler
 
 env = dotenv.DotEnv()
 EMAIL = env.get('email')
