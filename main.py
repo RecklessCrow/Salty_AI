@@ -80,9 +80,8 @@ def main():
             winner = web_scraper.get_bet_status()
             time.sleep(1)
 
-        old_balance = balance
-        balance = web_scraper.get_balance()
-        payout = old_balance - balance
+        new_balance = web_scraper.get_balance()
+        payout = new_balance - balance
         if payout < 0:
             payout = f'-${-payout:,}'
         else:
