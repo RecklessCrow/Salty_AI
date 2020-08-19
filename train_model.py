@@ -117,50 +117,38 @@ def train(load_file=None, save_to=None):
 def test_model(model_file):
 
     model = keras.models.load_model(model_file)
+    brackets = [.50]
+    results = []
 
-    wrong = 0
-    upset = 0
-    bets = 0
-    big_loss = 0
+    for bracket in brackets:
+        bets = 0
+        correct = 0
+        wrong = 0
+        for idx, pred in enumerate(model.predict(x_val)):
 
-    for idx, pred in enumerate(model.predict(x_val)):
+            if np.max(pred) < bracket:
+                continue
 
-        if np.max(pred) < 0.55:
-            continue
+            bets += 1
 
-        bets += 1
+            if np.argmax(pred) == np.argmax(y_val[idx]):
+                correct += 1
+            else:
+                wrong += 1
 
-        if np.argmax(pred) == np.argmax(y_val[idx]):
-            continue
+        results.append([bets, correct, wrong])
 
-        wrong += 1
-
-        if np.max(pred) < 0.60:
-            continue
-
-        upset += 1
-
-        if np.max(pred) < 0.75:
-            continue
-
-        big_loss += 1
-
-    print(
-        f'Number of matches:                        {len(x_val)}\n\n'          
-        f'Number bets > 55% certainty:              {bets}\n'
-        f'Percent bets:                             {bets / len(x_val):.2%}\n\n'
-        f'Number wrong bets:                        {wrong}\n'
-        f'Percent wrong to bets                     {wrong / bets:.2%}\n\n'
-        f'Number of wrong upset > 60% certainty:    {upset}\n'
-        f'Percent upset to bets:                    {upset / bets:.2%}\n'
-        f'Percent upset:                            {upset / len(x_val):.2%}\n\n'
-        f'Number of BIG Losses > 75% certainty:     {big_loss}\n'
-        f'Percent BIG Losses to bets:               {big_loss / bets:.2%}\n'
-        f'Percent BIG Losses:                       {big_loss / len(x_val):.2%}\n\n'
-        f'\n'
-        )
+    for bracket, (bets, correct, wrong) in zip(brackets, results):
+        print(
+            f'Number bets > {bracket:.2%} certainty:                  {bets}\n'
+            f'Percent matches > {bracket:.2%} certainty:              {bets / len(x_val):.2%}\n'
+            f'Number correct matches > {bracket:.2%} certainty:       {correct}\n'
+            f'Percent correct matches > {bracket:.2%} certainty:      {correct / bets:.2%}\n'
+            f'Number wrong bets > {bracket:.2%} certainty:            {wrong}\n'
+            f'Percent wrong > {bracket:.2%} certainty:                {wrong / bets:.2%}\n'
+            )
 
 
 if __name__ == '__main__':
     # train()
-    test_model('models/2020-08-18_19-40')
+    test_model('models/2020-08-18_18-40')

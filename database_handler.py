@@ -418,8 +418,8 @@ def create_database(drop=False):
 def select_all_matches():
     cur.execute(
         f"""
-        select  r.num_wins  * 100.0 / r.num_matches,  r.num_matches,
-                b.num_wins  * 100.0 / b.num_matches,  b.num_matches,
+        select  r.num_wins * 100.0 / r.num_matches,  r.num_matches,
+                b.num_wins * 100.0  / b.num_matches,  b.num_matches,
                 winner
         from characters as r
         inner join matches
