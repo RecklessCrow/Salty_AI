@@ -110,6 +110,11 @@ def bet(probability, prediction):
     else:
         bet_percent[20].click()
 
+    # if in tournament bet all in all the time
+    # todo find something else this is broken
+    if 'bracket!' in driver.find_element_by_id('footer-alert').text.split(' '):
+        bet_percent[100].click()
+
     # Bet on character
     if prediction == 'Red':
         driver.find_element_by_class_name('betbuttonred').click()
