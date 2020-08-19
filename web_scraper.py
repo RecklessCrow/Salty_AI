@@ -95,16 +95,22 @@ def get_stats():
 
 
 def bet(prob, prediction):
+    balance = get_balance()
+
     clip = min(((prob - 0.5) / 0.4), 1)
     modifier = min(np.arcsin(clip) ** 1.25, 1)
 
-    bet_amount = modifier * get_balance()
-    driver.find_element_by_id('wager').send_keys(str(int(bet_amount)))
+    bet_amount = int(np.round(modifier * balance))
+
+    if balance < 4000 or bet_amount >= balance:
+        driver.find_elements_by_id('interval10').click()
+    else:
+        driver.find_element_by_id('wager').send_keys(str(bet_amount))
 
     # if in tournament bet all in all the time
     # todo find something else this is broken
-    if 'bracket!' in driver.find_element_by_id('footer-alert').text.split(' '):
-        driver.find_element_by_id('interval10').click()
+    # if 'bracket!' in driver.find_element_by_id('footer-alert').text.split(' '):
+    #     driver.find_element_by_id('interval10').click()
 
     # Bet on character
     if prediction == 'Red':
