@@ -1,17 +1,24 @@
 import os
 import time
+
 import keras
 import numpy as np
 import tensorflow as tf
+
 import database_handler
 import web_scraper
+from logger_script import logger
 
+# fix tf
 physical_devices = tf.config.list_physical_devices('GPU')
 tf.config.experimental.set_memory_growth(physical_devices[0], True)
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
-model_path = os.path.join('models', '2020-08-18_17-27')
+# limit np printing
 np.set_printoptions(precision=2, suppress=True)
+
+# get model
+model_path = os.path.join('models', '2020-08-19_16-23')
 
 
 # TODO fix busy wait(s)
@@ -42,18 +49,51 @@ def main():
         prediction = prediction_code[np.argmax(probability)]
         probability = np.max(probability)
 
-        print(f'Red: {red}\n'
-              f'Blue: {blue}\n'
-              f'Predicted outcome: {prediction} {probability:.2%}')
-
+        balance = web_scraper.get_balance()
         web_scraper.bet(probability, prediction)
 
+        # Log initial data
+        log_str = f'{red} vs. {blue}\n' \
+                  f'Predicted outcome: {prediction} | {probability:>6.2%}\n' \
+                  f'Current balance: ${balance:,}'
+        logger.info(log_str)
+        print(log_str)
+
+        # todo
+        #  determine if match was upset (greater than 2 : 1 odds)
+
+        # Log betting data
+        # todo find better way of waiting until data is available
+        time.sleep(60)
+        bet_amount, potential_gain, red_odds, blue_odds = web_scraper.get_odds()
+        log_str = f'Odds: {red_odds} : {blue_odds}\n' \
+                  f'Potential upset: {red_odds > 2 or blue_odds > 2}\n' \
+                  f'Bet upset: {red_odds < 2 and prediction == "Red" or blue_odds < 2 and prediction == "Blue"}' \
+                  f'Bet: ${bet_amount:,} -> ${potential_gain:,}\n' \
+                  f'Percent of balance bet: {bet_amount / balance:>6.2%}\n'
+        logger.info(log_str)
+        print(log_str)
+
+        # todo find better way to wait until a winner is decided
         winner = None
         while winner is None:
             winner = web_scraper.get_bet_status()
             time.sleep(1)
 
-        print(f'Winner: {winner}\n')
+        old_balance = balance
+        balance = web_scraper.get_balance()
+        payout = old_balance - balance
+        if payout < 0:
+            payout = f'-${payout:,}'
+        else:
+            payout = f'${payout:,}'
+
+        # Log winner and payouts
+        log_str = f'Winner: {winner}\n' \
+                  f'Payout: {payout}'
+        logger.info(log_str)
+        print(log_str)
+
         matches += 1
         if winner == prediction:
             correct += 1

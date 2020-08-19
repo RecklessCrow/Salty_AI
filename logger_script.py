@@ -1,5 +1,4 @@
 import logging
-import time
 
 logger = logging.getLogger('myapp')
 
@@ -9,6 +8,5 @@ hdlr.setFormatter(formatter)
 logger.addHandler(hdlr)
 logger.setLevel(logging.INFO)
 
-logger.error('We have a problem')
-logger.info('While this is just chatty')
-logger.info('While this is just chatty')
+if __name__ == '__main__':
+    logger.log()

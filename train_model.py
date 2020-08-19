@@ -150,5 +150,4 @@ def test_model(model_file):
 
 
 if __name__ == '__main__':
-    # train()
-    test_model('models/2020-08-18_18-40')
+    train()

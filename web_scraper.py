@@ -50,6 +50,17 @@ def get_bet_status():
     return None
 
 
+def get_odds():
+    bet_amount, potential_gain, red_odds, blue_odds = driver.find_element_by_id(
+        'lastbet').find_elements_by_css_selector('span')
+    # todo find more effecient way of formatting
+    bet_amount = int(bet_amount.text.replace('$', ''))
+    potential_gain = int(potential_gain.text.replace('$', '').replace('+', '').replace('-', ''))
+    red_odds = float(red_odds.text)
+    blue_odds = float(blue_odds.text)
+    return bet_amount, potential_gain, red_odds, blue_odds
+
+
 def get_stats():
     driver.execute_script("window.open('');")
     driver.switch_to.window(driver.window_handles[1])
@@ -63,20 +74,20 @@ def get_stats():
     blue_winrate = driver.find_element_by_id('p2winrate').text.replace('%', '')
     blue_matches = driver.find_element_by_id('p2totalmatches').text
 
-    # find out if players are a team
-    if '/' in red_winrate:
-        red_winrate = np.array([int(n) for n in red_winrate.split('/')]).mean()
-        red_matches = np.array([int(n) for n in red_matches.split('/')]).mean()
-    else:
-        red_winrate = int(red_winrate)
-        red_matches = int(red_matches)
+    def get_params(player_winrate, player_matches):
+        # find out if players are a team
+        if '/' in player_winrate:
+            winrate = np.array([int(n) for n in player_winrate.split('/')]).mean()
+            matches = np.array([int(n) for n in player_matches.split('/')]).mean()
+        else:
+            winrate = int(player_winrate)
+            matches = int(player_matches)
 
-    if '/' in blue_winrate:
-        blue_winrate = np.array([int(n) for n in blue_winrate.split('/')]).mean()
-        blue_matches = np.array([int(n) for n in blue_matches.split('/')]).mean()
-    else:
-        blue_winrate = int(blue_winrate)
-        blue_matches = int(blue_matches)
+        return winrate, matches
+
+    red_winrate, red_matches = get_params(red_winrate, red_matches)
+
+    blue_winrate, blue_matches = get_params(blue_winrate, blue_matches)
 
     driver.close()
     driver.switch_to.window(driver.window_handles[0])
@@ -84,7 +95,6 @@ def get_stats():
 
 
 def bet(probability, prediction):
-
     clip = min(((probability - 0.5) / 0.4), 1)
     exp_mod = min(np.arcsin(clip) ** 1.25, 1)
 
@@ -105,6 +115,9 @@ def bet(probability, prediction):
 
 if __name__ == '__main__':
     login()
-    print(get_stats())
-    driver.close()
-    pass
+    try:
+        print(get_odds())
+    except Exception as e:
+        print(e)
+    finally:
+        driver.close()
