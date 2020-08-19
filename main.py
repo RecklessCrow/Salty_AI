@@ -3,11 +3,16 @@ import time
 
 import keras
 import numpy as np
+import tensorflow as tf
 
 import database_handler
 import web_scraper
 
-some_file = os.path.join('checkpoints', '2020-08-18_15-42')
+physical_devices = tf.config.list_physical_devices('GPU')
+tf.config.experimental.set_memory_growth(physical_devices[0], True)
+
+
+some_file = os.path.join('models', '2020-08-18_19-40')
 np.set_printoptions(precision=2, suppress=True)
 
 
@@ -15,6 +20,8 @@ np.set_printoptions(precision=2, suppress=True)
 def main():
     web_scraper.login()
     my_model = keras.models.load_model(some_file)
+    prediction_code = {0: 'Red', 1: 'Blue'}
+
     last_red = ''
     last_blue = ''
 
@@ -35,22 +42,12 @@ def main():
         last_red = red
         last_blue = blue
 
-        red_info, blue_info = web_scraper.get_stats()
-        print(database_handler.select_character(red))
-        print(red, red_info)
-        database_handler.update_character(red_info)
-        database_handler.update_character(blue_info)
-        print(database_handler.select_character(red))
-
-        X = database_handler.encode_match(red, blue)
+        X = web_scraper.get_stats()
 
         probability = my_model.predict(X)
-        prediction = database_handler.label_encoder.inverse_transform(probability)[0][0]
+        prediction = prediction_code[database_handler.label_encoder.inverse_transform(probability)[0][0]]
         probability = np.max(probability)
-        if prediction:
-            prediction = 'Blue'
-        else:
-            prediction = 'Red'
+
         print(f'Red: {red}\n'
               f'Blue: {blue}\n'
               f'Predicted outcome: {prediction} {probability:.2%}')
@@ -61,7 +58,6 @@ def main():
         while winner is None:
             winner = web_scraper.get_bet_status()
             time.sleep(1)
-            pass
 
         print(f'Winner: {winner}\n')
         matches += 1

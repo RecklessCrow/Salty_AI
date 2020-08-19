@@ -2,6 +2,7 @@ import random
 import time
 
 import dotenv
+import numpy as np
 from selenium import webdriver
 
 import database_handler
@@ -59,85 +60,57 @@ def get_stats():
 
     time.sleep(3)
 
-    red_stats = (
-        driver.find_element_by_id('p1namestats').text,
-        int(driver.find_element_by_id('p1totalmatches').text),
-        int(driver.find_element_by_id('p1winrate').text[:-1]),
-        int(driver.find_element_by_id('p1life').text),
-        int(driver.find_element_by_id('p1meter').text),
-        driver.find_element_by_id(''),
-        driver.find_element_by_id('p1author').text,
-    )
+    red_winrate = driver.find_element_by_id('p1winrate').text,
+    red_matches = driver.find_element_by_id('p1totalmatches').text
 
-    blue_stats = (
-        driver.find_element_by_id('p2namestats').text,
-        int(driver.find_element_by_id('p2totalmatches').text),
-        int(driver.find_element_by_id('p2winrate').text[:-1]),
-        int(driver.find_element_by_id('p2life').text),
-        int(driver.find_element_by_id('p2meter').text),
-        driver.find_element_by_id('p2author').text,
-    )
+    blue_winrate = driver.find_element_by_id('p2winrate').text,
+    blue_matches = driver.find_element_by_id('p2totalmatches').text
+
+    # find out if players are a team
+    if '/' in red_winrate:
+        red_winrate = np.array([int(n) for n in red_winrate.split('/')]).mean()
+        red_matches = np.array([int(n) for n in red_matches.split('/')]).mean()
+
+    else:
+        red_winrate = int(red_winrate[0][:-1])
+        red_matches = int(red_matches)
+
+    if '/' in blue_winrate:
+        blue_winrate = np.array([int(n[:-1]) for n in blue_winrate.split('/')]).mean()[0]
+        blue_matches = np.array([int(n[:-1]) for n in blue_matches.split('/')]).mean()[0]
+    else:
+        blue_winrate = int(blue_winrate[0][:-1])
+        blue_matches = int(blue_matches)
 
     driver.close()
     driver.switch_to.window(driver.window_handles[0])
-    return red_stats, blue_stats
-
-
-def data_collector():
-    login()
-
-    last_red = ''
-    last_blue = ''
-
-    while True:
-        red, blue = get_reb_blue()
-
-        if (red is None or blue is None) or (red == last_red and blue == last_blue):
-            continue
-
-        last_red = red
-        last_blue = blue
-
-        if 'Team' in red.split(' ') or 'Team' in blue.split(' '):
-            time.sleep(1)
-            continue
-
-        red_info, blue_info = get_stats()
-        print(red, red_info)
-        database_handler.update_character(red_info)
-        database_handler.update_character(blue_info)
-        print(database_handler.select_character(red))
-
-        winner = None
-        while winner is None:
-            winner = get_bet_status()
-            time.sleep(1)
-            pass
-
-        # print(f'Winner: {winner}\n')
-        w = 1
-        if winner == 'Red':
-            w = 0
-
-        database_handler.add_match(red, blue, w)
-        database_handler.connection.commit()
-
-        time.sleep(5)
+    return np.array([[[red_winrate, red_matches], [blue_winrate, blue_matches]]]).astype('float64')
 
 
 def bet(probability, prediction):
     probability = probability * 100
+    bet_percent = {10: driver.find_element_by_id('interval1'), 20: driver.find_element_by_id('interval2'),
+                   30: driver.find_element_by_id('interval3'), 40: driver.find_element_by_id('interval4'),
+                   50: driver.find_element_by_id('interval5'), 60: driver.find_element_by_id('interval6'),
+                   70: driver.find_element_by_id('interval7'), 80: driver.find_element_by_id('interval8'),
+                   90: driver.find_element_by_id('interval9'), 100: driver.find_element_by_id('interval10')}
 
-    if probability > 80:
-        if random.random() > 0.25:
-            driver.find_element_by_id('interval10').click()
-        else:
-            driver.find_element_by_id('interval1').click()
-    elif probability > 61:
-        driver.find_element_by_id('interval5').click()
+    if probability > 75:
+        bet_percent[100].click()
+
+    elif probability > 65:
+        bet_percent[90].click()
+
+    elif probability > 60:
+        bet_percent[80].click()
+
+    elif probability > 55:
+        bet_percent[50].click()
+
     else:
-        driver.find_element_by_id('interval1').click()
+        bet_percent[20].click()
 
+    # Bet on character
     if prediction == 'Red':
         driver.find_element_by_class_name('betbuttonred').click()
     else:
@@ -145,4 +118,7 @@ def bet(probability, prediction):
 
 
 if __name__ == '__main__':
-    data_collector()
+    login()
+    print(get_stats())
+    driver.close()
+    pass

@@ -259,7 +259,6 @@ def update_character(info):
         (matches, name)
     )
 
-
     cur.execute(
         '''
         update characters
@@ -269,7 +268,6 @@ def update_character(info):
         ''',
         (life, name)
     )
-
 
     cur.execute(
         '''
@@ -432,86 +430,28 @@ def select_all_matches():
         """
     )
 
+    def format_match_output(matchup):
+        global imp
+
+        if not isinstance(matchup, list):
+            matchup = list(matchup)
+
+        x = np.array([match[:-1] for match in matchup]).astype('float64')
+
+        try:
+            x = imp.transform(x).reshape((-1, 2, len(matchup[0]) // 2))
+        except NotFittedError:
+            imp.fit(x)
+            x = imp.transform(x).reshape((-1, 2, len(matchup[0]) // 2))
+
+        y = [[winner[-1]] for winner in matchup]
+        y = label_encoder.transform(y).toarray()
+
+        return x, y
+
     matchup = cur.fetchall()
 
     return format_match_output(matchup)
-
-
-def encode_match(red, blue):
-    cur.execute(
-        f"""
-        select  r.num_wins  * 100.0 / r.num_matches,  r.num_matches, r.x, r.y, r.life, r.meter,
-                b.num_wins  * 100.0 / b.num_matches,  b.num_matches, b.x, b.y, b.life, b.meter
-        from characters as r
-        inner join characters as b
-        where r.name = ?
-        and b.name = ?
-        """,
-        (red, blue)
-    )
-
-    matchup = cur.fetchone()
-
-    if matchup is None:
-        select_character(red)
-        select_character(blue)
-        return encode_match(red, blue)
-
-    def format_characters(match):
-        global imp
-
-        if not isinstance(match, list):
-            match = list(match)
-
-        if match[2] is None:
-            match[2] = match[0]
-            match[3] = match[1]
-
-        if match[10] is None:
-            match[10] = match[8]
-            match[11] = match[9]
-
-        match = np.array(match).reshape(1, -1)
-        print(match)
-
-        try:
-            match = imp.transform(match).reshape((-1, 2, len(match[0]) // 2))
-        except NotFittedError:
-            select_all_matches()
-            match = imp.transform(match).reshape((-1, 2, len(match[0]) // 2))
-
-        return match
-
-    return format_characters(matchup)
-
-
-def format_match_output(matchup):
-    global imp
-
-    if not isinstance(matchup, list):
-        matchup = list(matchup)
-
-    # replace missing author data with character data
-    # if matchup[2] is None:
-    #     matchup[2] = matchup[0]
-    #     matchup[3] = matchup[1]
-    #
-    # if matchup[10] is None:
-    #     matchup[10] = matchup[8]
-    #     matchup[11] = matchup[9]
-
-    x = np.array([match[:-1] for match in matchup]).astype('float64')
-
-    try:
-        x = imp.transform(x).reshape((-1, 2, len(matchup[0]) // 2))
-    except NotFittedError:
-        imp.fit(x)
-        x = imp.transform(x).reshape((-1, 2, len(matchup[0]) // 2))
-
-    y = [[winner[-1]] for winner in matchup]
-    y = label_encoder.transform(y).toarray()
-
-    return x, y
 
 
 if __name__ == '__main__':

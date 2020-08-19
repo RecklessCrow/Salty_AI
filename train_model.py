@@ -19,7 +19,7 @@ np.set_printoptions(precision=2, suppress=True)
 
 x, y = database_handler.select_all_matches()
 
-x_train, x_val, y_train, y_val = train_test_split(x, y, test_size=0.2, shuffle=True)
+x_train, x_val, y_train, y_val = train_test_split(x, y, test_size=0.2, random_state=66)
 
 print(x_train.shape)
 
@@ -64,7 +64,7 @@ def make_model():
 
     model.compile(
         optimizer='adam',
-        loss='mse',
+        loss='msle',
         metrics=['categorical_accuracy']
     )
 
@@ -75,41 +75,6 @@ def scheduler(epoch):
     if epoch < 3:
         return 0.001
     return 0.001 * np.exp(0.1 * (3 - epoch))
-
-
-def data_generator_db(batch_size=50):
-    while True:
-        x = []
-        y = []
-        for char_info, label in database_handler.select_rand_match(batch_size):
-            x.append(char_info)
-            y.append([label])
-
-        yield x, y
-
-
-def data_generator(train=True, batch_size=50):
-    while True:
-
-        x = []
-        y = []
-
-        for i in range(batch_size):
-
-            if train:
-                idx = randrange(0, len(x_train))
-                x.append(x_train[idx])
-                y.append(y_train[idx])
-                continue
-
-            idx = randrange(0, len(x_val))
-            x.append(x_val[idx])
-            y.append(y_val[idx])
-
-        x = np.array(x)
-        y = np.array(y)
-
-        yield x, y
 
 
 def train(load_file=None, save_to=None):
@@ -130,60 +95,73 @@ def train(load_file=None, save_to=None):
         model = keras.models.load_model(load_file)
 
     epochs = 25
-    steps_per_epoch = 50
     batch_size = 5000
 
     # Train model
-
-    # model.fit(
-    #     x=x_train,
-    #     y=y_train,
-    #     epochs=epochs,
-    #     batch_size=batch_size,
-    #     validation_data=(x_val, y_val),
-    #     callbacks=[tensorboard_callback, checkpoint_callback, scheduler_callback],
-    # )
-
-    # model.fit(
-    #     data_generator_db(batch_size=batch_size),
-    #     epochs=epochs,
-    #     steps_per_epoch=steps_per_epoch,
-    #     callbacks=[tensorboard_callback, checkpoint_callback, scheduler_callback],
-    # )
-
-    # model.fit(
-    #     data_generator(batch_size=batch_size),
-    #     epochs=epochs,
-    #     steps_per_epoch=steps_per_epoch,
-    #     validation_data=data_generator(train=False, batch_size=batch_size // 4),
-    #     validation_steps=steps_per_epoch // 4,
-    #     callbacks=[tensorboard_callback, checkpoint_callback, scheduler_callback],
-    # )
-
-    upset = 0
-    incorrect = 0
-    for idx, pred in enumerate(model.predict(x_val)):
-
-        if np.argmax(pred) == np.argmax(y_val[idx]):
-            continue
-        incorrect += 1
-        if np.max(pred) < 0.7:
-            continue
-
-        print(x_val[idx])
-        print(pred, y_val[idx], '\n')
-        upset += 1
-
-    print(f'Percent incorrect: {incorrect/len(x_val):.2%}')
-    print(f'Number incorrect: {incorrect}')
-    print(f'Number upset: {upset}')
-    print(f'Percent upset to incorrect pred: {upset / incorrect:.2%}')
+    model.fit(
+        x=x_train,
+        y=y_train,
+        epochs=epochs,
+        batch_size=batch_size,
+        validation_data=(x_val, y_val),
+        callbacks=[tensorboard_callback, checkpoint_callback, scheduler_callback],
+    )
 
     if save_to is None:
         keras.models.save_model(model, os.path.join('models', curr_date))
     else:
         keras.models.save_model(model, save_to)
 
+    test_model(os.path.join('models', curr_date))
+
+
+def test_model(model_file):
+
+    model = keras.models.load_model(model_file)
+
+    wrong = 0
+    upset = 0
+    bets = 0
+    big_loss = 0
+
+    for idx, pred in enumerate(model.predict(x_val)):
+
+        if np.max(pred) < 0.55:
+            continue
+
+        bets += 1
+
+        if np.argmax(pred) == np.argmax(y_val[idx]):
+            continue
+
+        wrong += 1
+
+        if np.max(pred) < 0.60:
+            continue
+
+        upset += 1
+
+        if np.max(pred) < 0.75:
+            continue
+
+        big_loss += 1
+
+    print(
+        f'Number of matches:                        {len(x_val)}\n\n'          
+        f'Number bets > 55% certainty:              {bets}\n'
+        f'Percent bets:                             {bets / len(x_val):.2%}\n\n'
+        f'Number wrong bets:                        {wrong}\n'
+        f'Percent wrong to bets                     {wrong / bets:.2%}\n\n'
+        f'Number of wrong upset > 60% certainty:    {upset}\n'
+        f'Percent upset to bets:                    {upset / bets:.2%}\n'
+        f'Percent upset:                            {upset / len(x_val):.2%}\n\n'
+        f'Number of BIG Losses > 75% certainty:     {big_loss}\n'
+        f'Percent BIG Losses to bets:               {big_loss / bets:.2%}\n'
+        f'Percent BIG Losses:                       {big_loss / len(x_val):.2%}\n\n'
+        f'\n'
+        )
+
 
 if __name__ == '__main__':
-    train("models/2020-08-18_17-27")
+    # train()
+    test_model('models/2020-08-18_19-40')
