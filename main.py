@@ -84,7 +84,7 @@ def main():
         balance = web_scraper.get_balance()
         payout = old_balance - balance
         if payout < 0:
-            payout = f'-${payout:,}'
+            payout = f'-${-payout:,}'
         else:
             payout = f'${payout:,}'
 
