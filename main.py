@@ -68,7 +68,7 @@ def main():
         bet_amount, potential_gain, red_odds, blue_odds = web_scraper.get_odds()
         log_str = f'Odds: {red_odds} : {blue_odds}\n' \
                   f'Potential upset: {red_odds > 2 or blue_odds > 2}\n' \
-                  f'Bet upset: {red_odds < 2 and prediction == "Red" or blue_odds < 2 and prediction == "Blue"}' \
+                  f'Bet upset: {red_odds == 1 and prediction == "Red" or blue_odds == 1 and prediction == "Blue"}\n' \
                   f'Bet: ${bet_amount:,} -> ${potential_gain:,}\n' \
                   f'Percent of balance bet: {bet_amount / balance:>6.2%}\n'
         logger.info(log_str)
