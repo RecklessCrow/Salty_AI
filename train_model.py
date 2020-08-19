@@ -63,7 +63,7 @@ def make_model():
 
     model.compile(
         optimizer='adam',
-        loss='msle',
+        loss='mse',
         metrics=['categorical_accuracy']
     )
 

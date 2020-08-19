@@ -103,7 +103,7 @@ def bet(prob, prediction):
     bet_amount = int(np.round(modifier * balance))
 
     if balance < 4000 or bet_amount >= balance:
-        driver.find_elements_by_id('interval10').click()
+        driver.find_element_by_id('interval10').click()
     else:
         driver.find_element_by_id('wager').send_keys(str(bet_amount))
 

@@ -1,3 +1,4 @@
+import glob
 import os
 import time
 
@@ -18,10 +19,10 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 np.set_printoptions(precision=2, suppress=True)
 
 # get model
-model_path = os.path.join('models', '2020-08-19_16-23')
+list_of_files = glob.glob(os.path.join('models', '*'))  # Gets the most recent model
+model_path = max(list_of_files, key=os.path.getctime)
 
 
-# TODO fix busy wait(s)
 def main():
     web_scraper.login()
     my_model = keras.models.load_model(model_path)
@@ -61,12 +62,8 @@ def main():
         logger.info(log_str)
         print(log_str)
 
-        # todo
-        #  determine if match was upset (greater than 2 : 1 odds)
-
         # Log betting data
-        # todo find better way of waiting until data is available
-        time.sleep(60)
+        time.sleep(40)
         bet_amount, potential_gain, red_odds, blue_odds = web_scraper.get_odds()
         log_str = f'\nOdds: {red_odds} : {blue_odds}\n' \
                   f'Potential upset: {red_odds > 2 or blue_odds > 2}\n' \
@@ -102,6 +99,12 @@ def main():
             print('Correct prediction.')
         else:
             print('Wrong prediction.')
+
+        if winnings < 0:
+            winnings = f'-${-winnings:,}'
+        else:
+            winnings = f'${winnings:,}'
+
         print(f'Current accuracy {correct / matches:.2%}\n'
               f'Current winnings {winnings}\n')
 
