@@ -101,12 +101,12 @@ def main():
             print('Wrong prediction.')
 
         if winnings < 0:
-            winnings = f'-${-winnings:,}'
+            winnings_str = f'-${-winnings:,}'
         else:
-            winnings = f'${winnings:,}'
+            winnings_str = f'${winnings:,}'
 
         print(f'Current accuracy {correct / matches:.2%}\n'
-              f'Current winnings {winnings}\n')
+              f'Current winnings {winnings_str}\n')
 
         w = 1
         if winner == 'Red':
