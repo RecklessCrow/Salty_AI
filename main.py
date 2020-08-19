@@ -63,7 +63,7 @@ def main():
         print(log_str)
 
         # Log betting data
-        time.sleep(40)
+        time.sleep(60)
         bet_amount, potential_gain, red_odds, blue_odds = web_scraper.get_odds()
         log_str = f'\nOdds: {red_odds} : {blue_odds}\n' \
                   f'Potential upset: {red_odds > 2 or blue_odds > 2}\n' \
