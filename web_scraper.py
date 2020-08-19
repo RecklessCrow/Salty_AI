@@ -94,11 +94,11 @@ def get_stats():
     return np.array([[[red_winrate, red_matches], [blue_winrate, blue_matches]]]).astype('float64')
 
 
-def bet(probability, prediction):
-    clip = min(((probability - 0.5) / 0.4), 1)
-    exp_mod = min(np.arcsin(clip) ** 1.25, 1)
+def bet(prob, prediction):
+    clip = min(((prob - 0.5) / 0.4), 1)
+    modifier = min(np.arcsin(clip) ** 1.25, 1)
 
-    bet_amount = exp_mod * get_balance()
+    bet_amount = modifier * get_balance()
     driver.find_element_by_id('wager').send_keys(str(int(bet_amount)))
 
     # if in tournament bet all in all the time

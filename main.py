@@ -53,7 +53,7 @@ def main():
         web_scraper.bet(probability, prediction)
 
         # Log initial data
-        log_str = f'{red} vs. {blue}\n' \
+        log_str = f'\n{red} vs. {blue}\n' \
                   f'Predicted outcome: {prediction} | {probability:>6.2%}\n' \
                   f'Current balance: ${balance:,}'
         logger.info(log_str)
@@ -66,11 +66,11 @@ def main():
         # todo find better way of waiting until data is available
         time.sleep(60)
         bet_amount, potential_gain, red_odds, blue_odds = web_scraper.get_odds()
-        log_str = f'Odds: {red_odds} : {blue_odds}\n' \
+        log_str = f'\nOdds: {red_odds} : {blue_odds}\n' \
                   f'Potential upset: {red_odds > 2 or blue_odds > 2}\n' \
                   f'Bet upset: {red_odds == 1 and prediction == "Red" or blue_odds == 1 and prediction == "Blue"}\n' \
                   f'Bet: ${bet_amount:,} -> ${potential_gain:,}\n' \
-                  f'Percent of balance bet: {bet_amount / balance:>6.2%}\n'
+                  f'Percent of balance bet: {bet_amount / balance:>6.2%}'
         logger.info(log_str)
         print(log_str)
 
@@ -88,8 +88,8 @@ def main():
             payout = f'${payout:,}'
 
         # Log winner and payouts
-        log_str = f'Winner: {winner}\n' \
-                  f'Payout: {payout}'
+        log_str = f'\nWinner: {winner}\n' \
+                  f'Payout: {payout}\n'
         logger.info(log_str)
         print(log_str)
 
