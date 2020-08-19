@@ -33,6 +33,8 @@ def main():
     correct = 0
     matches = 0
 
+    winnings = 0
+
     while True:
         red, blue = web_scraper.get_red_blue()
 
@@ -82,6 +84,7 @@ def main():
 
         new_balance = web_scraper.get_balance()
         payout = new_balance - balance
+        winnings += payout
         if payout < 0:
             payout = f'-${-payout:,}'
         else:
@@ -99,7 +102,8 @@ def main():
             print('Correct prediction.')
         else:
             print('Wrong prediction.')
-        print(f'Current accuracy {correct / matches:.2%}\n')
+        print(f'Current accuracy {correct / matches:.2%}\n'
+              f'Current winnings {winnings}\n')
 
         w = 1
         if winner == 'Red':
