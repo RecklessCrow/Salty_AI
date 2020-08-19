@@ -31,10 +31,6 @@ def main():
     while True:
         red, blue = web_scraper.get_reb_blue()
 
-        if 'Team' in red.split(' ') or 'Team' in blue.split(' '):
-            time.sleep(1)
-            continue
-
         if last_red == red and last_blue == blue:
             time.sleep(1)
             continue

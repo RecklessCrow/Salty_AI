@@ -25,7 +25,7 @@ def login():
 
 
 def get_balance():
-    balance = driver.find_element_by_id('balance').text
+    balance = int(driver.find_element_by_id('balance').text)
     return balance
 
 
@@ -85,32 +85,17 @@ def get_stats():
 
 
 def bet(probability, prediction):
-    probability = probability * 100
-    bet_percent = {10: driver.find_element_by_id('interval1'), 20: driver.find_element_by_id('interval2'),
-                   30: driver.find_element_by_id('interval3'), 40: driver.find_element_by_id('interval4'),
-                   50: driver.find_element_by_id('interval5'), 60: driver.find_element_by_id('interval6'),
-                   70: driver.find_element_by_id('interval7'), 80: driver.find_element_by_id('interval8'),
-                   90: driver.find_element_by_id('interval9'), 100: driver.find_element_by_id('interval10')}
+    if probability < 0.55:
+        driver.find_element_by_id('wager').send_keys('1')
 
-    if probability > 75:
-        bet_percent[100].click()
-
-    elif probability > 65:
-        bet_percent[90].click()
-
-    elif probability > 60:
-        bet_percent[80].click()
-
-    elif probability > 55:
-        bet_percent[50].click()
-
-    else:
-        bet_percent[20].click()
+    modifier = (probability - 0.55) / 0.25
+    bet_amount = modifier * get_balance()
+    driver.find_element_by_id('wager').send_keys(bet_amount)
 
     # if in tournament bet all in all the time
     # todo find something else this is broken
     if 'bracket!' in driver.find_element_by_id('footer-alert').text.split(' '):
-        bet_percent[100].click()
+        driver.find_element_by_id('interval10').click()
 
     # Bet on character
     if prediction == 'Red':
