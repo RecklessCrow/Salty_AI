@@ -25,11 +25,11 @@ def login():
 
 
 def get_balance():
-    balance = int(driver.find_element_by_id('balance').text)
+    balance = int(driver.find_element_by_id('balance').text.replace(',', ''))
     return balance
 
 
-def get_reb_blue():
+def get_red_blue():
     red = driver.find_element_by_class_name('betbuttonred').get_attribute('value')
     blue = driver.find_element_by_class_name('betbuttonblue').get_attribute('value')
 
@@ -57,26 +57,25 @@ def get_stats():
 
     time.sleep(3)
 
-    red_winrate = driver.find_element_by_id('p1winrate').text,
+    red_winrate = driver.find_element_by_id('p1winrate').text.replace('%', '')
     red_matches = driver.find_element_by_id('p1totalmatches').text
 
-    blue_winrate = driver.find_element_by_id('p2winrate').text,
+    blue_winrate = driver.find_element_by_id('p2winrate').text.replace('%', '')
     blue_matches = driver.find_element_by_id('p2totalmatches').text
 
     # find out if players are a team
     if '/' in red_winrate:
         red_winrate = np.array([int(n) for n in red_winrate.split('/')]).mean()
         red_matches = np.array([int(n) for n in red_matches.split('/')]).mean()
-
     else:
-        red_winrate = int(red_winrate[0][:-1])
+        red_winrate = int(red_winrate)
         red_matches = int(red_matches)
 
     if '/' in blue_winrate:
-        blue_winrate = np.array([int(n[:-1]) for n in blue_winrate.split('/')]).mean()[0]
-        blue_matches = np.array([int(n[:-1]) for n in blue_matches.split('/')]).mean()[0]
+        blue_winrate = np.array([int(n) for n in blue_winrate.split('/')]).mean()
+        blue_matches = np.array([int(n) for n in blue_matches.split('/')]).mean()
     else:
-        blue_winrate = int(blue_winrate[0][:-1])
+        blue_winrate = int(blue_winrate)
         blue_matches = int(blue_matches)
 
     driver.close()
@@ -85,12 +84,12 @@ def get_stats():
 
 
 def bet(probability, prediction):
-    if probability < 0.55:
-        driver.find_element_by_id('wager').send_keys('1')
 
-    modifier = (probability - 0.55) / 0.25
-    bet_amount = modifier * get_balance()
-    driver.find_element_by_id('wager').send_keys(bet_amount)
+    clip = min(((probability - 0.5) / 0.4), 1)
+    exp_mod = min(np.arcsin(clip) ** 1.25, 1)
+
+    bet_amount = exp_mod * get_balance()
+    driver.find_element_by_id('wager').send_keys(str(int(bet_amount)))
 
     # if in tournament bet all in all the time
     # todo find something else this is broken

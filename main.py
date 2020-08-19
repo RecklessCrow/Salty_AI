@@ -1,25 +1,23 @@
 import os
 import time
-
 import keras
 import numpy as np
 import tensorflow as tf
-
 import database_handler
 import web_scraper
 
 physical_devices = tf.config.list_physical_devices('GPU')
 tf.config.experimental.set_memory_growth(physical_devices[0], True)
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
-
-some_file = os.path.join('models', '2020-08-18_19-40')
+model_path = os.path.join('models', '2020-08-18_17-27')
 np.set_printoptions(precision=2, suppress=True)
 
 
 # TODO fix busy wait(s)
 def main():
     web_scraper.login()
-    my_model = keras.models.load_model(some_file)
+    my_model = keras.models.load_model(model_path)
     prediction_code = {0: 'Red', 1: 'Blue'}
 
     last_red = ''
@@ -29,7 +27,7 @@ def main():
     matches = 0
 
     while True:
-        red, blue = web_scraper.get_reb_blue()
+        red, blue = web_scraper.get_red_blue()
 
         if last_red == red and last_blue == blue:
             time.sleep(1)
@@ -38,10 +36,10 @@ def main():
         last_red = red
         last_blue = blue
 
-        X = web_scraper.get_stats()
+        put = web_scraper.get_stats()
 
-        probability = my_model.predict(X)
-        prediction = prediction_code[database_handler.label_encoder.inverse_transform(probability)[0][0]]
+        probability = my_model.predict(put)[0]
+        prediction = prediction_code[np.argmax(probability)]
         probability = np.max(probability)
 
         print(f'Red: {red}\n'

@@ -117,7 +117,7 @@ def train(load_file=None, save_to=None):
 def test_model(model_file):
 
     model = keras.models.load_model(model_file)
-    brackets = [.50]
+    brackets = np.linspace(.5, 1, 10)
     results = []
 
     for bracket in brackets:
