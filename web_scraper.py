@@ -4,6 +4,11 @@ import dotenv
 import numpy as np
 from selenium import webdriver
 
+from sklearn.preprocessing import LabelEncoder
+
+tier_encoder = LabelEncoder()
+tier_encoder.fit(['P', 'B', 'A', 'S', 'X', 'None'])
+
 env = dotenv.DotEnv()
 EMAIL = env.get('email')
 TOKEN = env.get('password')
@@ -66,6 +71,7 @@ def get_stats():
     driver.switch_to.window(driver.window_handles[1])
     driver.get('https://www.saltybet.com/stats')
 
+    # wait for page to load
     time.sleep(3)
 
     red_winrate = driver.find_element_by_id('p1winrate').text.replace('%', '')
@@ -94,6 +100,49 @@ def get_stats():
     return np.array([[[red_winrate, red_matches], [blue_winrate, blue_matches]]]).astype('float64')
 
 
+def get_more_stats():
+    driver.execute_script("window.open('');")
+    driver.switch_to.window(driver.window_handles[1])
+    driver.get('https://www.saltybet.com/stats')
+
+    # wait for page to load
+    time.sleep(3)
+
+    red_winrate = driver.find_element_by_id('p1winrate').text.replace('%', '')
+    red_matches = driver.find_element_by_id('p1totalmatches').text
+    red_tier = driver.find_element_by_id('p1tier').text
+    red_life = driver.find_element_by_id('p1life').text
+    red_meter = driver.find_element_by_id('p1meter').text
+    red = [red_winrate, red_matches, red_tier, red_life, red_meter]
+
+    blue_winrate = driver.find_element_by_id('p2winrate').text.replace('%', '')
+    blue_matches = driver.find_element_by_id('p2totalmatches').text
+    blue_tier = driver.find_element_by_id('p2tier').text
+    blue_life = driver.find_element_by_id('p2life').text
+    blue_meter = driver.find_element_by_id('p2meter').text
+    blue = [blue_winrate, blue_matches, blue_tier, blue_life, blue_meter]
+
+    def get_params(stats):
+        # find out if players are a team
+        if '/' in stats[0]:
+            stats[0] = np.array([int(n) for n in stats[0].split('/')]).mean()
+            stats[1] = np.array([int(n) for n in stats[1].split('/')]).mean()
+            stats[2] = np.max(tier_encoder.transform([stats[2]]))
+        else:
+            stats[2] = tier_encoder.transform([stats[2]])[0]
+            stats = np.array(stats).astype('float64')
+
+        return stats
+
+    red = get_params(red)
+
+    blue = get_params(blue)
+
+    driver.close()
+    driver.switch_to.window(driver.window_handles[0])
+    return np.array([[red, blue]]).astype('float64')
+
+
 def bet(prob, prediction):
     balance = get_balance()
 
@@ -102,7 +151,7 @@ def bet(prob, prediction):
 
     bet_amount = int(np.round(modifier * balance))
 
-    if balance < 4000 or bet_amount >= balance:
+    if balance < 3600 * 2 or bet_amount >= balance:
         driver.find_element_by_id('interval10').click()
     else:
         driver.find_element_by_id('wager').send_keys(str(bet_amount))
@@ -119,11 +168,15 @@ def bet(prob, prediction):
         driver.find_element_by_class_name('betbuttonblue').click()
 
 
+def simple_bet(prediction):
+    driver.find_element_by_id('wager').send_keys('3600')
+
+    # Bet on character
+    if not prediction:
+        driver.find_element_by_class_name('betbuttonred').click()
+    else:
+        driver.find_element_by_class_name('betbuttonblue').click()
+
+
 if __name__ == '__main__':
     login()
-    try:
-        print(get_odds())
-    except Exception as e:
-        print(e)
-    finally:
-        driver.close()

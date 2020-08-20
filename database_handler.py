@@ -454,9 +454,5 @@ def select_all_matches():
 
 
 if __name__ == '__main__':
-    # np.set_printoptions(precision=2, suppress=True)
     create_database(True)
     connection.commit()
-    # a = select_character('Eva-00')
-    # print(a)
-    # update_character()

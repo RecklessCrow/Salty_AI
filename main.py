@@ -10,7 +10,7 @@ import database_handler
 import web_scraper
 from logger_script import logger
 
-# fix tf
+# Fix tf
 physical_devices = tf.config.list_physical_devices('GPU')
 tf.config.experimental.set_memory_growth(physical_devices[0], True)
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
@@ -18,8 +18,8 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 # limit np printing
 np.set_printoptions(precision=2, suppress=True)
 
-# get model
-list_of_files = glob.glob(os.path.join('models', '*'))  # Gets the most recent model
+# Gets the most recent model, replace this with the path of the model you would like to use
+list_of_files = glob.glob(os.path.join('models', '*'))
 model_path = max(list_of_files, key=os.path.getctime)
 
 
@@ -53,6 +53,7 @@ def main():
         probability = np.max(probability)
 
         balance = web_scraper.get_balance()
+
         web_scraper.bet(probability, prediction)
 
         # Log initial data
@@ -63,8 +64,14 @@ def main():
         print(log_str)
 
         # Log betting data
-        time.sleep(60)
-        bet_amount, potential_gain, red_odds, blue_odds = web_scraper.get_odds()
+        time.sleep(50)
+
+        # todo find better way to handle this value error, sometimes not all values get parsed
+        try:
+            bet_amount, potential_gain, red_odds, blue_odds = web_scraper.get_odds()
+        except:
+            continue
+
         log_str = f'\nOdds: {red_odds} : {blue_odds}\n' \
                   f'Potential upset: {red_odds > 2 or blue_odds > 2}\n' \
                   f'Bet upset: {red_odds == 1 and prediction == "Red" or blue_odds == 1 and prediction == "Blue"}\n' \
@@ -119,5 +126,4 @@ def main():
 
 
 if __name__ == '__main__':
-    # data_collector()
     main()

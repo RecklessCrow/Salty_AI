@@ -5,8 +5,8 @@ import keras
 import numpy as np
 import tensorflow as tf
 from keras.callbacks import LearningRateScheduler, ModelCheckpoint, TensorBoard
-from keras.layers import Dense, Dropout, LSTM
-from keras.models import Sequential
+from keras.layers import Dense, Dropout, LSTM, Input, Conv1D
+from keras.models import Sequential, Model
 from sklearn.model_selection import train_test_split
 
 import database_handler
@@ -27,8 +27,6 @@ del x, y
 
 def make_model():
     model = Sequential()
-
-    # model.add(Input((2, 5)))
 
     model.add(LSTM(
         units=16,
@@ -66,6 +64,67 @@ def make_model():
         loss='mse',
         metrics=['categorical_accuracy']
     )
+
+    return model
+
+
+def make_rl_model():
+    def make_branch(inputs, name):
+        x = Conv1D(
+            filters=64,
+            kernel_size=8,
+            padding='same',
+            activation='relu'
+        )(inputs)
+
+        x = Conv1D(
+            filters=64,
+            kernel_size=8,
+            padding='same',
+            activation='relu'
+        )(x)
+
+        x = Conv1D(
+            filters=64,
+            kernel_size=8,
+            padding='same',
+            activation='relu'
+        )(x)
+
+        x = LSTM(
+            units=64,
+            activation='relu',
+            return_sequences=True,
+        )(x)
+
+        x = LSTM(
+            units=64,
+            activation='relu',
+            return_sequences=False,
+        )(x)
+
+        x = Dense(
+            units=128,
+            activation='relu'
+        )(x)
+
+        x = Dense(
+            units=2,
+            activation='softmax',
+            name=name
+        )(x)
+
+        return x
+
+
+    inputs = Input()
+    player_branch = make_branch(inputs, 'player_output')
+    betting_branch = make_branch(inputs, 'betting_output')
+
+    model = Model(
+        inputs=inputs,
+        outputs=[betting_branch, player_branch],
+        name="Salty_AI")
 
     return model
 
