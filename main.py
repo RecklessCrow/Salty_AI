@@ -1,16 +1,13 @@
 import glob
-import os
 import time
 from collections import deque
-
 import numpy as np
-
 from web_scraper import WebScraper
 
+import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 import tensorflow as tf
-
 physical_devices = tf.config.list_physical_devices('GPU')
 tf.config.experimental.set_memory_growth(physical_devices[0], True)
 
