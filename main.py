@@ -1,5 +1,6 @@
 import glob
 import time
+import random
 from collections import deque
 import numpy as np
 
@@ -7,12 +8,7 @@ import printer
 from web_scraper import WebScraper
 
 import os
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
-import tensorflow as tf
-
-physical_devices = tf.config.list_physical_devices('GPU')
-tf.config.experimental.set_memory_growth(physical_devices[0], True)
 
 STATES = {
     'IDLE': 0,
@@ -27,7 +23,40 @@ SCRAPER = WebScraper()
 # Load model
 list_of_files = glob.glob(os.path.join('models', '*'))
 MODEL_PATH = max(list_of_files, key=os.path.getctime)
-MODEL = tf.keras.models.load_model(MODEL_PATH)
+
+
+class Memory:
+
+    def __init__(self, maxlen=500):
+        self.maxlen = maxlen
+        self.mem_x = deque(maxlen=self.maxlen)
+        self.mem_y = deque(maxlen=self.maxlen)
+
+    def get_memories(self, num_memories=10):
+        temp_x = []
+        temp_y = []
+        used_idxs = []
+
+        if self.current_memories < num_memories:
+            num_memories = self.current_memories
+
+        for i in range(10):
+            idx = random.randrange(num_memories)
+
+            if idx not in used_idxs:
+                temp_x.append(list(self.mem_x)[idx])
+                temp_y.append(list(self.mem_y)[idx])
+                used_idxs.append(idx)
+
+        return np.array(temp_x), np.array(temp_y)
+
+    def add_memory(self, x, y):
+        self.mem_x.append(x)
+        self.mem_y.append(y)
+
+    @property
+    def current_memories(self):
+        return len(self.mem_x)
 
 
 def decode_state(encoded_state):
@@ -52,7 +81,7 @@ def await_next_state(last_state):
 def main():
     current_state = STATES['IDLE']
     current_stats = None
-    memory_replay = deque(maxlen=10)
+    memory_replay = Memory()
 
     while True:
         current_state = await_next_state(current_state)
@@ -100,10 +129,9 @@ def main():
 
             printer.print_payout(winner)
 
-            memory_replay.append((x, y))
-            if len(memory_replay) == 10:
-                data = np.array([tup[0] for tup in list(memory_replay)])
-                labels = np.array([tup[1] for tup in list(memory_replay)])
+            memory_replay.add_memory(x, y)
+            if memory_replay.current_memories > 10:
+                data, labels = memory_replay.get_memories()
                 MODEL.train_on_batch(data, labels)
                 MODEL.save(MODEL_PATH)
 
@@ -113,4 +141,14 @@ def main():
 
 
 if __name__ == '__main__':
+
+    # Remove excessive tf messages
+    os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+    import tensorflow as tf
+
+    physical_devices = tf.config.list_physical_devices('GPU')
+    tf.config.experimental.set_memory_growth(physical_devices[0], True)
+
+    MODEL = tf.keras.models.load_model(MODEL_PATH)
+
     main()
