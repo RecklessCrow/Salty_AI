@@ -1,10 +1,10 @@
 import sys
+import time
 
 import dotenv
 import numpy as np
 from selenium import webdriver
 from sklearn.preprocessing import OneHotEncoder
-import time
 
 te = OneHotEncoder()
 te.fit(np.array(['P', 'B', 'A', 'S', 'X']).reshape(-1, 1))
@@ -18,7 +18,6 @@ class WebScraper:
 
     @property
     def balance(self):
-        time.sleep(1)
         return int(self.driver.find_element_by_id('balance').text.replace(',', ''))
 
     @property
@@ -61,10 +60,20 @@ class WebScraper:
         return red, blue
 
     def get_odds(self):
-        bet_amount, potential_gain, red_odds, blue_odds = self.driver.find_element_by_id(
-            'lastbet').find_elements_by_css_selector('span')
+        info = ()
 
-        # cast strs to int
+        # todo add time out for when the bot didnt place bet in time
+        # todo Sometimes driver returns a tuple with less than 4 elements. Find more elegant way of doing this
+        while len(info) != 4:
+            info = self.driver.find_element_by_id('lastbet').find_elements_by_css_selector('span')
+            time.sleep(1)
+
+        bet_amount, potential_gain, red_odds, blue_odds = info
+
+        if "" in info:
+            return self.get_odds()
+
+        # cast strings to numbers
         bet_amount = int(bet_amount.text[1:])
         potential_gain = int(potential_gain.text[2:])
         red_odds = float(red_odds.text)
@@ -129,6 +138,5 @@ class WebScraper:
 
 if __name__ == '__main__':
     ws = WebScraper()
-    import time
-    time.sleep(1)
-    print(ws.get_player_names())
+    while True:
+        print(ws.get_odds())

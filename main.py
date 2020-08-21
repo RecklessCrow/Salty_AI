@@ -58,7 +58,7 @@ def main():
         current_state = await_next_state(current_state)
 
         if current_state == STATES['IDLE'] and current_stats is not None:
-            info = SCRAPER.get_odds() + (SCRAPER.balance, )
+            info = SCRAPER.get_odds()
             printer.print_idle(info)
             continue
 
@@ -75,7 +75,7 @@ def main():
             bet_amount = int(modifier * balance)
 
             # Set betting ceiling
-            bet_amount = min(50000, bet_amount)
+            bet_amount = min(1000, bet_amount)
 
             SCRAPER.bet(bet_amount, predicted_winner)
 
@@ -98,8 +98,7 @@ def main():
             x = current_stats[0]
             y = [1, 0] if winner == 'red' else [0, 1]
 
-            info = (winner, SCRAPER.balance)
-            printer.print_payout(info)
+            printer.print_payout(winner)
 
             memory_replay.append((x, y))
             if len(memory_replay) == 10:
