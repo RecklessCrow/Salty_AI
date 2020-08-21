@@ -98,14 +98,14 @@ class WebScraper:
         if None in tier:
             tier = np.zeros(5)
         else:
-            a = te.transform(tier[0]).toarray()[0]
-            b = te.transform(tier[1]).toarray()[0]
+            a = te.transform([[tier[0]]]).toarray()[0]
+            b = te.transform([[tier[1]]]).toarray()[0]
             if np.argmax(a) > np.argmax(b):
                 tier = a
             else:
                 tier = b
 
-        return [win_rate, num_matches, life, meter] + tier
+        return [win_rate, num_matches, life, meter] + list(tier)
 
     def get_stats(self):
         formatted_stats = []
@@ -114,14 +114,15 @@ class WebScraper:
             bettor_lines = stats.find_elements_by_class_name('bettor-line')
             goldtext = stats.find_elements_by_css_selector('span')
             stats = [x.text[len(i.text):] for x, i in zip(bettor_lines, goldtext)][:-2]
+            stats[1] = stats[1].replace('%', '')
+
             num_matches, win_rate, tier, life, meter = stats
-            stats[1] = win_rate.replace('%', '')
 
             if '/' in num_matches:
                 formatted_stats.append(self._format_team(stats))
                 continue
 
-            win_rate = int(win_rate.replace('%', ''))
+            win_rate = int(win_rate)
             num_matches = int(num_matches)
             life = int(life)
             meter = int(meter)
