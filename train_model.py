@@ -95,10 +95,10 @@ def train(load_file=None, save_to=None):
     if load_file is None:
         model = make_model()
     else:
-        model = keras.models.load_model(load_file)
+        model = tf.keras.models.load_model(load_file)
 
-    epochs = 25
-    batch_size = 5000
+    epochs = 10
+    batch_size = 10000
 
     # Train model
     model.fit(

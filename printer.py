@@ -12,7 +12,7 @@ def print_idle(info):
     betting_amount, potential_gain, red_odds, blue_odds = info
 
     print(
-        f'${red_odds} : {blue_odds} | {betting_amount:,} -> ${potential_gain:,}\n'
+        f'{red_odds} : {blue_odds} | ${betting_amount:,} -> ${potential_gain:,}\n'
         f'Percent of balance bet: {betting_amount / old_balance:.2%}'
     )
 

@@ -4,6 +4,7 @@ import time
 import dotenv
 import numpy as np
 from selenium import webdriver
+from selenium.common.exceptions import StaleElementReferenceException
 from sklearn.preprocessing import OneHotEncoder
 
 te = OneHotEncoder()
@@ -65,8 +66,11 @@ class WebScraper:
         # todo add time out for when the bot didnt place bet in time
         # todo Sometimes driver returns a tuple with less than 4 elements. Find more elegant way of doing this
         while len(info) != 4:
-            info = self.driver.find_element_by_id('lastbet').find_elements_by_css_selector('span')
-            time.sleep(1)
+            try:
+                info = self.driver.find_element_by_id('lastbet').find_elements_by_css_selector('span')
+            except StaleElementReferenceException:
+                pass
+            time.sleep(5)
 
         bet_amount, potential_gain, red_odds, blue_odds = info
 

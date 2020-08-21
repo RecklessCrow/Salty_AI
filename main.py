@@ -1,14 +1,13 @@
 import glob
-import time
+import os
 import random
+import time
 from collections import deque
+
 import numpy as np
 
 import printer
 from web_scraper import WebScraper
-
-import os
-
 
 STATES = {
     'IDLE': 0,
@@ -146,9 +145,11 @@ if __name__ == '__main__':
     os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
     import tensorflow as tf
 
+    # fix tf for my computer
     physical_devices = tf.config.list_physical_devices('GPU')
     tf.config.experimental.set_memory_growth(physical_devices[0], True)
 
+    # load model
     MODEL = tf.keras.models.load_model(MODEL_PATH)
 
     main()
