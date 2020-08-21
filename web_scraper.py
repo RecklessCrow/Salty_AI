@@ -125,9 +125,14 @@ def get_more_stats():
     def get_params(stats):
         # find out if players are a team
         if '/' in stats[0]:
+            # take avg winrate and matches
             stats[0] = np.array([int(n) for n in stats[0].split('/')]).mean()
             stats[1] = np.array([int(n) for n in stats[1].split('/')]).mean()
-            stats[2] = np.max(tier_encoder.transform([stats[2]]))
+            # take highest tier and meter
+            stats[2] = np.max([tier_encoder.transform(tier) for tier in stats[2].replace(' ', '').split('/')])
+            stats[4] = np.max([tier_encoder.transform(tier) for tier in stats[3].replace(' ', '').split('/')])
+            # take sum of health
+            stats[3] = np.array([int(n) for n in stats[3].split('/')]).sum()
         else:
             stats[2] = tier_encoder.transform([stats[2]])[0]
             stats = np.array(stats).astype('float64')

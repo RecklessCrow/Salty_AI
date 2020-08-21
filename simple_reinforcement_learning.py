@@ -65,7 +65,7 @@ class LiveEnvironment:
         reward = balance - self.beginning_balance
         self.beginning_balance = balance
 
-        if reward < 0:
+        if reward <= 0:
             return -1
         return 1
 
@@ -123,10 +123,8 @@ class Environment:
         ob = self.observe()
 
         reward = self._get_reward(action)
-        game_over = False
-
-        if reward == -1:
-            game_over = True
+        self.bad_counter += 1 if reward == -1 else 0
+        game_over = self.bad_counter == 5
 
         return ob, reward, game_over
 
@@ -136,7 +134,7 @@ class Environment:
 
 if __name__ == "__main__":
 
-    live = True
+    live = False
     if live:
         import web_scraper
 
