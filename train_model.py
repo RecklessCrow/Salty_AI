@@ -5,8 +5,8 @@ import keras
 import numpy as np
 import tensorflow as tf
 from keras.callbacks import LearningRateScheduler, ModelCheckpoint, TensorBoard
-from keras.layers import Dense, Dropout, LSTM, Input, Conv1D
-from keras.models import Sequential, Model
+from keras.layers import Dense, LSTM
+from keras.models import Sequential
 from sklearn.model_selection import train_test_split
 
 import database_handler
@@ -16,7 +16,13 @@ tf.config.experimental.set_memory_growth(physical_devices[0], True)
 
 np.set_printoptions(precision=2, suppress=True)
 
+## input format [win_rate, num_matches, life, meter, is.TierX, is.TierS, is.TierA, is.TierB, is.TierP]
+
 x, y = database_handler.select_all_matches()
+
+print(x.shape)
+x = np.dstack((x, np.zeros((len(x), 2, 5))))
+print(x[0])
 
 x_train, x_val, y_train, y_val = train_test_split(x, y, test_size=0.2, random_state=66)
 
@@ -29,30 +35,30 @@ def make_model():
     model = Sequential()
 
     model.add(LSTM(
-        units=16,
+        units=32,
         activation='relu',
         return_sequences=True,
     ))
 
     # model.add(BatchNormalization())
-    model.add(Dropout(0.4))
+    # model.add(Dropout(0.4))
 
     model.add(LSTM(
-        units=32,
+        units=64,
         activation='relu',
         return_sequences=False,
     ))
 
     # model.add(BatchNormalization())
-    model.add(Dropout(0.4))
+    # model.add(Dropout(0.4))
 
     model.add(Dense(
-        units=64,
+        units=128,
         activation='relu',
     ))
 
     # model.add(BatchNormalization())
-    model.add(Dropout(0.4))
+    # model.add(Dropout(0.4))
 
     model.add(Dense(
         units=2,
@@ -64,67 +70,6 @@ def make_model():
         loss='mse',
         metrics=['categorical_accuracy']
     )
-
-    return model
-
-
-def make_rl_model():
-    def make_branch(inputs, name):
-        x = Conv1D(
-            filters=64,
-            kernel_size=8,
-            padding='same',
-            activation='relu'
-        )(inputs)
-
-        x = Conv1D(
-            filters=64,
-            kernel_size=8,
-            padding='same',
-            activation='relu'
-        )(x)
-
-        x = Conv1D(
-            filters=64,
-            kernel_size=8,
-            padding='same',
-            activation='relu'
-        )(x)
-
-        x = LSTM(
-            units=64,
-            activation='relu',
-            return_sequences=True,
-        )(x)
-
-        x = LSTM(
-            units=64,
-            activation='relu',
-            return_sequences=False,
-        )(x)
-
-        x = Dense(
-            units=128,
-            activation='relu'
-        )(x)
-
-        x = Dense(
-            units=2,
-            activation='softmax',
-            name=name
-        )(x)
-
-        return x
-
-
-    inputs = Input()
-    player_branch = make_branch(inputs, 'player_output')
-    betting_branch = make_branch(inputs, 'betting_output')
-
-    model = Model(
-        inputs=inputs,
-        outputs=[betting_branch, player_branch],
-        name="Salty_AI")
 
     return model
 

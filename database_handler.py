@@ -233,7 +233,7 @@ def select_all(table):
 
 def update_character(info):
     name, matches, winrate, life, meter, author = info
-    _, old_wins, old_matches, author_id, author_wins, author_matches, x, y, old_life, old_meter = select_character(name)
+    _, old_wins, old_matches, author_id, uthor_wins, author_matches, x, y, old_life, old_meter = select_character(name)
 
     new_matches = matches - old_matches
     new_wins = int(matches * winrate) - old_wins
@@ -418,8 +418,8 @@ def create_database(drop=False):
 def select_all_matches():
     cur.execute(
         f"""
-        select  r.num_wins * 100.0 / r.num_matches,  r.num_matches,
-                b.num_wins * 100.0  / b.num_matches,  b.num_matches,
+        select  r.num_wins * 100.0 / r.num_matches,  r.num_matches, r.life, r.meter,
+                b.num_wins * 100.0  / b.num_matches,  b.num_matches, b.life, b.meter,
                 winner
         from characters as r
         inner join matches
