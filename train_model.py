@@ -4,9 +4,9 @@ from datetime import datetime
 import keras
 import numpy as np
 import tensorflow as tf
-from keras.callbacks import LearningRateScheduler, ModelCheckpoint, TensorBoard
-from keras.layers import Dense, LSTM
-from keras.models import Sequential
+from tensorflow.keras.callbacks import LearningRateScheduler, ModelCheckpoint, TensorBoard
+from tensorflow.keras.layers import Dense, LSTM
+from tensorflow.keras.models import Sequential
 from sklearn.model_selection import train_test_split
 
 import database_handler
@@ -111,9 +111,9 @@ def train(load_file=None, save_to=None):
     )
 
     if save_to is None:
-        keras.models.save_model(model, os.path.join('models', curr_date))
+        tf.keras.models.save_model(model, os.path.join('models', curr_date))
     else:
-        keras.models.save_model(model, save_to)
+        tf.keras.models.save_model(model, save_to)
 
     test_model(os.path.join('models', curr_date))
 
