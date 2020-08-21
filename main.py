@@ -4,9 +4,15 @@ import time
 from collections import deque
 
 import numpy as np
-import tensorflow as tf
 
 from web_scraper import WebScraper
+
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+
+import tensorflow as tf
+
+physical_devices = tf.config.list_physical_devices('GPU')
+tf.config.experimental.set_memory_growth(physical_devices[0], True)
 
 STATES = {
     'IDLE': 0,
