@@ -6,7 +6,8 @@ from collections import deque
 
 import numpy as np
 
-import printer
+import utils
+from utils import Memory
 from web_scraper import WebScraper
 
 STATES = {
@@ -22,40 +23,6 @@ SCRAPER = WebScraper()
 # Load model
 list_of_files = glob.glob(os.path.join('models', '*'))
 MODEL_PATH = max(list_of_files, key=os.path.getctime)
-
-
-class Memory:
-
-    def __init__(self, maxlen=500):
-        self.maxlen = maxlen
-        self.mem_x = deque(maxlen=self.maxlen)
-        self.mem_y = deque(maxlen=self.maxlen)
-
-    def get_memories(self, num_memories=10):
-        temp_x = []
-        temp_y = []
-        used_idxs = []
-
-        if self.current_memories < num_memories:
-            num_memories = self.current_memories
-
-        for i in range(10):
-            idx = random.randrange(num_memories)
-
-            if idx not in used_idxs:
-                temp_x.append(list(self.mem_x)[idx])
-                temp_y.append(list(self.mem_y)[idx])
-                used_idxs.append(idx)
-
-        return np.array(temp_x), np.array(temp_y)
-
-    def add_memory(self, x, y):
-        self.mem_x.append(x)
-        self.mem_y.append(y)
-
-    @property
-    def current_memories(self):
-        return len(self.mem_x)
 
 
 def decode_state(encoded_state):
@@ -87,7 +54,7 @@ def main():
 
         if current_state == STATES['IDLE'] and current_stats is not None:
             info = SCRAPER.get_odds()
-            printer.print_idle(info)
+            utils.print_idle(info)
             continue
 
         if current_state == STATES['BETS_OPEN']:
@@ -98,17 +65,20 @@ def main():
             predicted_winner = TEAM[np.argmax(prediction)]
             confidence_level = np.max(prediction)
 
-            clip = min(((confidence_level - 0.5) / 1), 1)
-            modifier = min(np.arcsin(clip) ** 3, 1)
-            bet_amount = int(modifier * balance)
+            clip = (confidence_level - 0.5) * 2
+            modifier = (.1 * (11 ** clip)) - .1
+            inv_modifier = max(.999999**balance, .1)
+            modifier = inv_modifier * modifier
+            bet_amount = balance * modifier
 
-            # Set betting ceiling
-            bet_amount = min(1000, bet_amount)
+            # All in under $10,000
+            if balance < 10_000:
+                bet_amount = balance
 
-            SCRAPER.bet(bet_amount, predicted_winner)
+            SCRAPER.bet(int(bet_amount), predicted_winner)
 
             info = SCRAPER.get_player_names() + (balance, predicted_winner, confidence_level)
-            printer.print_match(info)
+            utils.print_match(info)
 
             continue
 
@@ -126,13 +96,12 @@ def main():
             x = current_stats[0]
             y = [1, 0] if winner == 'red' else [0, 1]
 
-            printer.print_payout(winner)
+            utils.print_payout(winner)
 
             memory_replay.add_memory(x, y)
-            if memory_replay.current_memories > 10:
-                data, labels = memory_replay.get_memories()
-                MODEL.train_on_batch(data, labels)
-                MODEL.save(MODEL_PATH)
+            data, labels = memory_replay.get_memories()
+            MODEL.train_on_batch(data, labels)
+            MODEL.save(MODEL_PATH)
 
             current_stats = None
 

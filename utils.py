@@ -1,4 +1,45 @@
 from logger_script import logger
+from collections import deque
+import database_handler
+import numpy as np
+import random
+
+te = OneHotEncoder()
+te.fit(np.array(['P', 'B', 'A', 'S', 'X']).reshape(-1, 1))
+
+class Memory:
+    
+    def __init__(self, maxlen=500):
+        self.mem_x, self.mem_y = deque(maxlen=maxlen), deque(maxlen=maxlen)
+        
+        memory_buffer_size = 20
+        self._populate_memory(memory_buffer_size)
+    
+    def _populate_memory(self, num):
+        x, y = database_handler.select_num_matches(num)
+        x = np.dstack((x, np.zeros((len(x), 2, 5))))
+        self.mem_x.extend(x)
+        self.mem_y.extend(y)
+
+    def get_memories(self, num_memories=10):
+        if len(self) < num_memories:
+            num_memories = len(self)
+        
+        idxs = random.sample(range(len(self)), num_memories)
+        
+        x = np.array(self.mem_x).take(idxs)
+        y = np.array(self.mem_y).take(idxs)
+
+        return x, y
+
+    def add_memory(self, x, y):
+        self.mem_x.append(x)
+        self.mem_y.append(y)
+
+    def __len__(self):
+        return len(self.mem_x)
+
+
 
 old_balance = 0
 old_bet_amount = 0
@@ -16,7 +57,7 @@ match_msg = ''
 def print_idle(info):
     betting_amount, potential_gain, red_odds, blue_odds = info
 
-    msg_str = f'Match {num_games_bet + 1}' \
+    msg_str = f'Match #{num_games_bet + 1:,}\n' \
               f'{red_odds} : {blue_odds} | ${betting_amount:,} -> ${potential_gain:,}\n' \
               f'Percent of balance bet: {betting_amount / old_balance:.2%}'
 
@@ -60,3 +101,8 @@ def print_payout(winner):
     print(msg_str)
 
     logger.info('\n' + idle_msg + '\n' + match_msg + '\n' + msg_str)
+
+
+if __name__ == "__main__":
+    mem = Memory()
+    print(mem.get_memories())
