@@ -86,7 +86,7 @@ class WebScraper:
 
     @staticmethod
     def _format_team(team_stats):
-        win_rate, num_matches, life, meter, tier = [stat.replace(' ', '').split('/') for stat in team_stats]
+        win_rate, num_matches, tier, life, meter = [stat.replace(' ', '').split('/') for stat in team_stats]
         # take avg winrate and num_matches
         win_rate = np.array(list(map(int, win_rate))).mean()
         num_matches = np.array(list(map(int, num_matches))).mean()
