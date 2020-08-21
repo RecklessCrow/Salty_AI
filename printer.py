@@ -12,7 +12,7 @@ def print_idle(info):
     betting_amount, potential_gain, red_odds, blue_odds = info
 
     print(
-        f'${betting_amount:,} -> ${potential_gain:,} | {red_odds} : {blue_odds}\n'
+        f'${red_odds} : {blue_odds} | {betting_amount:,} -> ${potential_gain:,}\n'
         f'Percent of balance bet: {betting_amount / old_balance:.2%}'
     )
 
@@ -45,9 +45,8 @@ def print_payout(winner):
     num_games_bet += 1
 
     print(
-        f'Winner: {winner}\n'
-        f'{"Correct" if correct else "Incorrect"} prediction\n'
-        f'Payout            = {payout:+,}\n'
+        f'Winner: {winner} | {"Correct" if correct else "Incorrect"} prediction\n'
+        f'Match payout      = {payout:+,}\n'
         f'Current winnings  = {winnings:+,}\n'
-        f'Current accuracy  = {num_games_won / num_games_bet:.2%}'
+        f'Current accuracy  = {num_games_won / num_games_bet:.2%}\n'
     )
