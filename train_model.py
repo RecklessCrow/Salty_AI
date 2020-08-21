@@ -1,6 +1,6 @@
 import os
 from datetime import datetime
-
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 import keras
 import numpy as np
 import tensorflow as tf
@@ -16,7 +16,7 @@ tf.config.experimental.set_memory_growth(physical_devices[0], True)
 
 np.set_printoptions(precision=2, suppress=True)
 
-## input format [win_rate, num_matches, life, meter, is.TierX, is.TierS, is.TierA, is.TierB, is.TierP]
+# input format [win_rate, num_matches, life, meter, is.TierX, is.TierS, is.TierA, is.TierB, is.TierP]
 
 x, y = database_handler.select_all_matches()
 
@@ -82,7 +82,7 @@ def scheduler(epoch):
 
 def train(load_file=None, save_to=None):
     # Create callbacks
-    curr_date = datetime.now().strftime("%Y-%m-%d_%H-%M")
+    curr_date = datetime.now().strftime("%Y-%m-%d_%H-%M") + '.h5'
     log_dir = os.path.join('logs', 'scalars', curr_date)
     tensorboard_callback = TensorBoard(log_dir=log_dir)
     checkpoint_file = os.path.join('checkpoints', curr_date)

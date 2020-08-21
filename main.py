@@ -2,12 +2,15 @@ import glob
 import time
 from collections import deque
 import numpy as np
+
+import printer
 from web_scraper import WebScraper
 
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 import tensorflow as tf
+
 physical_devices = tf.config.list_physical_devices('GPU')
 tf.config.experimental.set_memory_growth(physical_devices[0], True)
 
@@ -54,10 +57,9 @@ def main():
     while True:
         current_state = await_next_state(current_state)
 
-        if current_state == STATES['IDLE']:
-            """
-            LOG bet_amount potential_gain odds
-            """
+        if current_state == STATES['IDLE'] and current_stats is not None:
+            info = SCRAPER.get_odds() + (SCRAPER.balance, )
+            printer.print_idle(info)
             continue
 
         if current_state == STATES['BETS_OPEN']:
@@ -65,27 +67,39 @@ def main():
             prediction = MODEL.predict(current_stats)[0]
             balance = SCRAPER.balance
 
-            predicted_winner = np.argmax(prediction)
+            predicted_winner = TEAM[np.argmax(prediction)]
             confidence_level = np.max(prediction)
 
-            clip = min(((confidence_level - 0.5) / 0.4), 1)
-            modifier = min(np.arcsin(clip) ** 1.25, 1)
+            clip = min(((confidence_level - 0.5) / 1), 1)
+            modifier = min(np.arcsin(clip) ** 3, 1)
             bet_amount = int(modifier * balance)
 
-            SCRAPER.bet(bet_amount, TEAM[predicted_winner])
+            # Set betting ceiling
+            bet_amount = min(50000, bet_amount)
+
+            SCRAPER.bet(bet_amount, predicted_winner)
+
+            info = SCRAPER.get_player_names() + (balance, predicted_winner, confidence_level)
+            printer.print_match(info)
 
             continue
 
         if current_state == STATES['PAYOUT'] and current_stats is not None:
             payout_message = SCRAPER.status
 
-            if 'blue' in payout_message:
+            if 'blue' in payout_message:    # blue winner
                 winner = 'blue'
-            if 'red' in payout_message:
+            elif 'red' in payout_message:   # red winner
                 winner = 'red'
+            else:                           # tie
+                current_stats = None
+                continue
 
             x = current_stats[0]
             y = [1, 0] if winner == 'red' else [0, 1]
+
+            info = (winner, SCRAPER.balance)
+            printer.print_payout(info)
 
             memory_replay.append((x, y))
             if len(memory_replay) == 10:
@@ -96,11 +110,6 @@ def main():
 
             current_stats = None
 
-            """
-            GET RESULTS
-            LOG RESULTS
-            TRAIN MODEL
-            """
             continue
 
 

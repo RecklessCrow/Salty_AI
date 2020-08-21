@@ -4,6 +4,7 @@ import dotenv
 import numpy as np
 from selenium import webdriver
 from sklearn.preprocessing import OneHotEncoder
+import time
 
 te = OneHotEncoder()
 te.fit(np.array(['P', 'B', 'A', 'S', 'X']).reshape(-1, 1))
@@ -17,6 +18,7 @@ class WebScraper:
 
     @property
     def balance(self):
+        time.sleep(1)
         return int(self.driver.find_element_by_id('balance').text.replace(',', ''))
 
     @property
@@ -47,8 +49,15 @@ class WebScraper:
         self.driver.find_element_by_class_name('graybutton').click()
 
     def get_player_names(self):
-        red = self.driver.find_element_by_class_name('betbuttonred').get_attribute('value')
-        blue = self.driver.find_element_by_class_name('betbuttonblue').get_attribute('value')
+        red = self.driver.find_element_by_id('sbettors1').find_element_by_class_name('redtext').text
+        blue = self.driver.find_element_by_id('sbettors2').find_element_by_class_name('bluetext').text
+
+        if '|' in red:
+            red = red.replace(' ', '').split('|')[1]
+
+        if '|' in blue:
+            blue = blue.replace(' ', '').split('|')[0]
+
         return red, blue
 
     def get_odds(self):
@@ -64,7 +73,26 @@ class WebScraper:
 
     @staticmethod
     def _format_team(team_stats):
-        return None
+        win_rate, num_matches, life, meter, tier = [stat.replace(' ', '').split('/') for stat in team_stats]
+        # take avg winrate and num_matches
+        win_rate = np.array(list(map(int, win_rate))).mean()
+        num_matches = np.array(list(map(int, num_matches))).mean()
+        # take sum live
+        life = sum(list(map(int, life)))
+        # take max meter and tier
+        meter = max(list(map(int, meter)))
+
+        if None in tier:
+            tier = np.zeros(5)
+        else:
+            a = te.transform(tier[0]).toarray()[0]
+            b = te.transform(tier[1]).toarray()[0]
+            if np.argmax(a) > np.argmax(b):
+                tier = a
+            else:
+                tier = b
+
+        return [win_rate, num_matches, life, meter] + tier
 
     def get_stats(self):
         formatted_stats = []
@@ -74,6 +102,7 @@ class WebScraper:
             goldtext = stats.find_elements_by_css_selector('span')
             stats = [x.text[len(i.text):] for x, i in zip(bettor_lines, goldtext)][:-2]
             num_matches, win_rate, tier, life, meter = stats
+            stats[1] = win_rate.replace('%', '')
 
             if '/' in num_matches:
                 formatted_stats.append(self._format_team(stats))
@@ -94,7 +123,12 @@ class WebScraper:
         self.driver.find_element_by_id('wager').send_keys(str(amount))
         self.driver.find_element_by_class_name(f'betbutton{team}').click()
 
+    def close(self):
+        self.driver.close()
+
 
 if __name__ == '__main__':
     ws = WebScraper()
-    print(ws.get_stats())
+    import time
+    time.sleep(1)
+    print(ws.get_player_names())
