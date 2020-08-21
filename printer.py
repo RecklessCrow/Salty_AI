@@ -18,7 +18,7 @@ def print_idle(info):
 
     global old_bet_amount, old_gain
     old_bet_amount = betting_amount
-    old_gain = betting_amount
+    old_gain = potential_gain
 
 
 def print_match(info):
