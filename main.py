@@ -118,5 +118,5 @@ if __name__ == '__main__':
 
     # load model
     MODEL = tf.keras.models.load_model(MODEL_PATH)
-
+    tf.keras.backend.set_value(MODEL.optimizer.learning_rate, 0.00001)
     main()

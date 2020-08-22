@@ -152,5 +152,5 @@ class WebScraper:
 
 if __name__ == '__main__':
     ws = WebScraper()
-    while True:
-        print(ws.get_odds())
+    # while True:
+    #     print(ws.get_odds())

@@ -15,7 +15,7 @@ class Memory:
     def __init__(self, maxlen=500):
         self.mem_x, self.mem_y = deque(maxlen=maxlen), deque(maxlen=maxlen)
         
-        memory_buffer_size = 20
+        memory_buffer_size = 100
         self._populate_memory(memory_buffer_size)
     
     def _populate_memory(self, num):
@@ -24,7 +24,7 @@ class Memory:
         self.mem_x.extend(x)
         self.mem_y.extend(y)
 
-    def get_memories(self, num_memories=10):
+    def get_memories(self, num_memories=25):
         x = []
         y = []
 
