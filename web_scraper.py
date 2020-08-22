@@ -90,29 +90,29 @@ class WebScraper:
         win_rate, num_matches, tier, life, meter = [stat.replace(' ', '').split('/') for stat in team_stats]
         # take avg winrate and num_matches
         win_rate = np.array(list(map(int, win_rate))).mean()
-        num_matches = np.array(list(map(int, num_matches))).mean()
+        # num_matches = np.array(list(map(int, num_matches))).mean()
         # take sum live
-        life = sum(list(map(int, life)))
+        # life = sum(list(map(int, life)))
         # take max meter and tier
-        meter = max(list(map(int, meter)))
+        # meter = max(list(map(int, meter)))
 
-        if None in tier:
-            tier = np.zeros(5)
-        else:
-            try:
-                a = te.transform([[tier[0]]]).toarray()[0]
-            except ValueError:
-                a = np.zeros(5)
-            try:
-                b = te.transform([[tier[1]]]).toarray()[0]
-            except ValueError:
-                b = np.zeros(5)
-            if np.argmax(a) > np.argmax(b):
-                tier = a
-            else:
-                tier = b
+        # if None in tier:
+        #     tier = np.zeros(5)
+        # else:
+        #     try:
+        #         a = te.transform([[tier[0]]]).toarray()[0]
+        #     except ValueError:
+        #         a = np.zeros(5)
+        #     try:
+        #         b = te.transform([[tier[1]]]).toarray()[0]
+        #     except ValueError:
+        #         b = np.zeros(5)
+        #     if np.argmax(a) > np.argmax(b):
+        #         tier = a
+        #     else:
+        #         tier = b
 
-        return [win_rate, num_matches, life, meter] + list(tier)
+        return [win_rate, num_matches]
 
     def get_stats(self):
         formatted_stats = []
@@ -131,16 +131,16 @@ class WebScraper:
 
             win_rate = int(win_rate)
             num_matches = int(num_matches)
-            life = int(life)
-            meter = int(meter)
-            try:
-                tier = te.transform([[tier.replace(' ', '')]]).toarray()[0]
-            except ValueError:
-                tier = np.zeros(5)
-            stats = [win_rate, num_matches, life, meter] + list(tier)
+            # life = int(life)
+            # meter = int(meter)
+            # try:
+            #     tier = te.transform([[tier.replace(' ', '')]]).toarray()[0]
+            # except ValueError:
+            #     tier = np.zeros(5)
+            stats = [win_rate, num_matches]
             formatted_stats.append(stats)
 
-        return np.array(formatted_stats).reshape((1, 2, 9))
+        return np.array([formatted_stats]).reshape((1, 2, 2))
 
     def bet(self, amount, team):
         self.driver.find_element_by_id('wager').send_keys(str(amount))

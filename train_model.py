@@ -1,11 +1,12 @@
 import os
 from datetime import datetime
+
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 import keras
 import numpy as np
 import tensorflow as tf
 from tensorflow.keras.callbacks import LearningRateScheduler, ModelCheckpoint, TensorBoard
-from tensorflow.keras.layers import Dense, LSTM
+from tensorflow.keras.layers import Dense, LSTM, Dropout, BatchNormalization
 from tensorflow.keras.models import Sequential
 from sklearn.model_selection import train_test_split
 
@@ -21,8 +22,8 @@ np.set_printoptions(precision=2, suppress=True)
 x, y = database_handler.select_all_matches()
 
 print(x.shape)
-x = np.dstack((x, np.zeros((len(x), 2, 5))))
-print(x[0])
+# x = np.dstack((x, np.zeros((len(x), 2, 5))))
+# print(x[0])
 
 x_train, x_val, y_train, y_val = train_test_split(x, y, test_size=0.2, random_state=66)
 
@@ -40,8 +41,26 @@ def make_model():
         return_sequences=True,
     ))
 
-    # model.add(BatchNormalization())
-    # model.add(Dropout(0.4))
+    model.add(BatchNormalization())
+    model.add(Dropout(0.4))
+
+    model.add(LSTM(
+        units=32,
+        activation='relu',
+        return_sequences=True,
+    ))
+
+    model.add(BatchNormalization())
+    model.add(Dropout(0.4))
+
+    model.add(LSTM(
+        units=64,
+        activation='relu',
+        return_sequences=True,
+    ))
+
+    model.add(BatchNormalization())
+    model.add(Dropout(0.4))
 
     model.add(LSTM(
         units=64,
@@ -49,16 +68,24 @@ def make_model():
         return_sequences=False,
     ))
 
-    # model.add(BatchNormalization())
-    # model.add(Dropout(0.4))
+    model.add(BatchNormalization())
+    model.add(Dropout(0.4))
 
     model.add(Dense(
-        units=128,
+        units=8,
         activation='relu',
     ))
 
-    # model.add(BatchNormalization())
-    # model.add(Dropout(0.4))
+    model.add(BatchNormalization())
+    model.add(Dropout(0.4))
+
+    model.add(Dense(
+        units=8,
+        activation='relu',
+    ))
+
+    model.add(BatchNormalization())
+    model.add(Dropout(0.4))
 
     model.add(Dense(
         units=2,
@@ -67,7 +94,7 @@ def make_model():
 
     model.compile(
         optimizer='adam',
-        loss='mse',
+        loss='categorical_crossentropy',
         metrics=['categorical_accuracy']
     )
 
@@ -120,7 +147,7 @@ def train(load_file=None, save_to=None):
 
 def test_model(model_file):
 
-    model = keras.models.load_model(model_file)
+    model = tf.keras.models.load_model(model_file)
     brackets = np.linspace(.5, 1, 10)
     results = []
 

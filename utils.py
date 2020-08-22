@@ -11,33 +11,30 @@ te.fit(np.array(['P', 'B', 'A', 'S', 'X']).reshape(-1, 1))
 
 
 class Memory:
-    
-    def __init__(self, maxlen=500):
+
+    def __init__(self, maxlen=5000):
         self.mem_x, self.mem_y = deque(maxlen=maxlen), deque(maxlen=maxlen)
-        
-        memory_buffer_size = 100
+
+        memory_buffer_size = 1000
         self._populate_memory(memory_buffer_size)
-    
+
     def _populate_memory(self, num):
         x, y = database_handler.select_num_matches(num)
-        x = np.dstack((x, np.zeros((len(x), 2, 5))))
+        # x = np.dstack((x, np.zeros((len(x), 2, 5))))
         self.mem_x.extend(x)
         self.mem_y.extend(y)
 
-    def get_memories(self, num_memories=25):
-        x = []
-        y = []
+    def get_memories(self, num_memories=50):
 
         if len(self) < num_memories:
             num_memories = len(self)
-        
-        idxs = random.sample(range(len(self)), num_memories)
-        
-        for idx in idxs:
-            x.append(self.mem_x[idx])
-            y.append(self.mem_y[idx])
 
-        return np.array(x), np.array(y)
+        idxs = random.sample(range(len(self)), num_memories)
+
+        x = np.array(self.mem_x).take(idxs, axis=0)
+        y = np.array(self.mem_y).take(idxs, axis=0)
+
+        return x, y
 
     def add_memory(self, x, y):
         self.mem_x.append(x)
@@ -45,7 +42,6 @@ class Memory:
 
     def __len__(self):
         return len(self.mem_x)
-
 
 
 old_balance = 0

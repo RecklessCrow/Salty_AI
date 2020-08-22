@@ -422,12 +422,12 @@ def format_match_output(matchup):
         matchup = list(matchup)
 
     x = np.array([match[:-1] for match in matchup])
-    try:
-        x = imp.transform(x)
-    except NotFittedError:
-        x = imp.fit_transform(x)
+    # try:
+    #     x = imp.transform(x)
+    # except NotFittedError:
+    #     x = imp.fit_transform(x)
 
-    x = x.reshape((-1, 2, 4)).astype('float64')
+    x = x.reshape((-1, 2, 2)).astype('float64')
 
     y = [[winner[-1]] for winner in matchup]
     y = label_encoder.transform(y).toarray()
@@ -438,8 +438,8 @@ def format_match_output(matchup):
 def select_all_matches():
     cur.execute(
         f"""
-        select  r.num_wins * 100.0 / r.num_matches,  r.num_matches, r.life, r.meter,
-                b.num_wins * 100.0  / b.num_matches,  b.num_matches, b.life, b.meter,
+        select  r.num_wins * 100.0 / r.num_matches,  r.num_matches,
+                b.num_wins * 100.0  / b.num_matches,  b.num_matches,
                 winner
         from characters as r
         inner join matches
@@ -457,8 +457,8 @@ def select_all_matches():
 def select_num_matches(num_matches):
     cur.execute(
         f"""
-        select  r.num_wins * 100.0 / r.num_matches,  r.num_matches, r.life, r.meter,
-                b.num_wins * 100.0  / b.num_matches,  b.num_matches, b.life, b.meter,
+        select  r.num_wins * 100.0 / r.num_matches,  r.num_matches,
+                b.num_wins * 100.0  / b.num_matches,  b.num_matches,
                 winner
         from characters as r
         inner join matches
