@@ -64,8 +64,7 @@ match_msg = ''
 def print_idle(info):
     betting_amount, potential_gain, red_odds, blue_odds = info
 
-    msg_str = f'Match #{num_games_bet + 1:,}\n' \
-              f'{red_odds} : {blue_odds} | ${betting_amount:,} -> ${potential_gain:,}\n' \
+    msg_str = f'{red_odds} : {blue_odds} | ${betting_amount:,} -> ${potential_gain:,}\n' \
               f'Percent of balance bet: {betting_amount / old_balance:.2%}'
 
     print(msg_str)
@@ -79,7 +78,8 @@ def print_idle(info):
 def print_match(info):
     red, blue, balance, prediction, probability = info
 
-    msg_str = f'Current balance: ${balance:,}\n' \
+    msg_str = f'Match #{num_games_bet + 1:,}\n' \
+              f'Current balance: ${balance:,}\n' \
               f'{red} vs. {blue} | {prediction} : {probability:.2%}'
 
     print(msg_str)

@@ -66,11 +66,8 @@ class WebScraper:
         # todo add time out for when the bot didnt place bet in time
         # todo Sometimes driver returns a tuple with less than 4 elements. Find more elegant way of doing this
         while len(info) != 4:
-            try:
-                info = self.driver.find_element_by_id('lastbet').find_elements_by_css_selector('span')
-            except StaleElementReferenceException:
-                pass
-            time.sleep(5)
+            info = self.driver.find_element_by_id('lastbet').find_elements_by_css_selector('span')
+            time.sleep(1)
 
         bet_amount, potential_gain, red_odds, blue_odds = info
 
@@ -78,10 +75,14 @@ class WebScraper:
             return self.get_odds()
 
         # cast strings to numbers
-        bet_amount = int(bet_amount.text[1:])
-        potential_gain = int(potential_gain.text[2:])
-        red_odds = float(red_odds.text)
-        blue_odds = float(blue_odds.text)
+        try:
+            bet_amount = int(bet_amount.text[1:])
+            potential_gain = int(potential_gain.text[2:])
+            red_odds = float(red_odds.text)
+            blue_odds = float(blue_odds.text)
+        except StaleElementReferenceException:
+            return self.get_odds()
+
         return bet_amount, potential_gain, red_odds, blue_odds
 
     @staticmethod

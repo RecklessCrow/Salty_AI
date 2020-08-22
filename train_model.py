@@ -97,8 +97,8 @@ def train(load_file=None, save_to=None):
     else:
         model = tf.keras.models.load_model(load_file)
 
-    epochs = 10
-    batch_size = 10000
+    epochs = 15
+    batch_size = 1000
 
     # Train model
     model.fit(
