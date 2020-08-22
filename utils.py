@@ -107,7 +107,7 @@ def print_payout(winner):
 
     print(msg_str)
 
-    logger.info('\n' + idle_msg + '\n' + match_msg + '\n' + msg_str)
+    logger.info('\n' + match_msg + '\n' + idle_msg + '\n' + msg_str)
 
 
 if __name__ == "__main__":

@@ -20,8 +20,8 @@ SCRAPER = WebScraper()
 
 # Load model
 list_of_files = glob.glob(os.path.join('models', '*'))
-MODEL_PATH = max(list_of_files, key=os.path.getctime)
-
+# MODEL_PATH = max(list_of_files, key=os.path.getctime)
+MODEL_PATH = 'models/current_best.h5'
 
 def decode_state(encoded_state):
     if 'locked' in encoded_state:
