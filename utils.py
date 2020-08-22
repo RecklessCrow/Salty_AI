@@ -1,3 +1,5 @@
+from sklearn.preprocessing import OneHotEncoder
+
 from logger_script import logger
 from collections import deque
 import database_handler
@@ -6,6 +8,7 @@ import random
 
 te = OneHotEncoder()
 te.fit(np.array(['P', 'B', 'A', 'S', 'X']).reshape(-1, 1))
+
 
 class Memory:
     
@@ -22,15 +25,19 @@ class Memory:
         self.mem_y.extend(y)
 
     def get_memories(self, num_memories=10):
+        x = []
+        y = []
+
         if len(self) < num_memories:
             num_memories = len(self)
         
         idxs = random.sample(range(len(self)), num_memories)
         
-        x = np.array(self.mem_x).take(idxs)
-        y = np.array(self.mem_y).take(idxs)
+        for idx in idxs:
+            x.append(self.mem_x[idx])
+            y.append(self.mem_y[idx])
 
-        return x, y
+        return np.array(x), np.array(y)
 
     def add_memory(self, x, y):
         self.mem_x.append(x)
@@ -105,4 +112,5 @@ def print_payout(winner):
 
 if __name__ == "__main__":
     mem = Memory()
-    print(mem.get_memories())
+    x, y = mem.get_memories()
+    print(x)

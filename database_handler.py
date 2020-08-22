@@ -13,7 +13,7 @@ db_file = os.path.join('data', 'salty.db')
 connection = connect(db_file, check_same_thread=False)
 cur = connection.cursor()
 
-imp = SimpleImputer(missing_values=np.nan, strategy='mean')
+imp = SimpleImputer(missing_values=None, strategy='constant', fill_value=-1)
 label_encoder = OneHotEncoder()
 label_encoder.fit([[0], [1]])
 
@@ -415,6 +415,26 @@ def create_database(drop=False):
         add_match(red, blue, winner)
 
 
+def format_match_output(matchup):
+    global imp
+
+    if not isinstance(matchup, list):
+        matchup = list(matchup)
+
+    x = np.array([match[:-1] for match in matchup])
+    try:
+        x = imp.transform(x)
+    except NotFittedError:
+        x = imp.fit_transform(x)
+
+    x = x.reshape((-1, 2, 4)).astype('float64')
+
+    y = [[winner[-1]] for winner in matchup]
+    y = label_encoder.transform(y).toarray()
+
+    return x, y
+
+
 def select_all_matches():
     cur.execute(
         f"""
@@ -428,25 +448,6 @@ def select_all_matches():
         on b.name = matches.blue
         """
     )
-
-    def format_match_output(matchup):
-        global imp
-
-        if not isinstance(matchup, list):
-            matchup = list(matchup)
-
-        x = np.array([match[:-1] for match in matchup]).astype('float64')
-
-        try:
-            x = imp.transform(x).reshape((-1, 2, len(matchup[0]) // 2))
-        except NotFittedError:
-            imp.fit(x)
-            x = imp.transform(x).reshape((-1, 2, len(matchup[0]) // 2))
-
-        y = [[winner[-1]] for winner in matchup]
-        y = label_encoder.transform(y).toarray()
-
-        return x, y
 
     matchup = cur.fetchall()
 
@@ -462,33 +463,12 @@ def select_num_matches(num_matches):
         from characters as r
         inner join matches
         on r.name = matches.red
-        inner join characters as b
+        inner join characters as b 
         on b.name = matches.blue
-        order by random()
-        limit {num_matches}
         """
     )
 
-    def format_match_output(matchup):
-        global imp
-
-        if not isinstance(matchup, list):
-            matchup = list(matchup)
-
-        x = np.array([match[:-1] for match in matchup]).astype('float64')
-
-        try:
-            x = imp.transform(x).reshape((-1, 2, len(matchup[0]) // 2))
-        except NotFittedError:
-            imp.fit(x)
-            x = imp.transform(x).reshape((-1, 2, len(matchup[0]) // 2))
-
-        y = [[winner[-1]] for winner in matchup]
-        y = label_encoder.transform(y).toarray()
-
-        return x, y
-
-    matchup = cur.fetchall()
+    matchup = cur.fetchmany(num_matches)
 
     return format_match_output(matchup)
 
@@ -496,3 +476,4 @@ def select_num_matches(num_matches):
 if __name__ == '__main__':
     create_database(True)
     connection.commit()
+    select_all_matches()

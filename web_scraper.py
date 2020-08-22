@@ -98,8 +98,14 @@ class WebScraper:
         if None in tier:
             tier = np.zeros(5)
         else:
-            a = te.transform([[tier[0]]]).toarray()[0]
-            b = te.transform([[tier[1]]]).toarray()[0]
+            try:
+                a = te.transform([[tier[0]]]).toarray()[0]
+            except ValueError:
+                a = np.zeros(5)
+            try:
+                b = te.transform([[tier[1]]]).toarray()[0]
+            except ValueError:
+                b = np.zeros(5)
             if np.argmax(a) > np.argmax(b):
                 tier = a
             else:
@@ -126,8 +132,10 @@ class WebScraper:
             num_matches = int(num_matches)
             life = int(life)
             meter = int(meter)
-            tier = te.transform([[tier.replace(' ', '')]]).toarray()[0]
-
+            try:
+                tier = te.transform([[tier.replace(' ', '')]]).toarray()[0]
+            except ValueError:
+                tier = np.zeros(5)
             stats = [win_rate, num_matches, life, meter] + list(tier)
             formatted_stats.append(stats)
 
