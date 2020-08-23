@@ -6,7 +6,7 @@ import numpy as np
 
 import database_handler
 import utils
-from utils import Memory
+from utils import Memory, label_encoder
 from web_scraper import WebScraper
 
 STATES = {
@@ -14,7 +14,7 @@ STATES = {
     'BETS_OPEN': 1,
     'PAYOUT': 2
 }
-TEAM = {0: 'red', 1: 'blue'}
+TEAM = {1: 'red', 0: 'blue'}
 
 # Load web scraper
 SCRAPER = WebScraper()
@@ -70,7 +70,8 @@ def main():
             modifier = inv_modifier * modifier
             bet_amount = balance * modifier
 
-            # All in under $10,000
+            if balance < 100_000:
+                bet_amount = balance * confidence_level // 2
             if balance < 10_000:
                 bet_amount = balance
 
@@ -94,16 +95,18 @@ def main():
                 current_stats = None
                 continue
 
+            utils.print_payout(winner)
+
             database_handler.add_match(red, blue, winner)
 
-            # x = current_stats
-            # y = [[1, 0]] if winner == 'red' else [[0, 1]]
-            #
-            # utils.print_payout(winner)
+            x = current_stats
+            y = [[1, 0]] if winner == 'red' else [[0, 1]]
+            data = np.array(x)
+            labels = np.array(y)
             # Memory.add_memory(x, y)
             # data, labels = Memory.get_memories()
-            # MODEL.train_on_batch(data, labels)
-            # MODEL.save(MODEL_PATH)
+            MODEL.train_on_batch(data, labels)
+            MODEL.save(MODEL_PATH)
 
             current_stats = None
 

@@ -5,16 +5,14 @@ from sqlite3 import connect
 import numpy as np
 import pandas as pd
 from sklearn.impute import SimpleImputer
-from sklearn.preprocessing import OneHotEncoder
 from tqdm import tqdm
 
+from utils import label_encoder
 db_file = os.path.join('data', 'salty.db')
 connection = connect(db_file, check_same_thread=False)
 cur = connection.cursor()
 
 imp = SimpleImputer(missing_values=None, strategy='constant', fill_value=-1)
-label_encoder = OneHotEncoder()
-label_encoder.fit([['red'], ['blue']])
 
 
 def drop_tables():
@@ -124,7 +122,9 @@ def format_match_output(matchup):
     x = x.reshape((-1, 2, 2)).astype('float64')
 
     y = [[winner[-1]] for winner in matchup]
+    print(y[0])
     y = label_encoder.transform(y).toarray()
+    print(y[0])
 
     return x, y
 
@@ -195,6 +195,6 @@ def create_database(drop=False):
 
 
 if __name__ == '__main__':
-    create_database(True)
-    connection.commit()
-    print(select_all_matches())
+    # create_database(True)
+    # connection.commit()
+    select_all_matches()

@@ -8,6 +8,8 @@ import random
 
 te = OneHotEncoder()
 te.fit(np.array(['P', 'B', 'A', 'S', 'X']).reshape(-1, 1))
+label_encoder = OneHotEncoder()
+label_encoder.fit([['red'], ['blue']])
 
 
 class Memory:
@@ -25,7 +27,6 @@ class Memory:
         self.mem_y.extend(y)
 
     def get_memories(self, num_memories=50):
-
         if len(self) < num_memories:
             num_memories = len(self)
 
@@ -60,8 +61,8 @@ match_msg = ''
 def print_idle(info):
     betting_amount, potential_gain, red_odds, blue_odds = info
 
-    msg_str = f'{red_odds} : {blue_odds} | ${betting_amount:,} -> ${potential_gain:,}\n' \
-              f'Percent of balance bet: {betting_amount / old_balance:.2%}'
+    msg_str = f'Percent of balance bet: {betting_amount / old_balance:.2%}\n' \
+              f'{red_odds} : {blue_odds} | ${betting_amount:,} -> ${potential_gain:,}'
 
     print(msg_str)
 
@@ -75,8 +76,8 @@ def print_match(info):
     red, blue, balance, prediction, probability = info
 
     msg_str = f'Match #{num_games_bet + 1:,}\n' \
-              f'Current balance: ${balance:,}\n' \
-              f'{red} vs. {blue} | {prediction} : {probability:.2%}'
+              f'{red} vs. {blue} | {prediction} : {probability:.2%}\n' \
+              f'Current balance: ${balance:,}'
 
     print(msg_str)
 
@@ -94,7 +95,7 @@ def print_payout(winner):
 
     # while under 10_000 we always bet all in, so add the base amount from the display
     if payout < 0 and old_balance < 10_000:
-        payout += 3600
+        payout += 3650
     winnings += payout
 
     num_games_won += 1 if correct else 0

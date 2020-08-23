@@ -81,6 +81,7 @@ class WebScraper:
             red_odds = float(red_odds.text)
             blue_odds = float(blue_odds.text)
         except StaleElementReferenceException:
+            time.sleep(3)
             return self.get_odds()
 
         return bet_amount, potential_gain, red_odds, blue_odds
@@ -90,7 +91,7 @@ class WebScraper:
         win_rate, num_matches, tier, life, meter = [stat.replace(' ', '').split('/') for stat in team_stats]
         # take avg winrate and num_matches
         win_rate = np.array(list(map(int, win_rate))).mean()
-        # num_matches = np.array(list(map(int, num_matches))).mean()
+        num_matches = np.array(list(map(int, num_matches))).mean()
         # take sum live
         # life = sum(list(map(int, life)))
         # take max meter and tier
@@ -140,7 +141,13 @@ class WebScraper:
             stats = [win_rate, num_matches]
             formatted_stats.append(stats)
 
-        return np.array([formatted_stats]).reshape((1, 2, 2)).astype('float32')
+        try:
+            formatted_stats = np.array([formatted_stats]).reshape((1, 2, 2)).astype('float32')
+        except ValueError:
+            time.sleep(2)
+            return self.get_stats()
+
+        return formatted_stats
 
     def bet(self, amount, team):
         self.driver.find_element_by_id('wager').send_keys(str(amount))
