@@ -4,6 +4,7 @@ import time
 
 import numpy as np
 
+import database_handler
 import utils
 from utils import Memory
 from web_scraper import WebScraper
@@ -45,7 +46,7 @@ def await_next_state(last_state):
 def main():
     current_state = STATES['IDLE']
     current_stats = None
-    memory_replay = Memory()
+    # memory_replay = Memory()
 
     while True:
         current_state = await_next_state(current_state)
@@ -83,6 +84,8 @@ def main():
         if current_state == STATES['PAYOUT'] and current_stats is not None:
             payout_message = SCRAPER.status
 
+            red, blue = SCRAPER.get_player_names()
+
             if 'blue' in payout_message:    # blue winner
                 winner = 'blue'
             elif 'red' in payout_message:   # red winner
@@ -91,15 +94,16 @@ def main():
                 current_stats = None
                 continue
 
-            x = current_stats[0]
-            y = [1, 0] if winner == 'red' else [0, 1]
+            database_handler.add_match(red, blue, winner)
 
-            utils.print_payout(winner)
-
-            memory_replay.add_memory(x, y)
-            data, labels = memory_replay.get_memories()
-            MODEL.train_on_batch(data, labels)
-            MODEL.save(MODEL_PATH)
+            # x = current_stats
+            # y = [[1, 0]] if winner == 'red' else [[0, 1]]
+            #
+            # utils.print_payout(winner)
+            # Memory.add_memory(x, y)
+            # data, labels = Memory.get_memories()
+            # MODEL.train_on_batch(data, labels)
+            # MODEL.save(MODEL_PATH)
 
             current_stats = None
 

@@ -91,6 +91,10 @@ def print_payout(winner):
 
     correct = old_prediction == winner
     payout = old_gain if correct else -old_bet_amount
+
+    # while under 10_000 we always bet all in, so add the base amount from the display
+    if payout < 0 and old_balance < 10_000:
+        payout += 3600
     winnings += payout
 
     num_games_won += 1 if correct else 0

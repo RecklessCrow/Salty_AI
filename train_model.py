@@ -63,6 +63,24 @@ def make_model():
     model.add(Dropout(0.4))
 
     model.add(LSTM(
+        units=32,
+        activation='relu',
+        return_sequences=True,
+    ))
+
+    model.add(BatchNormalization())
+    model.add(Dropout(0.4))
+
+    model.add(LSTM(
+        units=32,
+        activation='relu',
+        return_sequences=True,
+    ))
+
+    model.add(BatchNormalization())
+    model.add(Dropout(0.4))
+
+    model.add(LSTM(
         units=64,
         activation='relu',
         return_sequences=False,
@@ -72,16 +90,8 @@ def make_model():
     model.add(Dropout(0.4))
 
     model.add(Dense(
-        units=8,
-        activation='relu',
-    ))
-
-    model.add(BatchNormalization())
-    model.add(Dropout(0.4))
-
-    model.add(Dense(
-        units=8,
-        activation='relu',
+        units=64,
+        activation='relu'
     ))
 
     model.add(BatchNormalization())
@@ -94,7 +104,7 @@ def make_model():
 
     model.compile(
         optimizer='adam',
-        loss='categorical_crossentropy',
+        loss='msle',
         metrics=['categorical_accuracy']
     )
 
@@ -124,8 +134,8 @@ def train(load_file=None, save_to=None):
     else:
         model = tf.keras.models.load_model(load_file)
 
-    epochs = 15
-    batch_size = 1000
+    epochs = 25
+    batch_size = 10000
 
     # Train model
     model.fit(
@@ -142,7 +152,7 @@ def train(load_file=None, save_to=None):
     else:
         tf.keras.models.save_model(model, save_to)
 
-    test_model(os.path.join('models', curr_date))
+    # test_model(os.path.join('models', curr_date))
 
 
 def test_model(model_file):

@@ -140,7 +140,7 @@ class WebScraper:
             stats = [win_rate, num_matches]
             formatted_stats.append(stats)
 
-        return np.array([formatted_stats]).reshape((1, 2, 2))
+        return np.array([formatted_stats]).reshape((1, 2, 2)).astype('float32')
 
     def bet(self, amount, team):
         self.driver.find_element_by_id('wager').send_keys(str(amount))
