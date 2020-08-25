@@ -70,8 +70,6 @@ def main():
             modifier = inv_modifier * modifier
             bet_amount = balance * modifier
 
-            if balance < 100_000:
-                bet_amount = balance * confidence_level // 2
             if balance < 10_000:
                 bet_amount = balance
 

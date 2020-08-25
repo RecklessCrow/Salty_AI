@@ -118,11 +118,14 @@ class WebScraper:
     def get_stats(self):
         formatted_stats = []
         for p in [1, 2]:
-            stats = self.driver.find_element_by_id(f'bettors{p}')
-            bettor_lines = stats.find_elements_by_class_name('bettor-line')
-            goldtext = stats.find_elements_by_css_selector('span')
-            stats = [x.text[len(i.text):] for x, i in zip(bettor_lines, goldtext)][:-2]
-            stats[1] = stats[1].replace('%', '')
+            try:
+                stats = self.driver.find_element_by_id(f'bettors{p}')
+                bettor_lines = stats.find_elements_by_class_name('bettor-line')
+                goldtext = stats.find_elements_by_css_selector('span')
+                stats = [x.text[len(i.text):] for x, i in zip(bettor_lines, goldtext)][:-2]
+                stats[1] = stats[1].replace('%', '')
+            except StaleElementReferenceException and IndexError:
+                return self.get_stats()
 
             num_matches, win_rate, tier, life, meter = stats
 
@@ -141,11 +144,7 @@ class WebScraper:
             stats = [win_rate, num_matches]
             formatted_stats.append(stats)
 
-        try:
-            formatted_stats = np.array([formatted_stats]).reshape((1, 2, 2)).astype('float32')
-        except ValueError:
-            time.sleep(2)
-            return self.get_stats()
+        formatted_stats = np.array([formatted_stats]).reshape((1, 2, 2)).astype('float32')
 
         return formatted_stats
 

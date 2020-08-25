@@ -191,4 +191,4 @@ def test_model(model_file):
 
 
 if __name__ == '__main__':
-    train()
+    test_model('models/2020-08-23_16-52.h5')
