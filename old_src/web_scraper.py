@@ -7,15 +7,17 @@ from selenium import webdriver
 from selenium.common.exceptions import StaleElementReferenceException
 from sklearn.preprocessing import OneHotEncoder
 
-te = OneHotEncoder()
-te.fit(np.array(['P', 'B', 'A', 'S', 'X']).reshape(-1, 1))
+
 
 
 class WebScraper:
 
     def __init__(self):
-        self.driver = webdriver.Chrome('chromedriver.exe')
+        self.driver = webdriver.Chrome()
         self.login()
+
+        self.te = OneHotEncoder()
+        self.te.fit(np.array(['P', 'B', 'A', 'S', 'X']).reshape(-1, 1))
 
     @property
     def balance(self):
@@ -92,26 +94,6 @@ class WebScraper:
         # take avg winrate and num_matches
         win_rate = np.array(list(map(int, win_rate))).mean()
         num_matches = np.array(list(map(int, num_matches))).mean()
-        # take sum live
-        # life = sum(list(map(int, life)))
-        # take max meter and tier
-        # meter = max(list(map(int, meter)))
-
-        # if None in tier:
-        #     tier = np.zeros(5)
-        # else:
-        #     try:
-        #         a = te.transform([[tier[0]]]).toarray()[0]
-        #     except ValueError:
-        #         a = np.zeros(5)
-        #     try:
-        #         b = te.transform([[tier[1]]]).toarray()[0]
-        #     except ValueError:
-        #         b = np.zeros(5)
-        #     if np.argmax(a) > np.argmax(b):
-        #         tier = a
-        #     else:
-        #         tier = b
 
         return [win_rate, num_matches]
 
