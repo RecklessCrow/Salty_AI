@@ -1,10 +1,10 @@
 import os
 from datetime import datetime
 
-import keras.saving.saved_model.model_serialization
-
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
+import keras.saving.saved_model.model_serialization
+from keras.callbacks import EarlyStopping
 from keras.layers import Dense, Embedding, Dropout, Flatten
 from tensorflow.keras import Sequential
 
@@ -54,8 +54,16 @@ class Model:
         self.model.fit(
             x, y,
             epochs=epochs,
-            validation_split=0,
-            steps_per_epoch=1
+            validation_split=validation_split,
+            steps_per_epoch=1,
+            callbacks=[
+                EarlyStopping(
+                    # monitor="",
+                    min_delta=0.0001,
+                    patience=5,
+                    restore_best_weights=True
+                )
+            ]
         )
 
     def predict(self, x):

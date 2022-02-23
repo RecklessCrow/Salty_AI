@@ -13,4 +13,5 @@ dropout = 0.6
 optimizer = "adam"
 loss = "bce"
 
-epochs = 100
+epochs = int(1e6)
+validation_split = 0.1

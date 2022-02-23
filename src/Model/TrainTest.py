@@ -15,12 +15,12 @@ def cross_validation(data):
     :return:
     """
     x, y = data
-    model = Model(database.get_num_characters() + 1)
 
     scores = []
 
     iterator = StratifiedKFold(n_splits=5, shuffle=True).split(x, y)
     for train_idxs, val_idxs in iterator:
+        model = Model(database.get_num_characters() + 1)
         train_x, train_y = x[train_idxs], y[train_idxs]
         val_x, y_true = x[val_idxs], y[val_idxs]
 
