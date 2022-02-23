@@ -1,7 +1,5 @@
+/data/*.csv
+/data/*.db
 /.env
-/venv/
-/models/
-/logs/
-/checkpoints/
-/chromedriver.exe
-/data/
+
+/src/geckodriver.log
