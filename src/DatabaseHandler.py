@@ -7,13 +7,13 @@ import pandas as pd
 from sklearn.preprocessing import OrdinalEncoder
 from tqdm import tqdm
 
-ZIP_FILE = os.path.join("data", "data.zip")
-MATCH_DATA_FILE = os.path.join("data", "match_data.csv")
+ZIP_FILE = os.path.join("data", "match_data.zip")
+MATCH_DATA = os.path.join("data", "match_data")
 DB_FILE = os.path.join("data", "salty.db")
 
 
 class DatabaseHandler:
-    def __init__(self):
+    def __init__(self, remake=False):
         """
         Object to interact with the database
         """
@@ -22,7 +22,7 @@ class DatabaseHandler:
         self.connection = sqlite3.connect(DB_FILE, check_same_thread=False)
         self.cur = self.connection.cursor()
 
-        if not db_exists:
+        if not db_exists or remake:
             self.__create_database()
 
         self.encoder = OrdinalEncoder()
@@ -54,9 +54,9 @@ class DatabaseHandler:
             drop table if exists matches;
 
             create table characters(
-                name        text    primary key,
-                num_wins    integer not null,
-                num_matches integer not null
+                name            text        primary key,
+                num_wins        integer     not null,
+                num_matches     integer     not null
             );
 
             create table matches(
@@ -72,7 +72,14 @@ class DatabaseHandler:
         )
 
         # Populate tables
-        df = pd.read_csv(MATCH_DATA_FILE).dropna()
+        df = pd.read_csv(os.path.join(MATCH_DATA, "saltyRecordsM--2021-02-03-13.33.txt"))
+        iter_obj = tqdm(df.iterrows(), desc="Populating Tables", total=len(df))
+        for idx, (
+        red, blue, winner, strategy, prediction, tier, mode, odds, time, crowd_favor, illum_favor, date) in iter_obj:
+            winner = "red" if winner == 0 else "blue"
+            self.match_over(red, blue, winner, commit=False)
+
+        df = pd.read_csv(os.path.join(MATCH_DATA, "match_data.csv")).dropna()
         iter_obj = tqdm(df.iterrows(), desc="Populating Tables", total=len(df))
         for idx, (_, match_id, red, blue, winner) in iter_obj:
             self.match_over(red, blue, winner, commit=False)
@@ -254,3 +261,7 @@ class DatabaseHandler:
         :return:
         """
         return self.encoder.inverse_transform(x)
+
+
+if __name__ == '__main__':
+    database = DatabaseHandler(True)

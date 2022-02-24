@@ -51,19 +51,20 @@ class Model:
         return model
 
     def train(self, x, y):
+        callbacks = []
+
+        callbacks.append(EarlyStopping(
+            min_delta=min_delta,
+            patience=patience,
+            restore_best_weights=True
+        ))
+
         self.model.fit(
             x, y,
             epochs=epochs,
             validation_split=validation_split,
-            steps_per_epoch=1,
-            callbacks=[
-                EarlyStopping(
-                    # monitor="",
-                    min_delta=0.0001,
-                    patience=5,
-                    restore_best_weights=True
-                )
-            ]
+            steps_per_epoch=32,
+            callbacks=callbacks
         )
 
     def predict(self, x):

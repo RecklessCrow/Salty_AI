@@ -13,5 +13,10 @@ dropout = 0.6
 optimizer = "adam"
 loss = "bce"
 
+# Training
 epochs = int(1e6)
 validation_split = 0.1
+
+# Early Stopping
+min_delta = 0.0001
+patience = 4
