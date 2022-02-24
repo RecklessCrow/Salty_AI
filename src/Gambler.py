@@ -19,16 +19,6 @@ def main():
 
         if state == STATES["BETS_OPEN"]:
             red, blue = driver.get_fighters()
-            x = [[red, blue]]
-            x = database.encode_character(x)
-            print(x)
-
-            confidence = model.predict(x)[0][0]
-            pred = np.around(confidence)
-
-            if pred == 0:
-                confidence = 1 - confidence
-
             is_tournament = driver.is_tournament()
             bailout = driver.get_bailout(is_tournament)
             balance = driver.get_balance()
@@ -36,21 +26,30 @@ def main():
             if "team" in red.lower() or "team" in blue.lower():
                 bet_amount = 1
                 pred = np.around(np.random.random())  # coin flip
-
-            elif balance < 2 * bailout or confidence > 0.9:
-                bet_amount = balance
-
-            elif is_tournament:
-                bet_amount = np.floor(balance * confidence)
-
-                if bet_amount < bailout:
-                    bet_amount = bailout
-
+                confidence = 0
+                
             else:
-                if balance < 10_000:
-                    bet_amount = np.floor(balance * confidence) // 2
+                x = database.encode_character([[red], [blue]]).reshape(1, 2)
+
+                confidence = model.predict(x)[0][0]
+                pred = np.around(confidence)
+
+                if pred == 0:
+                    confidence = 1 - confidence
+                if balance < 2 * bailout or confidence > 0.9:
+                    bet_amount = balance
+
+                elif is_tournament:
+                    bet_amount = np.floor(balance * confidence)
+
+                    if bet_amount < bailout:
+                        bet_amount = bailout
+
                 else:
-                    bet_amount = np.floor(min(balance * confidence, balance * 0.01))
+                    if balance < 10_000:
+                        bet_amount = np.floor(balance * confidence) // 2
+                    else:
+                        bet_amount = np.floor(min(balance * confidence, balance * 0.01))
 
             if bet_amount > balance:
                 bet_amount = balance
