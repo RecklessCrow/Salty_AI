@@ -1,4 +1,5 @@
 import os
+import re
 import sys
 
 from dotenv import load_dotenv
@@ -48,6 +49,18 @@ class SaltyBetDriver:
     def __del__(self):
         self.driver.close()
 
+    def get_bailout(self, tournament):
+        level_url = self.driver.find_element(By.ID, "rank")
+        level_url = level_url.find_element(By.CLASS_NAME, "levelimage").get_attribute("src")
+        level = int(re.search("[0-9]+", level_url.split("/")[-1])[0])
+
+        modifier = level * 25
+
+        if tournament:
+            return 1000 + modifier
+
+        return 100 + modifier
+
     def get_balance(self):
         """
         Get the current balance of the player
@@ -88,3 +101,13 @@ class SaltyBetDriver:
             blue = blue.split('|')[0]
 
         return red.strip(), blue.strip()
+
+    def is_tournament(self):
+        tournament_text = self.driver.find_element(By.ID, "footer-alert").text
+        return "bracket" in tournament_text or \
+               "FINAL ROUND" in tournament_text or \
+               "Tournament mode start" in tournament_text
+
+
+if __name__ == '__main__':
+    driver = SaltyBetDriver(headless=True)

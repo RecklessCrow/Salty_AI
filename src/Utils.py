@@ -1,14 +1,13 @@
 import time
 
 from DatabaseHandler import DatabaseHandler
-from SaltyBetDriver import SaltyBetDriver
 
 """
 Utilities for the state machines
 """
 
 database = DatabaseHandler()
-driver = SaltyBetDriver(headless=True)
+
 
 STATES = {
     "IDLE": 0,
@@ -30,7 +29,7 @@ def decode_state(encoded_state):
     return STATES["IDLE"]
 
 
-def await_next_state(last_state):
+def await_next_state(driver, last_state):
     state = last_state
 
     while state == last_state:
@@ -38,3 +37,27 @@ def await_next_state(last_state):
         time.sleep(1)
 
     return state
+
+
+def record_match(driver, match_time):
+    payout_message = driver.get_game_state()
+
+    if "red" in payout_message:  # red winner
+        winner = "red"
+    elif "blue" in payout_message:  # blue winner
+        winner = "blue"
+    else:  # tie
+        return
+
+    print(
+        f"{winner.capitalize()} Team Wins!\n"
+        f"Match time: {time.strftime('%M:%S', time.gmtime(match_time))}\n"
+        f"--------------------"
+    )
+
+    red, blue = driver.get_fighters()
+
+    if "team" in red.lower() or "team" in blue.lower():
+        return
+
+    database.match_over(red, blue, winner)

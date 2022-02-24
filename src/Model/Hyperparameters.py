@@ -2,19 +2,17 @@
 Hyperparameters for the neural network
 """
 
-embedding_output = 4
-
-dense_layers = 2
-dense_units = 128
+embedding_output = 3
+dense_layers = 4
+dense_units = 32
 dense_activation = "gelu"
 
-dropout = 0.6
-
 optimizer = "adam"
+learning_rate = 0.03
 loss = "bce"
 
 # Training
-epochs = int(1e6)
+epochs = 34
 validation_split = 0.1
 
 # Early Stopping

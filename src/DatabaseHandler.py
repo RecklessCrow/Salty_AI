@@ -74,8 +74,12 @@ class DatabaseHandler:
         # Populate tables
         df = pd.read_csv(os.path.join(MATCH_DATA, "saltyRecordsM--2021-02-03-13.33.txt"))
         iter_obj = tqdm(df.iterrows(), desc="Populating Tables", total=len(df))
-        for idx, (
-        red, blue, winner, strategy, prediction, tier, mode, odds, time, crowd_favor, illum_favor, date) in iter_obj:
+        for idx, (red, blue, winner,
+                  strategy, prediction, tier,
+                  mode, odds, time,
+                  crowd_favor, illum_favor, date) in iter_obj:
+            if "Team" in red or "Team" in blue:
+                continue
             winner = "red" if winner == 0 else "blue"
             self.match_over(red, blue, winner, commit=False)
 
@@ -242,7 +246,7 @@ class DatabaseHandler:
         blu_vec = self.encoder.transform(np.array(matches[:, 1]).reshape(-1, 1)).flatten()
 
         x = np.array(list(zip(red_vec, blu_vec)), dtype=int)
-        y = np.array([[winner == "red"] for winner in matches[:, -1]], dtype=int)
+        y = np.array([[self.team_to_int(winner)] for winner in matches[:, -1]], dtype=int)
 
         return x, y
 
@@ -252,7 +256,10 @@ class DatabaseHandler:
         :param x: Characters to transform
         :return:
         """
-        return self.encoder.transform(x)
+        try:
+            return self.encoder.transform(x)
+        except:
+            return 0
 
     def decode_character(self, x):
         """
@@ -260,7 +267,18 @@ class DatabaseHandler:
         :param x: integers to transform
         :return:
         """
-        return self.encoder.inverse_transform(x)
+        try:
+            return self.encoder.inverse_transform(x)
+        except:
+            return "CHARACTER NOT FOUND"
+
+    @staticmethod
+    def team_to_int(team):
+        return int(team == "red")
+
+    @staticmethod
+    def int_to_team(number):
+        return "red" if number else "blue"
 
 
 if __name__ == '__main__':
