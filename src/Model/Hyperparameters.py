@@ -12,7 +12,7 @@ learning_rate = 0.03
 loss = "bce"
 
 # Training
-epochs = 34
+epochs = 15
 validation_split = 0.1
 
 # Early Stopping

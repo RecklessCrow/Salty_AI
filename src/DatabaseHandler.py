@@ -26,6 +26,7 @@ class DatabaseHandler:
             self.__create_database()
 
         self.encoder = OrdinalEncoder()
+        self.encoder.fit(self.get_all_characters())
 
     def __del__(self):
         self.commit()
@@ -256,10 +257,7 @@ class DatabaseHandler:
         :param x: Characters to transform
         :return:
         """
-        try:
-            return self.encoder.transform(x)
-        except:
-            return 0
+        return self.encoder.transform(x)
 
     def decode_character(self, x):
         """
@@ -267,10 +265,7 @@ class DatabaseHandler:
         :param x: integers to transform
         :return:
         """
-        try:
-            return self.encoder.inverse_transform(x)
-        except:
-            return "CHARACTER NOT FOUND"
+        return self.encoder.inverse_transform(x)
 
     @staticmethod
     def team_to_int(team):

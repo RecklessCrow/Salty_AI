@@ -2,14 +2,13 @@ import numpy as np
 
 from Utils import *
 from src.Model.Model import Model
+from src.SaltyBetDriver import SaltyBetDriver
 
-model_file = ""
+model_file = "SavedModels/model_15.14.00"
 
 
 def main():
-    model = Model(database.get_num_characters())
-    x, y = database.get_dataset()
-    model.train(x, y)
+    model = Model(database.get_num_characters(), model_file)
 
     driver = SaltyBetDriver(headless=False)
     state = STATES["IDLE"]
@@ -20,7 +19,9 @@ def main():
 
         if state == STATES["BETS_OPEN"]:
             red, blue = driver.get_fighters()
-            x = [[database.encode_character(red), database.encode_character(blue)]]
+            x = [[red, blue]]
+            x = database.encode_character(x)
+            print(x)
 
             confidence = model.predict(x)[0][0]
             pred = np.around(confidence)
@@ -34,6 +35,7 @@ def main():
 
             if "team" in red.lower() or "team" in blue.lower():
                 bet_amount = 1
+                pred = np.around(np.random.random())  # coin flip
 
             elif balance < 2 * bailout or confidence > 0.9:
                 bet_amount = balance
@@ -45,7 +47,10 @@ def main():
                     bet_amount = bailout
 
             else:
-                bet_amount = np.floor(min(balance * confidence, balance * 0.01))
+                if balance < 10_000:
+                    bet_amount = np.floor(balance * confidence) // 2
+                else:
+                    bet_amount = np.floor(min(balance * confidence, balance * 0.01))
 
             if bet_amount > balance:
                 bet_amount = balance
@@ -56,7 +61,8 @@ def main():
             print(
                 f"Red  Team: {red}\n"
                 f"Blue Team: {blue}\n"
-                f"Betting ${bet_amount:,} on {team.capitalize()} Team"
+                f"Betting ${bet_amount:,} on {team.capitalize()} Team\n"
+                f"Model confidence: {confidence:%}"
             )
             driver.bet(max(bet_amount, 1), team)
             continue
