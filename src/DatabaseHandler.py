@@ -257,7 +257,10 @@ class DatabaseHandler:
         :param x: Characters to transform
         :return:
         """
-        return self.encoder.transform(x)
+        try:
+            return self.encoder.transform(x)
+        except ValueError:
+            return 0
 
     def decode_character(self, x):
         """

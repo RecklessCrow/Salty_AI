@@ -50,6 +50,11 @@ class SaltyBetDriver:
         self.driver.close()
 
     def get_bailout(self, tournament):
+        """
+        Get the bailout amount for the player, based on level and if participating in a tournament
+        :param tournament: if the current match is part of a tournament
+        :return: bailout amount
+        """
         level_url = self.driver.find_element(By.ID, "rank")
         level_url = level_url.find_element(By.CLASS_NAME, "levelimage").get_attribute("src")
         level = int(re.search("[0-9]+", level_url.split("/")[-1])[0])

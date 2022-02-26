@@ -27,7 +27,7 @@ def main():
                 bet_amount = 1
                 pred = np.around(np.random.random())  # coin flip
                 confidence = 0
-                
+
             else:
                 x = database.encode_character([[red], [blue]]).reshape(1, 2)
 
@@ -47,7 +47,7 @@ def main():
 
                 else:
                     if balance < 10_000:
-                        bet_amount = np.floor(balance * confidence) // 2
+                        bet_amount = np.floor(balance * confidence) // 4
                     else:
                         bet_amount = np.floor(min(balance * confidence, balance * 0.01))
 
