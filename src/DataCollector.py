@@ -1,4 +1,5 @@
 from Utils import *
+from src.SaltyBetDriver import SaltyBetDriver
 
 """
 Script to gather match data.

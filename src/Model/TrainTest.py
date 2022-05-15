@@ -44,9 +44,10 @@ def cross_validation(data):
 
 
 def main():
-    data = database.get_dataset()
+    data = database.get_dataset(add_flips=True)
     # cross_validation(data)
     hyperparameter_tuning(data)
+
 
 if __name__ == '__main__':
     main()

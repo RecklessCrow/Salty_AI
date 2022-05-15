@@ -74,17 +74,21 @@ class DatabaseHandler:
 
         # Populate tables
         df = pd.read_csv(os.path.join(MATCH_DATA, "saltyRecordsM--2021-02-03-13.33.txt"))
+
         iter_obj = tqdm(df.iterrows(), desc="Populating Tables", total=len(df))
         for idx, (red, blue, winner,
                   strategy, prediction, tier,
                   mode, odds, time,
                   crowd_favor, illum_favor, date) in iter_obj:
+
             if "Team" in red or "Team" in blue:
                 continue
+
             winner = "red" if winner == 0 else "blue"
             self.match_over(red, blue, winner, commit=False)
 
         df = pd.read_csv(os.path.join(MATCH_DATA, "match_data.csv")).dropna()
+
         iter_obj = tqdm(df.iterrows(), desc="Populating Tables", total=len(df))
         for idx, (_, match_id, red, blue, winner) in iter_obj:
             self.match_over(red, blue, winner, commit=False)
@@ -232,7 +236,7 @@ class DatabaseHandler:
 
         return self.cur.fetchall()
 
-    def get_dataset(self):
+    def get_dataset(self, add_flips=False):
         """
         Formats the data for machine learning
         :return: x and y, the observation target pair
@@ -248,6 +252,14 @@ class DatabaseHandler:
 
         x = np.array(list(zip(red_vec, blu_vec)), dtype=int)
         y = np.array([[self.team_to_int(winner)] for winner in matches[:, -1]], dtype=int)
+
+        # flip all matches teams and winners to add data
+        if add_flips:
+            x_flip = np.flip(x, axis=1)
+            y_flip = np.array([(val[0] + 1) % 2 for val in y]).reshape(-1, 1)
+
+            x = np.concatenate((x, x_flip))
+            y = np.concatenate((y, y_flip))
 
         return x, y
 
@@ -280,4 +292,5 @@ class DatabaseHandler:
 
 
 if __name__ == '__main__':
-    database = DatabaseHandler(True)
+    database = DatabaseHandler()
+    database.get_dataset(add_flips=True)

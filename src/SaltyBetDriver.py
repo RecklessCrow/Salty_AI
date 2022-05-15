@@ -55,6 +55,9 @@ class SaltyBetDriver:
         :param tournament: if the current match is part of a tournament
         :return: bailout amount
         """
+        base_bailout = 100
+        tournament_base_bailout = 1000
+
         level_url = self.driver.find_element(By.ID, "rank")
         level_url = level_url.find_element(By.CLASS_NAME, "levelimage").get_attribute("src")
         level = int(re.search("[0-9]+", level_url.split("/")[-1])[0])
@@ -62,9 +65,9 @@ class SaltyBetDriver:
         modifier = level * 25
 
         if tournament:
-            return 1000 + modifier
+            return tournament_base_bailout + modifier
 
-        return 100 + modifier
+        return base_bailout + modifier
 
     def get_balance(self):
         """
