@@ -1,6 +1,6 @@
 import numpy as np
 from sklearn.metrics import classification_report, accuracy_score
-from sklearn.model_selection import StratifiedKFold, train_test_split
+from sklearn.model_selection import StratifiedKFold
 
 from src.DatabaseHandler import DatabaseHandler
 from src.Model.Model import Model, TuningModel
@@ -8,22 +8,43 @@ from src.Model.Model import Model, TuningModel
 database = DatabaseHandler()
 
 
-def hyperparameter_tuning(data):
-    x, y = data
-
-    x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2)
+def hyperparameter_tuning():
+    x_train, y_train = database.get_train_data()
+    val = database.get_val_data()
 
     model = TuningModel(database.get_num_characters() + 1)
-    model.search(x_train, y_train)
+    model.search(x_train, y_train, val)
 
 
-def cross_validation(data):
+def test_hyperparameter_model():
+    test_size = 300
+    x, y = database.get_dataset()
+    x_test, y_true = x[-test_size:], y[-test_size:]
+    x, y = x[:len(x) - test_size], y[:len(y) - test_size]
+
+    model = Model(database.get_num_characters() + 1)
+    model.train(x, y)
+
+    y_pred = model.predict(x_test)
+    print(y_pred)
+    y_pred = np.around(y_pred)
+    print(y_pred)
+
+    print(classification_report(y_true, y_pred))
+    # print("Last 10,000")
+    # print(classification_report(y_true[-10_000:], y_pred[-10_000:]))
+    # print("Last 500")
+    # print(classification_report(y_true[-500:], y_pred[-500:]))
+
+
+def cross_validation():
     """
     Run 5-fold cross validation to test effectiveness of model architecture
     :param data:
     :return:
     """
-    x, y = data
+
+    x, y = database.get_dataset()
 
     scores = []
 
@@ -43,10 +64,24 @@ def cross_validation(data):
     print(f"Model Accuracy: {np.mean(scores):.2%}")
 
 
+def train():
+    x, y = database.get_dataset()
+    model = Model(database.get_num_characters() + 1)
+    model.train(x, y)
+    model.save()
+
+
 def main():
-    data = database.get_dataset(add_flips=True)
-    # cross_validation(data)
-    hyperparameter_tuning(data)
+    mode = input("Enter desired run mode:")
+
+    if "cross" in mode or "val" in mode:
+        cross_validation()
+    elif "tune" in mode:
+        hyperparameter_tuning()
+    elif "test" in mode:
+        test_hyperparameter_model()
+    else:
+        train()
 
 
 if __name__ == '__main__':

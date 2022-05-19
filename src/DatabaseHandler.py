@@ -4,6 +4,7 @@ import zipfile
 
 import numpy as np
 import pandas as pd
+from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import OrdinalEncoder
 from tqdm import tqdm
 
@@ -27,6 +28,14 @@ class DatabaseHandler:
 
         self.encoder = OrdinalEncoder()
         self.encoder.fit(self.get_all_characters())
+
+        self.x, self.y = self.__make_dataset(add_mirrored_matches=True)
+
+        # 70, 10, 20 % split
+        self.x_train, self.x_test, self.y_train, self.y_test = train_test_split(self.x, self.y, test_size=0.2,
+                                                                                random_state=1)
+        self.x_train, self.x_val, self.y_train, self.y_val = train_test_split(self.x, self.y, test_size=0.125,
+                                                                              random_state=1)
 
     def __del__(self):
         self.commit()
@@ -236,14 +245,13 @@ class DatabaseHandler:
 
         return self.cur.fetchall()
 
-    def get_dataset(self, add_flips=False):
+    def __make_dataset(self, add_mirrored_matches=False):
         """
         Formats the data for machine learning
         :return: x and y, the observation target pair
         """
 
         # todo if data becomes too large, add batching support
-
         matches = np.array(self.get_all_matches())
 
         self.encoder.fit(self.get_all_characters())
@@ -253,8 +261,8 @@ class DatabaseHandler:
         x = np.array(list(zip(red_vec, blu_vec)), dtype=int)
         y = np.array([[self.team_to_int(winner)] for winner in matches[:, -1]], dtype=int)
 
-        # flip all matches teams and winners to add data
-        if add_flips:
+        # mirror all matches teams and winners to add data
+        if add_mirrored_matches:
             x_flip = np.flip(x, axis=1)
             y_flip = np.array([(val[0] + 1) % 2 for val in y]).reshape(-1, 1)
 
@@ -262,6 +270,18 @@ class DatabaseHandler:
             y = np.concatenate((y, y_flip))
 
         return x, y
+
+    def get_dataset(self):
+        return self.x, self.y
+
+    def get_train_data(self):
+        return self.x_train, self.y_train
+
+    def get_test_data(self):
+        return self.x_test, self.y_test
+
+    def get_val_data(self):
+        return self.x_val, self.y_val
 
     def encode_character(self, x):
         """
@@ -272,7 +292,7 @@ class DatabaseHandler:
         try:
             return self.encoder.transform(x)
         except ValueError:
-            return 0
+            return np.array([0, 0])
 
     def decode_character(self, x):
         """
@@ -293,4 +313,7 @@ class DatabaseHandler:
 
 if __name__ == '__main__':
     database = DatabaseHandler()
-    database.get_dataset(add_flips=True)
+    x, y = database.get_dataset()
+
+    print(x[-500:])
+    print(database.decode_character(x.reshape(-1, 1)))

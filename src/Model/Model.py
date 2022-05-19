@@ -6,7 +6,7 @@ from keras.callbacks import EarlyStopping
 from keras.layers import Dense, Embedding, Flatten
 from keras_tuner import HyperModel, HyperParameters, Hyperband
 from tensorflow.keras import Sequential
-from tensorflow.keras.optimizers import Adam, Nadam, Adamax, Adagrad, Adadelta, RMSprop
+from tensorflow.keras.optimizers import Adam
 
 from src.Model.Hyperparameters import *
 
@@ -19,7 +19,7 @@ class TuningModel(HyperModel):
     def build(self, hp: HyperParameters):
         model = Sequential()
 
-        hp_output_dim = hp.Int("embedding_outputs", min_value=1, max_value=5)
+        hp_output_dim = hp.Int("Embedding Outputs", min_value=1, max_value=10)
         model.add(Embedding(
             input_dim=self.input_dim,
             output_dim=hp_output_dim,
@@ -28,8 +28,8 @@ class TuningModel(HyperModel):
 
         model.add(Flatten())
 
-        hp_layers = hp.Int("num_dense", min_value=1, max_value=5)
-        hp_units = hp.Choice(f"dense_units", [2 ** p for p in range(4, 10)])
+        hp_layers = hp.Int("Dense Layers", min_value=1, max_value=5)
+        hp_units = hp.Choice(f"Dense Units", [2 ** p for p in range(4, 10)])
         for num_dense in range(hp_layers):
             model.add(Dense(
                 units=hp_units,
@@ -41,19 +41,20 @@ class TuningModel(HyperModel):
             activation="sigmoid"
         ))
 
-        optimizers = [Adam, Nadam, Adamax, Adagrad, Adadelta, RMSprop]
-        hp_optimizer_idx = hp.Int("optimizer_idx", min_value=0, max_value=len(optimizers) - 1)
-        hp_lr = hp.Float("LR", min_value=1e-6, max_value=0.1)
+        hp_lr = hp.Float("Learning Rate", min_value=1e-10, max_value=1)
+        hp_epsilon = hp.Float("Epsilon", min_value=1e-10, max_value=1)
 
         model.compile(
-            optimizer=optimizers[hp_optimizer_idx](learning_rate=hp_lr),
+            optimizer=Adam(learning_rate=hp_lr, epsilon=hp_epsilon),
             loss=loss,
             metrics=["accuracy"]
         )
 
         return model
 
-    def search(self, x, y):
+    def search(self, x, y, validation_data=None):
+        validation_split = 0
+
         tuner = Hyperband(
             self,
             objective="val_accuracy",
@@ -67,11 +68,15 @@ class TuningModel(HyperModel):
             restore_best_weights=True
         )
 
+        if validation_data is not None:
+            validation_split = 0.125
+
         tuner.search(
             x, y,
-            epochs=epochs,
+            validation_data=validation_data,
             validation_split=validation_split,
-            steps_per_epoch=32,
+            epochs=epochs,
+            steps_per_epoch=steps,
             callbacks=[early_stopping]
         )
 
@@ -79,13 +84,13 @@ class TuningModel(HyperModel):
 
 
 class Model:
-    def __init__(self, input_dim, filepath=None):
-        self.input_dim = input_dim
-        self.model = None
-
-        if filepath is None:
+    def __init__(self, input_dim=None, filepath=None):
+        if input_dim is not None:
+            self.input_dim = input_dim
             self.model = self.build()
+
         else:
+            assert filepath is not None, "Must have one of input_dim or filepath not None"
             self.load(filepath)
 
     def build(self):
@@ -112,22 +117,24 @@ class Model:
         ))
 
         model.compile(
-            optimizer=Adam(learning_rate=learning_rate),
+            optimizer=Adam(
+                learning_rate=learning_rate,
+                epsilon=epsilon
+            ),
             loss=loss,
             metrics=["accuracy"]
         )
 
         return model
 
-    def train(self, x, y):
+    def train(self, x, y, val=None):
 
         history = self.model.fit(
             x, y,
+            validation_data=val,
             epochs=epochs,
-            steps_per_epoch=32,
+            steps_per_epoch=steps,
         )
-
-        self.save()
 
         return history
 

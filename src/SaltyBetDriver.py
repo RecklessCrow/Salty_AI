@@ -103,7 +103,6 @@ class SaltyBetDriver:
         """
         red = self.driver.find_element(By.CLASS_NAME, "redtext").text
         blue = self.driver.find_element(By.CLASS_NAME, "bluetext").text
-
         if "|" in red:
             red = red.split('|')[1]
             blue = blue.split('|')[0]
