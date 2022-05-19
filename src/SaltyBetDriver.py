@@ -110,10 +110,10 @@ class SaltyBetDriver:
         return red.strip(), blue.strip()
 
     def is_tournament(self):
-        tournament_text = self.driver.find_element(By.ID, "footer-alert").text
+        tournament_text = self.driver.find_element(By.ID, "footer-alert").text.lower()
         return "bracket" in tournament_text or \
-               "FINAL ROUND" in tournament_text or \
-               "Tournament mode start" in tournament_text
+               "final" in tournament_text or \
+               "tournament" in tournament_text
 
 
 if __name__ == '__main__':

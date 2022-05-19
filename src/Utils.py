@@ -1,6 +1,5 @@
 import time
 
-import numpy as np
 from sigfig import round
 
 from DatabaseHandler import DatabaseHandler
@@ -11,14 +10,15 @@ Utilities for the state machines
 
 DATABASE = DatabaseHandler()
 
-MODLE_FILE = "SavedModels/model_03.35.55"
+MODLE_FILE = "SavedModels/model_14.15.44"
 
 UNKNOWN_FIGHTER = 0
 
 # Betting parameters
 BALANCE_CAP = 100_000
-ALL_IN = False
-ALL_IN_CONFIDENCE_LEVEL = 0.9
+ALL_IN = True
+HIGH_CONFIDENCE = 0.8
+ALL_IN_CONFIDENCE = 0.95
 
 STATES = {
     "IDLE": 0,
@@ -49,25 +49,28 @@ def calc_bet_amount(driver, confidence):
 
     # Tournament betting rules
     if is_tournament:
-        bet_amount = np.floor(balance * confidence)
+        bet_amount = balance * confidence
 
         if bet_amount < bailout:
             bet_amount = bailout
 
-    # Bet all in if we're less than 5x buy in
+    # Bet all in if we're less than 5x bailout
     elif balance < 5 * bailout:
         bet_amount = balance
 
     # Bet all in if we're above a certain confidence level
-    elif confidence > ALL_IN_CONFIDENCE_LEVEL:
-        bet_amount = float("inf") if ALL_IN else balance * margin
+    elif confidence > HIGH_CONFIDENCE:
+        if confidence > ALL_IN_CONFIDENCE:
+            bet_amount = balance if ALL_IN else balance * margin * 1.5
+        else:
+            bet_amount = (balance * margin) / 2
 
     # normal betting rules
     else:
         if balance < BALANCE_CAP:
-            bet_amount = balance * confidence / 2
+            bet_amount = balance * margin
         else:
-            bet_amount = min(balance * margin, balance * 0.01)
+            bet_amount = balance * 0.05
 
     bet_amount = round(int(bet_amount), sigfigs=2)
 

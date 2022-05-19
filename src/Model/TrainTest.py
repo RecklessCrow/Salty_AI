@@ -9,15 +9,17 @@ database = DatabaseHandler()
 
 
 def hyperparameter_tuning():
-    x_train, y_train = database.get_train_data()
-    val = database.get_val_data()
+    test_size = 1000
+    x, y = database.get_dataset()
+    val = x[-test_size:], y[-test_size:]
+    x, y = x[:len(x) - test_size], y[:len(y) - test_size]
 
     model = TuningModel(database.get_num_characters() + 1)
-    model.search(x_train, y_train, val)
+    model.search(x, y, val)
 
 
 def test_hyperparameter_model():
-    test_size = 300
+    test_size = 1000
     x, y = database.get_dataset()
     x_test, y_true = x[-test_size:], y[-test_size:]
     x, y = x[:len(x) - test_size], y[:len(y) - test_size]
@@ -72,7 +74,8 @@ def train():
 
 
 def main():
-    mode = input("Enter desired run mode:")
+    # mode = input("Enter desired run mode:")
+    mode = "train"
 
     if "cross" in mode or "val" in mode:
         cross_validation()

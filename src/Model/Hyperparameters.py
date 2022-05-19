@@ -13,9 +13,9 @@ epsilon = 0.083681
 loss = "bce"
 
 # Training
-epochs = 34
+epochs = 1000
 steps = 64
 
 # Early Stopping
 min_delta = 0.0001
-patience = 4
+patience = 10
