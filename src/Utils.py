@@ -10,15 +10,15 @@ Utilities for the state machines
 
 DATABASE = DatabaseHandler()
 
-MODLE_FILE = "SavedModels/model_14.15.44"
+MODLE_FILE = "SavedModels/model_04.27.31"
 
 UNKNOWN_FIGHTER = 0
 
 # Betting parameters
-BALANCE_CAP = 100_000
-ALL_IN = True
+BALANCE_CAP = 10_000
 HIGH_CONFIDENCE = 0.8
 ALL_IN_CONFIDENCE = 0.95
+MAX_NORMAL_BET = 100_000
 
 STATES = {
     "IDLE": 0,
@@ -61,9 +61,9 @@ def calc_bet_amount(driver, confidence):
     # Bet all in if we're above a certain confidence level
     elif confidence > HIGH_CONFIDENCE:
         if confidence > ALL_IN_CONFIDENCE:
-            bet_amount = balance if ALL_IN else balance * margin * 1.5
+            bet_amount = balance if balance < 1e6 else (balance * confidence) / 2
         else:
-            bet_amount = (balance * margin) / 2
+            bet_amount = (balance * confidence) / 4
 
     # normal betting rules
     else:
@@ -72,7 +72,9 @@ def calc_bet_amount(driver, confidence):
         else:
             bet_amount = balance * 0.05
 
-    bet_amount = round(int(bet_amount), sigfigs=2)
+        bet_amount = min(MAX_NORMAL_BET, bet_amount)
+
+    bet_amount = round(int(bet_amount), sigfigs=3)
 
     if bet_amount > balance:
         bet_amount = balance

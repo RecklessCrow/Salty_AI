@@ -1,3 +1,5 @@
+from shutil import rmtree
+
 import numpy as np
 from sklearn.metrics import classification_report, accuracy_score
 from sklearn.model_selection import StratifiedKFold
@@ -5,38 +7,32 @@ from sklearn.model_selection import StratifiedKFold
 from src.DatabaseHandler import DatabaseHandler
 from src.Model.Model import Model, TuningModel
 
-database = DatabaseHandler()
+database = DatabaseHandler(add_mirrored_matches=False)
 
 
 def hyperparameter_tuning():
-    test_size = 1000
-    x, y = database.get_dataset()
-    val = x[-test_size:], y[-test_size:]
-    x, y = x[:len(x) - test_size], y[:len(y) - test_size]
+    x, y = database.get_train_data()
+    val = database.get_val_data()
 
     model = TuningModel(database.get_num_characters() + 1)
     model.search(x, y, val)
 
+    rmtree("src/Model/parameters")
+    # todo: record console output to save hyperparameter tuning results
+
 
 def test_hyperparameter_model():
-    test_size = 1000
-    x, y = database.get_dataset()
-    x_test, y_true = x[-test_size:], y[-test_size:]
-    x, y = x[:len(x) - test_size], y[:len(y) - test_size]
+    x, y = database.get_train_data()
+    val = database.get_val_data()
+    x_test, y_true = database.get_test_data()
 
     model = Model(database.get_num_characters() + 1)
-    model.train(x, y)
+    model.train(x, y, val)
 
     y_pred = model.predict(x_test)
-    print(y_pred)
     y_pred = np.around(y_pred)
-    print(y_pred)
 
     print(classification_report(y_true, y_pred))
-    # print("Last 10,000")
-    # print(classification_report(y_true[-10_000:], y_pred[-10_000:]))
-    # print("Last 500")
-    # print(classification_report(y_true[-500:], y_pred[-500:]))
 
 
 def cross_validation():
@@ -66,25 +62,19 @@ def cross_validation():
     print(f"Model Accuracy: {np.mean(scores):.2%}")
 
 
-def train():
+def train(filepath=None):
     x, y = database.get_dataset()
-    model = Model(database.get_num_characters() + 1)
+    if filepath is not None:
+        model = Model(filepath=filepath)
+    else:
+        model = Model(database.get_num_characters() + 1)
     model.train(x, y)
     model.save()
 
 
 def main():
     # mode = input("Enter desired run mode:")
-    mode = "train"
-
-    if "cross" in mode or "val" in mode:
-        cross_validation()
-    elif "tune" in mode:
-        hyperparameter_tuning()
-    elif "test" in mode:
-        test_hyperparameter_model()
-    else:
-        train()
+    hyperparameter_tuning()
 
 
 if __name__ == '__main__':

@@ -4,6 +4,7 @@ import sys
 
 from dotenv import load_dotenv
 from selenium import webdriver
+from selenium.common.exceptions import StaleElementReferenceException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.firefox.service import Service
@@ -101,8 +102,12 @@ class SaltyBetDriver:
         Gets the current characters of the red and blue teams
         :return:
         """
-        red = self.driver.find_element(By.CLASS_NAME, "redtext").text
-        blue = self.driver.find_element(By.CLASS_NAME, "bluetext").text
+        try:
+            red = self.driver.find_element(By.CLASS_NAME, "redtext").text
+            blue = self.driver.find_element(By.CLASS_NAME, "bluetext").text
+        except StaleElementReferenceException:
+            return
+
         if "|" in red:
             red = red.split('|')[1]
             blue = blue.split('|')[0]

@@ -1,14 +1,100 @@
 import os
+
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+
 from datetime import datetime
 
 import keras.saving.saved_model.model_serialization
+from keras import Input
 from keras.callbacks import EarlyStopping
-from keras.layers import Dense, Embedding, Flatten
+from keras.layers import Dense, Embedding, Flatten, MultiHeadAttention, Dropout, LayerNormalization
 from keras_tuner import HyperModel, HyperParameters, Hyperband
-from tensorflow.keras import Sequential
 from tensorflow.keras.optimizers import Adam
 
-from src.Model.Hyperparameters import *
+# Training
+EPOCHS = 100
+STEPS = 256
+LOSS = "bce"
+
+# Early Stopping
+min_delta = 0.01
+patience = 3
+
+
+def make_embedding_model(parameters):
+    inputs = Input(shape=(2,))
+    x = Embedding(input_dim=parameters["input_dim"], output_dim=parameters["embedding_out"])(inputs)
+    x = Flatten()(x)
+
+    for _ in range(parameters["ff_layers"]):
+        x = Dense(
+            units=parameters["ff_units"],
+            activation=parameters["ff_activation"]
+        )(x)
+        x = Dropout(parameters["dropout"])(x)
+
+    outputs = Dense(units=1, activation="sigmoid")(x)
+
+    model = keras.Model(inputs=inputs, outputs=outputs, name="salty_model")
+
+    model.compile(
+        optimizer=Adam(
+            learning_rate=parameters["learning_rate"],
+            epsilon=parameters["epsilon"]
+        ),
+        loss=LOSS,
+        metrics=["accuracy"]
+    )
+
+    return model
+
+
+def make_attention_model(parameters):
+    inputs = Input(shape=(2,))
+    x = Embedding(input_dim=parameters["input_dim"], output_dim=parameters["embedding_out"])(inputs)
+
+    # Transformer
+    for _ in range(parameters["num_transformers"]):
+        # Attention
+        sub_x = MultiHeadAttention(
+            num_heads=parameters["attention_heads"],
+            key_dim=parameters["attention_keys"],
+            dropout=parameters["dropout"]
+        )(x, x)
+        x = LayerNormalization()(x + sub_x)
+
+        # Feed Forward
+        sub_x = Dense(
+            units=parameters["embedding_out"],
+            activation=parameters["ff_activation"]
+        )(x)
+        x = LayerNormalization()(x + sub_x)
+
+        x = Dropout(parameters["dropout"])(x)
+
+    x = Flatten()(x)
+
+    for _ in range(parameters["ff_layers"]):
+        x = Dense(
+            units=parameters["ff_units"],
+            activation=parameters["ff_activation"]
+        )(x)
+        x = Dropout(parameters["dropout"])(x)
+
+    outputs = Dense(units=1, activation="sigmoid")(x)
+
+    model = keras.Model(inputs=inputs, outputs=outputs, name="salty_model")
+
+    model.compile(
+        optimizer=Adam(
+            learning_rate=parameters["learning_rate"],
+            epsilon=parameters["epsilon"]
+        ),
+        loss=LOSS,
+        metrics=["accuracy"]
+    )
+
+    return model
 
 
 class TuningModel(HyperModel):
@@ -17,40 +103,31 @@ class TuningModel(HyperModel):
         self.input_dim = input_dim
 
     def build(self, hp: HyperParameters):
-        model = Sequential()
-
-        hp_output_dim = hp.Int("Embedding Outputs", min_value=1, max_value=10)
-        model.add(Embedding(
-            input_dim=self.input_dim,
-            output_dim=hp_output_dim,
-            input_length=2
-        ))
-
-        model.add(Flatten())
-
+        hp_dropout = 0.0
+        hp_output_dim = hp.Choice("Embedding Outputs", [2 ** p for p in range(2, 10)])
+        hp_transformers = hp.Int("Transformers", min_value=1, max_value=5)
+        hp_heads = hp.Int("Attention Heads", min_value=1, max_value=5)
+        hp_key_dim = hp.Int("Key Dimention", min_value=1, max_value=5)
         hp_layers = hp.Int("Dense Layers", min_value=1, max_value=5)
-        hp_units = hp.Choice(f"Dense Units", [2 ** p for p in range(4, 10)])
-        for num_dense in range(hp_layers):
-            model.add(Dense(
-                units=hp_units,
-                activation=dense_activation
-            ))
-
-        model.add(Dense(
-            units=1,
-            activation="sigmoid"
-        ))
-
+        hp_units = hp.Choice("Dense Units", [2 ** p for p in range(2, 10)])
         hp_lr = hp.Float("Learning Rate", min_value=1e-10, max_value=1)
         hp_epsilon = hp.Float("Epsilon", min_value=1e-10, max_value=1)
 
-        model.compile(
-            optimizer=Adam(learning_rate=hp_lr, epsilon=hp_epsilon),
-            loss=loss,
-            metrics=["accuracy"]
-        )
+        parameters = {
+            "dropout": hp_dropout,
+            "input_dim": self.input_dim,
+            "embedding_out": hp_output_dim,
+            "num_transformers": hp_transformers,
+            "attention_heads": hp_heads,
+            "attention_keys": hp_key_dim,
+            "ff_layers": hp_layers,
+            "ff_units": hp_units,
+            "ff_activation": "gelu",
+            "learning_rate": hp_lr,
+            "epsilon": hp_epsilon
+        }
 
-        return model
+        return make_attention_model(parameters)
 
     def search(self, x, y, validation_data=None):
         validation_split = 0
@@ -75,8 +152,8 @@ class TuningModel(HyperModel):
             x, y,
             validation_data=validation_data,
             validation_split=validation_split,
-            epochs=epochs,
-            steps_per_epoch=steps,
+            epochs=EPOCHS,
+            steps_per_epoch=STEPS,
             callbacks=[early_stopping]
         )
 
@@ -94,36 +171,24 @@ class Model:
             self.load(filepath)
 
     def build(self):
-        model = Sequential()
 
-        model.add(Embedding(
-            input_dim=self.input_dim,
-            output_dim=embedding_output,
-            input_length=2
-        ))
+        parameters = {
+            "dropout": 0.6,
+            "input_dim": self.input_dim,
+            "embedding_out": 32,
+            "num_transformers": 6,
+            "attention_heads": 12,
+            "attention_keys": 12,
+            "ff_layers": 2,
+            "ff_units": 64,
+            "ff_activation": "gelu",
+            "learning_rate": 1e-5,
+            "epsilon": 1e-7
+        }
 
-        model.add(Flatten())
+        model = make_attention_model(parameters)
 
-        for _ in range(dense_layers):
-            model.add(Dense(
-                units=dense_units,
-                activation=dense_activation
-            ))
-
-        # output layer
-        model.add(Dense(
-            units=1,
-            activation="sigmoid"
-        ))
-
-        model.compile(
-            optimizer=Adam(
-                learning_rate=learning_rate,
-                epsilon=epsilon
-            ),
-            loss=loss,
-            metrics=["accuracy"]
-        )
+        model.summary()
 
         return model
 
@@ -132,8 +197,8 @@ class Model:
         history = self.model.fit(
             x, y,
             validation_data=val,
-            epochs=epochs,
-            steps_per_epoch=steps,
+            epochs=EPOCHS,
+            steps_per_epoch=STEPS,
         )
 
         return history

@@ -1,12 +1,13 @@
+import numpy as np
 
 from Utils import *
 from src.Model.Model import Model
 from src.SaltyBetDriver import SaltyBetDriver
 
 
-def main():
+def main(headless):
     model = Model(filepath=MODLE_FILE)
-    driver = SaltyBetDriver(headless=False)
+    driver = SaltyBetDriver(headless=headless)
 
     state = STATES["IDLE"]
 
@@ -19,6 +20,10 @@ def main():
 
         if state == STATES["BETS_OPEN"]:
             red, blue = driver.get_fighters()
+
+            if (red, blue) is None:
+                continue
+
             fighter_vector = DATABASE.encode_character([[red], [blue]]).reshape(1, 2)
 
             if UNKNOWN_FIGHTER not in fighter_vector:
@@ -72,7 +77,8 @@ def main():
             print(
                 f"{winner.capitalize()} Team Wins!\n"
                 f"Current Model Accuracy: {wins / matches:.2%} | {matches} matches\n"
-                f"{'-' * 15}"
+                f"Ending Balance: ${driver.get_balance()}\n"
+                f"{'-' * 30}"
             )
 
             red, blue = driver.get_fighters()
@@ -81,4 +87,12 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    headless = None
+    while headless is None:
+        response = input("Run in headless mode? y/n: ")
+        if response not in ['y', 'n']:
+            continue
+
+        headless = response == "y"
+
+    main(headless)

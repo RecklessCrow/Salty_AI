@@ -14,7 +14,7 @@ DB_FILE = os.path.join("data", "salty.db")
 
 
 class DatabaseHandler:
-    def __init__(self, remake=False):
+    def __init__(self, remake=False, add_mirrored_matches=False):
         """
         Object to interact with the database
         """
@@ -29,7 +29,7 @@ class DatabaseHandler:
         self.encoder = OrdinalEncoder()
         self.encoder.fit(self.get_all_characters())
 
-        self.x, self.y = self.__make_dataset(add_mirrored_matches=True)
+        self.x, self.y = self.__make_dataset(add_mirrored_matches=add_mirrored_matches)
 
         # 70, 10, 20 % split
         self.x_train, self.x_test, self.y_train, self.y_test = train_test_split(self.x, self.y, test_size=0.2,
