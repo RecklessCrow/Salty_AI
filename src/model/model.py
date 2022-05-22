@@ -14,12 +14,12 @@ from data_generator import DataGenerator
 
 # Training
 EPOCHS = 100
-BATCH_SIZE = 2 ** 12
+BATCH_SIZE = 2 ** 13
 
 # Early Stopping
 MIN_DELTA = 0.001
 PATIENCE = 3
-MONITOR = "val_loss"
+MONITOR = "val_accuracy"
 
 
 def make_embedding_model(parameters):

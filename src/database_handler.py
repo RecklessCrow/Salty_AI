@@ -17,7 +17,7 @@ DB_FILE = os.path.join("data", "salty.db")
 
 
 class DatabaseHandler:
-    def __init__(self, remake=False, test_data_is_recent=False):
+    def __init__(self, remake=False, test_data_is_recent=False, seed=None):
         """
         Object to interact with the database
         """
@@ -43,13 +43,13 @@ class DatabaseHandler:
             self.x_train, self.y_train = self.x[:-test_matches], self.y[:-test_matches]
 
             self.x_train, self.x_val, self.y_train, self.y_val = train_test_split(self.x, self.y, test_size=0.1,
-                                                                                  random_state=1)
+                                                                                  random_state=seed)
         else:
             # 70, 10, 20 % split
             self.x_train, self.x_test, self.y_train, self.y_test = train_test_split(self.x, self.y, test_size=0.2,
-                                                                                    random_state=1)
+                                                                                    random_state=seed)
             self.x_train, self.x_val, self.y_train, self.y_val = train_test_split(self.x, self.y, test_size=0.125,
-                                                                                  random_state=1)
+                                                                                  random_state=seed)
 
     def __del__(self):
         self.commit()

@@ -8,7 +8,7 @@ from sklearn.model_selection import StratifiedKFold
 from model import Model, TuningModel
 from src.database_handler import DatabaseHandler
 
-database = DatabaseHandler()
+DATABASE = DatabaseHandler(test_data_is_recent=True, seed=1)
 
 
 def hyperparameter_tuning():
@@ -19,10 +19,10 @@ def hyperparameter_tuning():
     if os.path.isdir("src/model/parameters"):
         rmtree("src/Model/parameters")
 
-    x, y = database.get_train_data()
-    val = database.get_val_data()
+    x, y = DATABASE.get_train_data()
+    val = DATABASE.get_val_data()
 
-    model = TuningModel(database.get_num_characters() + 1)
+    model = TuningModel(DATABASE.get_num_characters() + 1)
     model.search(x, y, val)
 
     rmtree("src/Model/parameters")
@@ -36,13 +36,13 @@ def cross_validation():
     :return:
     """
 
-    x, y = database.get_dataset()
+    x, y = DATABASE.get_dataset()
 
     scores = []
 
     iterator = StratifiedKFold(n_splits=5, shuffle=True).split(x, y)
     for train_idxs, val_idxs in iterator:
-        model = Model(database.get_num_characters() + 1)
+        model = Model(DATABASE.get_num_characters() + 1)
         train_x, train_y = x[train_idxs], y[train_idxs]
         val_x, y_true = x[val_idxs], y[val_idxs]
 
@@ -61,11 +61,11 @@ def test_model():
     Test a models' performance over the test set
     :return:
     """
-    x, y = database.get_train_data()
-    val = database.get_val_data()
-    x_test, y_true = database.get_test_data()
+    x, y = DATABASE.get_train_data()
+    val = DATABASE.get_val_data()
+    x_test, y_true = DATABASE.get_test_data()
 
-    model = Model(database.get_num_characters() + 1)
+    model = Model(DATABASE.get_num_characters() + 1)
     model.train(x, y, val)
 
     y_pred = model.predict(x_test)
@@ -80,21 +80,21 @@ def train(filepath=None):
     :param filepath:
     :return:
     """
-    x, y = database.get_dataset()
+    x, y = DATABASE.get_dataset()
 
     if filepath is not None:
         # continue training from a saved model
         model = Model(filepath=filepath)
     else:
         # train a new model
-        model = Model(database.get_num_characters() + 1)
+        model = Model(DATABASE.get_num_characters() + 1)
 
     model.train(x, y)
     model.save()
 
 
 def main():
-    hyperparameter_tuning()
+    test_model()
 
 
 if __name__ == '__main__':
