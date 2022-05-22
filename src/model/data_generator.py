@@ -3,7 +3,7 @@ from tensorflow.keras.utils import Sequence
 
 
 class DataGenerator(Sequence):
-    def __init__(self, x, y, batch_size=32, shuffle=True, seed=None):
+    def __init__(self, x, y, batch_size=32, flip=True, shuffle=True, seed=None):
         """
         :param x:
         :param y:
@@ -13,6 +13,7 @@ class DataGenerator(Sequence):
 
         self.x, self.y = x, y
         self.batch_size = batch_size
+        self.flip = flip
         self.shuffle = shuffle
         self.rng = np.random.default_rng(seed=seed)
 
@@ -24,7 +25,7 @@ class DataGenerator(Sequence):
         batch_y = self.y[idx * self.batch_size:(idx + 1) * self.batch_size]
 
         # randomly switch red and blue teams to correct for potential class imbalance at a per character level
-        if self.rng.random() > 0.5:
+        if self.rng.random() > 0.5 and self.flip:
             batch_x = np.flip(batch_x, axis=1)
             batch_y = (batch_y + 1) % 2
 
