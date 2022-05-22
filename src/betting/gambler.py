@@ -49,7 +49,6 @@ def main(headless):
                 f"Blue Team: {blue}\n"
                 f"Betting ${bet_amount:,} on {pred_str.capitalize()} Team\n"
                 f"Model confidence: {confidence:.2%}\n"
-                f"Tournament: {driver.is_tournament()}"
             )
 
             driver.bet(max(bet_amount, 1), pred_str)
