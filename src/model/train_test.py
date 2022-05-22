@@ -8,7 +8,7 @@ from sklearn.model_selection import StratifiedKFold
 from model import Model, TuningModel
 from src.database_handler import DatabaseHandler
 
-database = DatabaseHandler(add_mirrored_matches=True)
+database = DatabaseHandler()
 
 
 def hyperparameter_tuning():

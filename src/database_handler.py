@@ -17,7 +17,7 @@ DB_FILE = os.path.join("data", "salty.db")
 
 
 class DatabaseHandler:
-    def __init__(self, remake=False, add_mirrored_matches=False, test_data_is_recent=False):
+    def __init__(self, remake=False, test_data_is_recent=False):
         """
         Object to interact with the database
         """
@@ -50,20 +50,6 @@ class DatabaseHandler:
                                                                                     random_state=1)
             self.x_train, self.x_val, self.y_train, self.y_val = train_test_split(self.x, self.y, test_size=0.125,
                                                                                   random_state=1)
-
-        if add_mirrored_matches:
-            def add_flips(x, y):
-                x_flip = np.flip(x, axis=1)
-                y_flip = np.array([(value[0] + 1) % 2 for value in y]).reshape(-1, 1)
-
-                x = np.concatenate((x, x_flip))
-                y = np.concatenate((y, y_flip))
-                return x, y
-
-            self.x, self.y = add_flips(self.x, self.y)
-            self.x_train, self.y_train = add_flips(self.x_train, self.y_train)
-            self.x_val, self.y_val = add_flips(self.x_val, self.y_val)
-            self.x_test, self.y_test = add_flips(self.x_test, self.y_test)
 
     def __del__(self):
         self.commit()
