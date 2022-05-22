@@ -261,7 +261,7 @@ class DatabaseHandler:
         x = np.array(list(zip(red_vec, blu_vec)), dtype=int)
         y = np.array([[self.team_to_int(winner)] for winner in matches[:, -1]], dtype=int)
 
-        # mirror all matches teams and winners to add data
+        # mirror all matches teams and winners to add data and balance winning team amounts
         if add_mirrored_matches:
             x_flip = np.flip(x, axis=1)
             y_flip = np.array([(val[0] + 1) % 2 for val in y]).reshape(-1, 1)

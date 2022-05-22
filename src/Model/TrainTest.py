@@ -7,7 +7,7 @@ from sklearn.model_selection import StratifiedKFold
 from src.DatabaseHandler import DatabaseHandler
 from src.Model.Model import Model, TuningModel
 
-database = DatabaseHandler(add_mirrored_matches=False)
+database = DatabaseHandler(add_mirrored_matches=True)
 
 
 def hyperparameter_tuning():
@@ -52,7 +52,7 @@ def cross_validation():
         train_x, train_y = x[train_idxs], y[train_idxs]
         val_x, y_true = x[val_idxs], y[val_idxs]
 
-        model.train(train_x, train_y)
+        model.train(train_x, train_y, (val_x, y_true))
 
         y_pred = np.around(model.predict(val_x))
 
@@ -73,8 +73,7 @@ def train(filepath=None):
 
 
 def main():
-    # mode = input("Enter desired run mode:")
-    hyperparameter_tuning()
+    train()
 
 
 if __name__ == '__main__':

@@ -12,12 +12,12 @@ from keras_tuner import HyperModel, HyperParameters, Hyperband
 from tensorflow.keras.optimizers import Adam
 
 # Training
-EPOCHS = 100
-STEPS = 256
+EPOCHS = 32
+STEPS = 128
 LOSS = "bce"
 
 # Early Stopping
-min_delta = 0.01
+min_delta = 0.001
 patience = 3
 
 
@@ -105,11 +105,11 @@ class TuningModel(HyperModel):
     def build(self, hp: HyperParameters):
         hp_dropout = 0.0
         hp_output_dim = hp.Choice("Embedding Outputs", [2 ** p for p in range(2, 10)])
-        hp_transformers = hp.Int("Transformers", min_value=1, max_value=5)
-        hp_heads = hp.Int("Attention Heads", min_value=1, max_value=5)
-        hp_key_dim = hp.Int("Key Dimention", min_value=1, max_value=5)
-        hp_layers = hp.Int("Dense Layers", min_value=1, max_value=5)
-        hp_units = hp.Choice("Dense Units", [2 ** p for p in range(2, 10)])
+        hp_transformers = hp.Int("Transformers", min_value=4, max_value=16)
+        hp_heads = hp.Int("Attention Heads", min_value=4, max_value=16)
+        hp_key_dim = hp.Int("Key Dimention", min_value=4, max_value=16)
+        hp_layers = hp.Int("Dense Layers", min_value=1, max_value=8)
+        hp_units = hp.Choice("Dense Units", [2 ** p for p in range(4, 11)])
         hp_lr = hp.Float("Learning Rate", min_value=1e-10, max_value=1)
         hp_epsilon = hp.Float("Epsilon", min_value=1e-10, max_value=1)
 
@@ -173,17 +173,17 @@ class Model:
     def build(self):
 
         parameters = {
-            "dropout": 0.6,
+            "dropout": 0.0,
             "input_dim": self.input_dim,
             "embedding_out": 32,
-            "num_transformers": 6,
-            "attention_heads": 12,
-            "attention_keys": 12,
-            "ff_layers": 2,
+            "num_transformers": 8,
+            "attention_heads": 8,
+            "attention_keys": 8,
+            "ff_layers": 4,
             "ff_units": 64,
             "ff_activation": "gelu",
-            "learning_rate": 1e-5,
-            "epsilon": 1e-7
+            "learning_rate": 0.01,
+            "epsilon": 0.001
         }
 
         model = make_attention_model(parameters)
@@ -193,12 +193,22 @@ class Model:
         return model
 
     def train(self, x, y, val=None):
+        callbacks = []
+
+        if val is not None:
+            early_stopping = EarlyStopping(
+                min_delta=min_delta,
+                patience=patience,
+                restore_best_weights=True
+            )
+            callbacks.append(early_stopping)
 
         history = self.model.fit(
             x, y,
             validation_data=val,
             epochs=EPOCHS,
             steps_per_epoch=STEPS,
+            callbacks=callbacks
         )
 
         return history
