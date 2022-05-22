@@ -6,7 +6,7 @@ from utils import *
 
 
 def main(headless):
-    model = Model(filepath=MODLE_FILE)
+    model = Model(filepath=MODEL_FILE)
     driver = SaltyBetDriver(headless=headless)
 
     state = STATES["IDLE"]

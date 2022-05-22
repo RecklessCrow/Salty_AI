@@ -10,7 +10,7 @@ from tensorflow.keras.losses import BinaryCrossentropy
 from tensorflow.keras.models import load_model
 from tensorflow.keras.optimizers import Adam
 
-from data_generator import DataGenerator
+from .data_generator import DataGenerator
 
 # Training
 EPOCHS = 100

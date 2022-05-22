@@ -11,13 +11,13 @@ from src.database_handler import DatabaseHandler
 DATABASE = DatabaseHandler(test_data_is_recent=True, seed=1)
 
 
-def hyperparameter_tuning():
+def hyperparameter_tuning(continue_tuning=True):
     """
     Perform hyperparameter tuning through keras hyperparameter tuner
     :return:
     """
-    if os.path.isdir("src/model/parameters"):
-        rmtree("src/Model/parameters")
+    if os.path.isdir("src/model/parameters") and not continue_tuning:
+        rmtree("src/model/parameters")
 
     x, y = DATABASE.get_train_data()
     val = DATABASE.get_val_data()
@@ -25,7 +25,7 @@ def hyperparameter_tuning():
     model = TuningModel(DATABASE.get_num_characters() + 1)
     model.search(x, y, val)
 
-    rmtree("src/Model/parameters")
+    rmtree("src/model/parameters")
     # todo: record console output to save hyperparameter tuning results
 
 
@@ -94,7 +94,7 @@ def train(filepath=None):
 
 
 def main():
-    test_model()
+    train()
 
 
 if __name__ == '__main__':
