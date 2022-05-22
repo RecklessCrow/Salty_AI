@@ -2,7 +2,7 @@ import time
 
 from sigfig import round
 
-from DatabaseHandler import DatabaseHandler
+from src.database_handler import DatabaseHandler
 
 """
 Utilities for the state machines
@@ -10,7 +10,7 @@ Utilities for the state machines
 
 DATABASE = DatabaseHandler()
 
-MODLE_FILE = "SavedModels/model_01.14.24"
+MODLE_FILE = "saved_models/model_01.14.24"
 
 UNKNOWN_FIGHTER = 0
 

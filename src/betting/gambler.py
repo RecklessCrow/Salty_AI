@@ -1,8 +1,8 @@
 import numpy as np
-from src.Model import Model
 
-from Utils import *
-from src.SaltyBetDriver import SaltyBetDriver
+from salty_bet_driver import SaltyBetDriver
+from src.model.model import Model
+from utils import *
 
 
 def main(headless):

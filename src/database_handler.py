@@ -8,13 +8,16 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import OrdinalEncoder
 from tqdm import tqdm
 
+if not os.path.isdir("data"):
+    os.mkdir("data")
+
 ZIP_FILE = os.path.join("data", "match_data.zip")
 MATCH_DATA = os.path.join("data", "match_data")
 DB_FILE = os.path.join("data", "salty.db")
 
 
 class DatabaseHandler:
-    def __init__(self, remake=False, add_mirrored_matches=False):
+    def __init__(self, remake=False, add_mirrored_matches=False, test_data_is_recent=False):
         """
         Object to interact with the database
         """
@@ -31,11 +34,22 @@ class DatabaseHandler:
 
         self.x, self.y = self.__make_dataset(add_mirrored_matches=add_mirrored_matches)
 
-        # 70, 10, 20 % split
-        self.x_train, self.x_test, self.y_train, self.y_test = train_test_split(self.x, self.y, test_size=0.2,
-                                                                                random_state=1)
-        self.x_train, self.x_val, self.y_train, self.y_val = train_test_split(self.x, self.y, test_size=0.125,
-                                                                              random_state=1)
+        if test_data_is_recent:
+            # take the n most recent matches from the database as opposed to a random split for a
+            # potentially more representative test set
+            test_matches = 10_000
+
+            self.x_test, self.y_test = self.x[-test_matches:], self.y[-test_matches:]
+            self.x_train, self.y_train = self.x[:-test_matches], self.y[:-test_matches]
+
+            self.x_train, self.x_val, self.y_train, self.y_val = train_test_split(self.x, self.y, test_size=0.1,
+                                                                                  random_state=1)
+        else:
+            # 70, 10, 20 % split
+            self.x_train, self.x_test, self.y_train, self.y_test = train_test_split(self.x, self.y, test_size=0.2,
+                                                                                    random_state=1)
+            self.x_train, self.x_val, self.y_train, self.y_val = train_test_split(self.x, self.y, test_size=0.125,
+                                                                                  random_state=1)
 
     def __del__(self):
         self.commit()

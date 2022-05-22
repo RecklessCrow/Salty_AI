@@ -1,16 +1,24 @@
+import os
 from shutil import rmtree
 
 import numpy as np
 from sklearn.metrics import classification_report, accuracy_score
 from sklearn.model_selection import StratifiedKFold
-from src.Model import Model, TuningModel
 
-from src.DatabaseHandler import DatabaseHandler
+from model import Model, TuningModel
+from src.database_handler import DatabaseHandler
 
 database = DatabaseHandler(add_mirrored_matches=True)
 
 
 def hyperparameter_tuning():
+    """
+    Perform hyperparameter tuning through keras hyperparameter tuner
+    :return:
+    """
+    if os.path.isdir("src/model/parameters"):
+        rmtree("src/Model/parameters")
+
     x, y = database.get_train_data()
     val = database.get_val_data()
 
@@ -19,20 +27,6 @@ def hyperparameter_tuning():
 
     rmtree("src/Model/parameters")
     # todo: record console output to save hyperparameter tuning results
-
-
-def test_hyperparameter_model():
-    x, y = database.get_train_data()
-    val = database.get_val_data()
-    x_test, y_true = database.get_test_data()
-
-    model = Model(database.get_num_characters() + 1)
-    model.train(x, y, val)
-
-    y_pred = model.predict(x_test)
-    y_pred = np.around(y_pred)
-
-    print(classification_report(y_true, y_pred))
 
 
 def cross_validation():
@@ -62,18 +56,45 @@ def cross_validation():
     print(f"Model Accuracy: {np.mean(scores):.2%}")
 
 
+def test_model():
+    """
+    Test a models' performance over the test set
+    :return:
+    """
+    x, y = database.get_train_data()
+    val = database.get_val_data()
+    x_test, y_true = database.get_test_data()
+
+    model = Model(database.get_num_characters() + 1)
+    model.train(x, y, val)
+
+    y_pred = model.predict(x_test)
+    y_pred = np.around(y_pred)
+
+    print(classification_report(y_true, y_pred))
+
+
 def train(filepath=None):
+    """
+    Train a model for production
+    :param filepath:
+    :return:
+    """
     x, y = database.get_dataset()
+
     if filepath is not None:
+        # continue training from a saved model
         model = Model(filepath=filepath)
     else:
+        # train a new model
         model = Model(database.get_num_characters() + 1)
+
     model.train(x, y)
     model.save()
 
 
 def main():
-    test_hyperparameter_model()
+    hyperparameter_tuning()
 
 
 if __name__ == '__main__':

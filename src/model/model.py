@@ -11,8 +11,9 @@ from tensorflow.keras.models import load_model
 from tensorflow.keras.optimizers import Adam
 
 # Training
-EPOCHS = 32
-STEPS = 128
+EPOCHS = 100
+BATCH_SIZE = None
+STEPS = 64
 
 # Early Stopping
 MIN_DELTA = 0.001
@@ -21,6 +22,12 @@ MONITOR = "val_loss"
 
 
 def make_embedding_model(parameters):
+    """
+    Model with an embedding layer and a feed forward neural network
+    :param parameters:
+    :return:
+    """
+
     inputs = Input(shape=(2,))
     x = Embedding(input_dim=parameters["input_dim"], output_dim=parameters["embedding_out"])(inputs)
     x = Flatten()(x)
@@ -41,7 +48,10 @@ def make_embedding_model(parameters):
             learning_rate=parameters["learning_rate"],
             epsilon=parameters["epsilon"]
         ),
-        loss=BinaryCrossentropy(from_logits=True),
+        loss=BinaryCrossentropy(
+            from_logits=True,
+            label_smoothing=0.5
+        ),
         metrics=["accuracy"]
     )
 
@@ -49,6 +59,12 @@ def make_embedding_model(parameters):
 
 
 def make_attention_model(parameters):
+    """
+    Model with the transformer architecture
+    :param parameters:
+    :return:
+    """
+
     inputs = Input(shape=(2,))
     x = Embedding(input_dim=parameters["input_dim"], output_dim=parameters["embedding_out"])(inputs)
 
@@ -73,6 +89,7 @@ def make_attention_model(parameters):
 
     x = Flatten()(x)
 
+    # Feed forward neural network
     for _ in range(parameters["ff_layers"]):
         x = Dense(
             units=parameters["ff_units"],
@@ -89,7 +106,10 @@ def make_attention_model(parameters):
             learning_rate=parameters["learning_rate"],
             epsilon=parameters["epsilon"]
         ),
-        loss=BinaryCrossentropy(from_logits=True),
+        loss=BinaryCrossentropy(
+            from_logits=True,
+            label_smoothing=0.5
+        ),
         metrics=["accuracy"]
     )
 
@@ -103,10 +123,10 @@ class TuningModel(HyperModel):
 
     def build(self, hp: HyperParameters):
         hp_dropout = 0.0
-        hp_output_dim = hp.Choice("Embedding Outputs", [2 ** p for p in range(2, 10)])
+        hp_output_dim = hp.Choice("Embedding Outputs", [2 ** p for p in range(2, 5)])
         hp_transformers = hp.Int("Transformers", min_value=4, max_value=16)
-        hp_heads = hp.Int("Attention Heads", min_value=4, max_value=16)
-        hp_key_dim = hp.Int("Key Dimention", min_value=4, max_value=16)
+        hp_heads = hp.Int("Attention Heads", min_value=4, max_value=12)
+        hp_key_dim = hp.Int("Key Dimention", min_value=4, max_value=12)
         hp_layers = hp.Int("Dense Layers", min_value=1, max_value=8)
         hp_units = hp.Choice("Dense Units", [2 ** p for p in range(4, 11)])
         hp_lr = hp.Float("Learning Rate", min_value=1e-10, max_value=1)
@@ -153,7 +173,9 @@ class TuningModel(HyperModel):
             validation_data=validation_data,
             validation_split=validation_split,
             epochs=EPOCHS,
+            batch_size=BATCH_SIZE,
             steps_per_epoch=STEPS,
+            validation_steps=max(1, STEPS // 8),
             callbacks=[early_stopping]
         )
 
@@ -209,6 +231,8 @@ class Model:
             validation_data=val,
             epochs=EPOCHS,
             steps_per_epoch=STEPS,
+            validation_steps=max(1, STEPS // 8),
+            batch_size=BATCH_SIZE,
             callbacks=callbacks
         )
 
@@ -219,7 +243,9 @@ class Model:
         return sigmoid(predictions).numpy()
 
     def save(self):
-        self.model.save(os.path.join("SavedModels", f"model_{datetime.now().strftime('%H.%M.%S')}"))
+        if not os.path.isdir("saved_models"):
+            os.mkdir("saved_models")
+        self.model.save(os.path.join("saved_models", f"model_{datetime.now().strftime('%H.%M.%S')}"))
 
     def load(self, filepath):
         self.model = load_model(filepath)
