@@ -3,7 +3,7 @@ from tensorflow.keras.utils import Sequence
 
 
 class DataGenerator(Sequence):
-    def __init__(self, x, y, batch_size, shuffle=True, seed=None):
+    def __init__(self, x, y, batch_size=32, shuffle=True, seed=None):
         """
         :param x:
         :param y:

@@ -10,10 +10,11 @@ from tensorflow.keras.losses import BinaryCrossentropy
 from tensorflow.keras.models import load_model
 from tensorflow.keras.optimizers import Adam
 
+from data_generator import DataGenerator
+
 # Training
 EPOCHS = 100
-BATCH_SIZE = None
-STEPS = 64
+BATCH_SIZE = 2 ** 12
 
 # Early Stopping
 MIN_DELTA = 0.001
@@ -148,8 +149,8 @@ class TuningModel(HyperModel):
 
         return make_attention_model(parameters)
 
-    def search(self, x, y, validation_data=None):
-        validation_split = 0
+    def search(self, x, y, val=None):
+        train = DataGenerator(x, y, BATCH_SIZE)
 
         tuner = Hyperband(
             self,
@@ -165,17 +166,13 @@ class TuningModel(HyperModel):
             restore_best_weights=True
         )
 
-        if validation_data is None:
-            validation_split = 0.125
+        if val is not None:
+            val = DataGenerator(val[0], val[1], batch_size=BATCH_SIZE // 8)
 
         tuner.search(
-            x, y,
-            validation_data=validation_data,
-            validation_split=validation_split,
+            train,
+            validation_data=val,
             epochs=EPOCHS,
-            batch_size=BATCH_SIZE,
-            steps_per_epoch=STEPS,
-            validation_steps=max(1, STEPS // 8),
             callbacks=[early_stopping]
         )
 
@@ -215,6 +212,8 @@ class Model:
         return model
 
     def train(self, x, y, val=None):
+        train = DataGenerator(x, y, BATCH_SIZE)
+
         callbacks = []
 
         if val is not None:
@@ -226,13 +225,13 @@ class Model:
             )
             callbacks.append(early_stopping)
 
+        if val is not None:
+            val = DataGenerator(val[0], val[1], batch_size=BATCH_SIZE // 8)
+
         history = self.model.fit(
-            x, y,
+            train,
             validation_data=val,
             epochs=EPOCHS,
-            steps_per_epoch=STEPS,
-            validation_steps=max(1, STEPS // 8),
-            batch_size=BATCH_SIZE,
             callbacks=callbacks
         )
 
