@@ -1,24 +1,23 @@
 import os
-
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
-
 from datetime import datetime
 
-import keras.saving.saved_model.model_serialization
-from keras import Input
-from keras.callbacks import EarlyStopping
-from keras.layers import Dense, Embedding, Flatten, MultiHeadAttention, Dropout, LayerNormalization
 from keras_tuner import HyperModel, HyperParameters, Hyperband
+from tensorflow.keras import Model as TF_Model
+from tensorflow.keras.activations import sigmoid
+from tensorflow.keras.callbacks import EarlyStopping
+from tensorflow.keras.layers import Input, Dense, Embedding, Flatten, MultiHeadAttention, Dropout, LayerNormalization
+from tensorflow.keras.losses import BinaryCrossentropy
+from tensorflow.keras.models import load_model
 from tensorflow.keras.optimizers import Adam
 
 # Training
 EPOCHS = 32
 STEPS = 128
-LOSS = "bce"
 
 # Early Stopping
-min_delta = 0.001
-patience = 3
+MIN_DELTA = 0.001
+PATIENCE = 3
+MONITOR = "val_loss"
 
 
 def make_embedding_model(parameters):
@@ -33,16 +32,16 @@ def make_embedding_model(parameters):
         )(x)
         x = Dropout(parameters["dropout"])(x)
 
-    outputs = Dense(units=1, activation="sigmoid")(x)
+    outputs = Dense(units=1)(x)
 
-    model = keras.Model(inputs=inputs, outputs=outputs, name="salty_model")
+    model = TF_Model(inputs=inputs, outputs=outputs, name="salty_model")
 
     model.compile(
         optimizer=Adam(
             learning_rate=parameters["learning_rate"],
             epsilon=parameters["epsilon"]
         ),
-        loss=LOSS,
+        loss=BinaryCrossentropy(from_logits=True),
         metrics=["accuracy"]
     )
 
@@ -81,16 +80,16 @@ def make_attention_model(parameters):
         )(x)
         x = Dropout(parameters["dropout"])(x)
 
-    outputs = Dense(units=1, activation="sigmoid")(x)
+    outputs = Dense(units=1)(x)
 
-    model = keras.Model(inputs=inputs, outputs=outputs, name="salty_model")
+    model = TF_Model(inputs=inputs, outputs=outputs, name="salty_model")
 
     model.compile(
         optimizer=Adam(
             learning_rate=parameters["learning_rate"],
             epsilon=parameters["epsilon"]
         ),
-        loss=LOSS,
+        loss=BinaryCrossentropy(from_logits=True),
         metrics=["accuracy"]
     )
 
@@ -140,12 +139,13 @@ class TuningModel(HyperModel):
         )
 
         early_stopping = EarlyStopping(
-            min_delta=min_delta,
-            patience=patience,
+            min_delta=MIN_DELTA,
+            patience=PATIENCE,
+            monitor=MONITOR,
             restore_best_weights=True
         )
 
-        if validation_data is not None:
+        if validation_data is None:
             validation_split = 0.125
 
         tuner.search(
@@ -197,8 +197,9 @@ class Model:
 
         if val is not None:
             early_stopping = EarlyStopping(
-                min_delta=min_delta,
-                patience=patience,
+                min_delta=MIN_DELTA,
+                patience=PATIENCE,
+                monitor=MONITOR,
                 restore_best_weights=True
             )
             callbacks.append(early_stopping)
@@ -213,11 +214,12 @@ class Model:
 
         return history
 
-    def predict(self, x):
-        return self.model.predict(x)
+    def predict(self, x, **kwargs):
+        predictions = self.model.predict(x, **kwargs)
+        return sigmoid(predictions).numpy()
 
     def save(self):
         self.model.save(os.path.join("SavedModels", f"model_{datetime.now().strftime('%H.%M.%S')}"))
 
     def load(self, filepath):
-        self.model = keras.models.load_model(filepath)
+        self.model = load_model(filepath)

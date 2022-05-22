@@ -10,7 +10,7 @@ Utilities for the state machines
 
 DATABASE = DatabaseHandler()
 
-MODLE_FILE = "SavedModels/model_04.27.31"
+MODLE_FILE = "SavedModels/model_01.14.24"
 
 UNKNOWN_FIGHTER = 0
 

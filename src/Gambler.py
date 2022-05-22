@@ -1,7 +1,7 @@
 import numpy as np
+from src.Model import Model
 
 from Utils import *
-from src.Model.Model import Model
 from src.SaltyBetDriver import SaltyBetDriver
 
 

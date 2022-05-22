@@ -3,9 +3,9 @@ from shutil import rmtree
 import numpy as np
 from sklearn.metrics import classification_report, accuracy_score
 from sklearn.model_selection import StratifiedKFold
+from src.Model import Model, TuningModel
 
 from src.DatabaseHandler import DatabaseHandler
-from src.Model.Model import Model, TuningModel
 
 database = DatabaseHandler(add_mirrored_matches=True)
 
@@ -73,7 +73,7 @@ def train(filepath=None):
 
 
 def main():
-    train()
+    test_hyperparameter_model()
 
 
 if __name__ == '__main__':
