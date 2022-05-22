@@ -23,6 +23,7 @@ class DataGenerator(Sequence):
         batch_x = self.x[idx * self.batch_size:(idx + 1) * self.batch_size]
         batch_y = self.y[idx * self.batch_size:(idx + 1) * self.batch_size]
 
+        # randomly switch red and blue teams to correct for potential class imbalance at a per character level
         if self.rng.random() > 0.5:
             batch_x = np.flip(batch_x, axis=1)
             batch_y = (batch_y + 1) % 2
