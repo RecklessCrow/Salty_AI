@@ -32,7 +32,7 @@ class DatabaseHandler:
         self.encoder = OrdinalEncoder()
         self.encoder.fit(self.get_all_characters())
 
-        self.x, self.y = self.__make_dataset(add_mirrored_matches=add_mirrored_matches)
+        self.x, self.y = self.__make_dataset()
 
         if test_data_is_recent:
             # take the n most recent matches from the database as opposed to a random split for a
@@ -50,6 +50,20 @@ class DatabaseHandler:
                                                                                     random_state=1)
             self.x_train, self.x_val, self.y_train, self.y_val = train_test_split(self.x, self.y, test_size=0.125,
                                                                                   random_state=1)
+
+        if add_mirrored_matches:
+            def add_flips(x, y):
+                x_flip = np.flip(x, axis=1)
+                y_flip = np.array([(value[0] + 1) % 2 for value in y]).reshape(-1, 1)
+
+                x = np.concatenate((x, x_flip))
+                y = np.concatenate((y, y_flip))
+                return x, y
+
+            self.x, self.y = add_flips(self.x, self.y)
+            self.x_train, self.y_train = add_flips(self.x_train, self.y_train)
+            self.x_val, self.y_val = add_flips(self.x_val, self.y_val)
+            self.x_test, self.y_test = add_flips(self.x_test, self.y_test)
 
     def __del__(self):
         self.commit()
@@ -259,13 +273,13 @@ class DatabaseHandler:
 
         return self.cur.fetchall()
 
-    def __make_dataset(self, add_mirrored_matches=False):
+    def __make_dataset(self):
         """
         Formats the data for machine learning
         :return: x and y, the observation target pair
         """
 
-        # todo if data becomes too large, add batching support
+        # todo if data becomes too large, add generator support
         matches = np.array(self.get_all_matches())
 
         self.encoder.fit(self.get_all_characters())
@@ -274,14 +288,6 @@ class DatabaseHandler:
 
         x = np.array(list(zip(red_vec, blu_vec)), dtype=int)
         y = np.array([[self.team_to_int(winner)] for winner in matches[:, -1]], dtype=int)
-
-        # mirror all matches teams and winners to add data and balance winning team amounts
-        if add_mirrored_matches:
-            x_flip = np.flip(x, axis=1)
-            y_flip = np.array([(val[0] + 1) % 2 for val in y]).reshape(-1, 1)
-
-            x = np.concatenate((x, x_flip))
-            y = np.concatenate((y, y_flip))
 
         return x, y
 
