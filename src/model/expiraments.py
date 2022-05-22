@@ -89,7 +89,7 @@ def train(filepath=None):
         # train a new model
         model = Model(DATABASE.get_num_characters() + 1)
 
-    model.train(x, y)
+    model.train(x, y, epochs=27)
     model.save()
 
 

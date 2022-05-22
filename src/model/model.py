@@ -149,7 +149,7 @@ class TuningModel(HyperModel):
 
         return make_attention_model(parameters)
 
-    def search(self, x, y, val=None):
+    def search(self, x, y, val=None, epochs=EPOCHS):
         train = DataGenerator(x, y, BATCH_SIZE)
 
         tuner = Hyperband(
@@ -172,7 +172,7 @@ class TuningModel(HyperModel):
         tuner.search(
             train,
             validation_data=val,
-            epochs=EPOCHS,
+            epochs=epochs,
             callbacks=[early_stopping]
         )
 
@@ -211,7 +211,7 @@ class Model:
 
         return model
 
-    def train(self, x, y, val=None):
+    def train(self, x, y, val=None, epochs=EPOCHS):
         train = DataGenerator(x, y, BATCH_SIZE)
 
         callbacks = []
@@ -231,7 +231,7 @@ class Model:
         history = self.model.fit(
             train,
             validation_data=val,
-            epochs=EPOCHS,
+            epochs=epochs,
             callbacks=callbacks
         )
 
