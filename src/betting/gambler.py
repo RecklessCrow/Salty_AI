@@ -81,7 +81,7 @@ def main(headless):
             )
 
             red, blue = driver.get_fighters()
-            if not ("team" in red.lower() or "team" in blue.lower()):
+            if not ("team" == red.lower()[:4] or "team" == blue.lower()[:4]):
                 DATABASE.match_over(red, blue, winner)
 
 

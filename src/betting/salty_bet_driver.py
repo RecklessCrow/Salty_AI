@@ -1,6 +1,7 @@
 import os
 import re
 import sys
+import time
 
 from dotenv import load_dotenv
 from selenium import webdriver
@@ -115,11 +116,13 @@ class SaltyBetDriver:
         return red.strip(), blue.strip()
 
     def is_tournament(self):
-        tournament_text = self.driver.find_element(By.ID, "footer-alert").text.lower()
-        return "bracket" in tournament_text or \
-               "final" in tournament_text or \
-               "tournament" in tournament_text
+        balance_wrapper = self.driver.find_element(By.ID, "balancewrapper")
+        balance_wrapper = balance_wrapper.find_elements(By.CSS_SELECTOR, "*")
+        return 'dollar purpletext' in [element.get_attribute("class") for element in balance_wrapper]
 
 
 if __name__ == '__main__':
     driver = SaltyBetDriver(headless=True)
+    while True:
+        print(driver.is_tournament())
+        time.sleep(1)

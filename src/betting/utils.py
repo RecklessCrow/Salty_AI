@@ -54,8 +54,8 @@ def calc_bet_amount(driver, confidence):
         if bet_amount < bailout:
             bet_amount = bailout
 
-    # Bet all in if we're less than 5x bailout
-    elif balance < 5 * bailout:
+    # Bet all in if we're less than 2x bailout
+    elif balance < 2 * bailout:
         bet_amount = balance
 
     # Bet all in if we're above a certain confidence level
