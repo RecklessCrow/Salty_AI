@@ -16,8 +16,8 @@ def hyperparameter_tuning(continue_tuning=True):
     Perform hyperparameter tuning through keras hyperparameter tuner
     :return:
     """
-    if os.path.isdir("src/model/parameters") and not continue_tuning:
-        rmtree("src/model/parameters")
+    if os.path.isdir("src/model/tuning") and not continue_tuning:
+        rmtree("src/model/tuning")
 
     x, y = DATABASE.get_train_data()
     val = DATABASE.get_val_data()
@@ -25,7 +25,7 @@ def hyperparameter_tuning(continue_tuning=True):
     model = TuningModel(DATABASE.get_num_characters() + 1)
     model.search(x, y, val)
 
-    rmtree("src/model/parameters")
+    rmtree("src/model/tuning")
     # todo: record console output to save hyperparameter tuning results
 
 
@@ -35,6 +35,8 @@ def cross_validation():
     :param data:
     :return:
     """
+    import numpy as np
+    import tensorflow as tf
 
     x, y = DATABASE.get_dataset()
 
@@ -42,6 +44,8 @@ def cross_validation():
 
     iterator = StratifiedKFold(n_splits=5, shuffle=True).split(x, y)
     for train_idxs, val_idxs in iterator:
+        np.random.seed(1)
+        tf.random.set_seed(1)
         model = Model(DATABASE.get_num_characters() + 1)
         train_x, train_y = x[train_idxs], y[train_idxs]
         val_x, y_true = x[val_idxs], y[val_idxs]
@@ -89,13 +93,28 @@ def train(filepath=None):
         # train a new model
         model = Model(DATABASE.get_num_characters() + 1)
 
-    model.train(x, y, epochs=27)
+    history = model.train(x, y, epochs=27)
     model.save()
+
+    return history
 
 
 def main():
-    train()
+    response = input("Select run mode: ")
+
+    if "hyper" in response:
+        response = input("Continue from last? y/n: ")
+        hyperparameter_tuning(response == "y")
+    elif "cross" in response:
+        cross_validation()
+    elif "test" in response:
+        test_model()
+    else:
+        train()
 
 
 if __name__ == '__main__':
+    gpu = input("Use gpu? y/n: ")
+    if gpu == "n":
+        os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
     main()

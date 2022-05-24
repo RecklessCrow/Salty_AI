@@ -259,6 +259,40 @@ class DatabaseHandler:
 
         return self.cur.fetchall()
 
+    def get_matchup_info(self, red, blue):
+
+        self.cur.execute(
+            """
+            select winner 
+            from matches 
+            where red == ? 
+            and blue == ?
+            """,
+            (red, blue)
+        )
+        a = np.array(self.cur.fetchall()).reshape(-1, 1)
+
+        self.cur.execute(
+            """
+            select winner 
+            from matches 
+            where red == ? 
+            and blue == ?
+            """,
+            (blue, red)
+        )
+        b = self.cur.fetchall()
+
+        if a and b:
+            a = np.array(a).reshape(-1, 1)
+            b = np.array(b).reshape(-1, 1)
+            b = (b + 1) % 2
+            return np.concatenate((a, b))
+        elif a:
+            return np.array(a).reshape(-1, 1)
+        else:
+            return np.array(b).reshape(-1, 1)
+
     def __make_dataset(self):
         """
         Formats the data for machine learning

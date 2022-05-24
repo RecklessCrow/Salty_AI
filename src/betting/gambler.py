@@ -86,6 +86,9 @@ def main(headless):
 
 
 if __name__ == '__main__':
+    import os
+
+    os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
     headless = None
     while headless is None:
         response = input("Run in headless mode? y/n: ")
