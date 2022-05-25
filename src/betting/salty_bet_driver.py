@@ -98,6 +98,19 @@ class SaltyBetDriver:
         self.driver.find_element(By.ID, "wager").send_keys(str(amount))
         self.driver.find_element(By.CLASS_NAME, f"betbutton{team}").click()
 
+    def get_odds(self):
+        """
+        :return:
+        """
+        betting_text = self.driver.find_element(By.ID, "lastbet").text
+        odds_text = betting_text.split("|")[-1].strip()
+
+        if odds_text == "":
+            return 0, 0
+
+        red, blue = tuple(odds_text.split(":"))
+        return float(red), float(blue)
+
     def get_fighters(self):
         """
         Gets the current characters of the red and blue teams
@@ -124,5 +137,5 @@ class SaltyBetDriver:
 if __name__ == '__main__':
     driver = SaltyBetDriver(headless=True)
     while True:
-        print(driver.is_tournament())
+        print(driver.get_odds())
         time.sleep(1)
