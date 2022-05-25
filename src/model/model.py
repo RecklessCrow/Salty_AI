@@ -19,7 +19,7 @@ BATCH_SIZE = 2 ** 12
 # Early Stopping
 ENABLE_ES = True
 MIN_DELTA = 0.0001
-PATIENCE = 5
+PATIENCE = 10
 MONITOR = "val_loss"
 
 
