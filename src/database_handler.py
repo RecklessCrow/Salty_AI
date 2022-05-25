@@ -213,7 +213,7 @@ class DatabaseHandler:
         """
         self.cur.execute(
             """
-            select max(match_number)
+            select max(match_id)
             from matches
             """
         )
@@ -259,39 +259,18 @@ class DatabaseHandler:
 
         return self.cur.fetchall()
 
-    def get_matchup_info(self, red, blue):
+    def get_matchup_count(self, red, blue):
 
         self.cur.execute(
             """
             select winner 
             from matches 
-            where red == ? 
-            and blue == ?
+            where (red == ? and blue == ?) or (red == ? and blue == ?)
             """,
-            (red, blue)
+            (red, blue, blue, red)
         )
-        a = np.array(self.cur.fetchall()).reshape(-1, 1)
 
-        self.cur.execute(
-            """
-            select winner 
-            from matches 
-            where red == ? 
-            and blue == ?
-            """,
-            (blue, red)
-        )
-        b = self.cur.fetchall()
-
-        if a and b:
-            a = np.array(a).reshape(-1, 1)
-            b = np.array(b).reshape(-1, 1)
-            b = (b + 1) % 2
-            return np.concatenate((a, b))
-        elif a:
-            return np.array(a).reshape(-1, 1)
-        else:
-            return np.array(b).reshape(-1, 1)
+        return len(self.cur.fetchall())
 
     def __make_dataset(self):
         """
@@ -329,10 +308,24 @@ class DatabaseHandler:
         :param x: Characters to transform
         :return:
         """
+
         try:
-            return self.encoder.transform(x)
+            encoded_vec = self.encoder.transform(x) + 1
+
         except ValueError:
-            return np.array([0, 0])
+            try:
+                a = self.encoder.transform([[x[0]]])[0][0] + 1
+            except ValueError:
+                a = 0
+
+            try:
+                b = self.encoder.transform([[x[1]]])[0][0] + 1
+            except ValueError:
+                b = 0
+
+            encoded_vec = np.array([a, b])
+
+        return encoded_vec
 
     def decode_character(self, x):
         """
@@ -340,37 +333,35 @@ class DatabaseHandler:
         :param x: integers to transform
         :return:
         """
-        return self.encoder.inverse_transform(x)
+        unknown = "Unknown Character"
 
-    def get_matchup_info(self, red, blue):
+        if isinstance(x, list):
+            x = np.array(x).reshape(-1, 1)
 
+        x -= 1
+
+        # Single character
+        if isinstance(x, int):
+            return self.encoder.inverse_transform([[x]])[0][0] if x != -1 else unknown
+
+        idxs = np.where(x == -1)
+        decoded = self.encoder.inverse_transform(x)
+        decoded[idxs] = unknown
+
+        return decoded
+
+    def add_model_match(self, table, confidence, team_bet_on, current_balance, bet_amount):
         self.cur.execute(
             """
-            select winner 
-            from matches 
-            where red == ? 
-            and blue == ?
+            insert into ? (
+                confidence,
+                team_bet_on,
+                current_balance,
+                bet_amount
+            ) values(?,?,?,?)
             """,
-            (red, blue)
+            (table, confidence, team_bet_on, current_balance, bet_amount)
         )
-        a = np.array(self.cur.fetchall()).reshape(-1, 1)
-
-        self.cur.execute(
-            """
-            select winner 
-            from matches 
-            where red == ? 
-            and blue == ?
-            """,
-            (blue, red)
-        )
-        b = self.cur.fetchall()
-        if b:
-            b = np.array(self.cur.fetchall()).reshape(-1, 1)
-            b = (b + 1) % 2
-            a = np.concatenate((a, b))
-
-        return a
 
     @staticmethod
     def team_to_int(team):
@@ -383,7 +374,6 @@ class DatabaseHandler:
 
 if __name__ == '__main__':
     database = DatabaseHandler()
-    x, y = database.get_dataset()
-
-    print(x[-500:])
-    print(database.decode_character(x.reshape(-1, 1)))
+    print(database.encode_character(["!", "new guy on the block"]))
+    print(database.decode_character([1, 9]))
+    print(database.decode_character([1, 0]))

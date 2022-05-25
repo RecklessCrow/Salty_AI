@@ -1,7 +1,7 @@
 import numpy as np
 
 from salty_bet_driver import SaltyBetDriver
-from src.Model.model import Model
+from src.model.model import Model
 from utils import *
 
 
@@ -27,7 +27,7 @@ def main(headless):
 
             fighter_vector = DATABASE.encode_character([[red], [blue]]).reshape(1, 2)
 
-            if UNKNOWN_FIGHTER not in fighter_vector:
+            if not np.all(fighter_vector == UNKNOWN_FIGHTER):
                 confidence = model.predict(fighter_vector)[0][0]
                 pred = np.around(confidence)
 
@@ -36,13 +36,13 @@ def main(headless):
                     confidence = 1 - confidence
 
                 confidence = (confidence - 0.5) * 2
-                matchup_count = len(DATABASE.get_matchup_info(red, blue))
+                matchup_count = DATABASE.get_matchup_count(red, blue)
                 matchup_rate = lambda count_seen: 1 - ((2 - count_seen) * 0.1)
                 scaled_confidence = confidence * matchup_rate(matchup_count)
 
-                bet_amount = calc_bet_amount2(driver, scaled_confidence)
+                bet_amount = calc_bet_amount3(driver, scaled_confidence)
 
-            # Unknown fighter present
+            # Both fighters unknown, bet on random team
             else:
                 bet_amount = 1
                 pred = np.random.choice([0, 1])  # coin flip
@@ -55,9 +55,9 @@ def main(headless):
             print(
                 f"Red  Team: {red}\n"
                 f"Blue Team: {blue}\n"
-                f"Betting ${bet_amount:,} on {pred_str.capitalize()} Team\n"
-                f"Model confidence:  {confidence:>6.2%}\n"
-                f"Scaled confidence: {scaled_confidence:>6.2%}\n"
+                f"Betting ${bet_amount:,} on {pred_str.upper()} Team \n"
+                f"Model confidence:  {confidence:<7.2%}\n"
+                f"Scaled confidence: {scaled_confidence:<7.2%}\n"
                 f"Matchup count: {matchup_count:}"
             )
 
@@ -83,10 +83,16 @@ def main(headless):
                 if pred_str == winner:
                     wins += 1
 
+            # prevent division by zero
+            if matches > 0:
+                acc = wins / matches
+            else:
+                acc = 0
+
             print(
-                f"{winner.capitalize()} Team Wins!\n"
-                f"Current Model Accuracy: {wins / matches:.2%} | {matches} matches\n"
-                f"Ending Balance: ${driver.get_balance()}\n"
+                f"{winner.upper()} Team Wins!\n"
+                f"Current Model Accuracy: {acc:.2%} | {matches} matches\n"
+                f"Ending Balance: ${driver.get_balance():,}\n"
                 f"{'-' * 30}"
             )
 

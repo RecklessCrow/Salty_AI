@@ -10,7 +10,7 @@ from tensorflow.keras.losses import BinaryCrossentropy
 from tensorflow.keras.models import load_model
 from tensorflow.keras.optimizers import Adam
 
-from data_generator import DataGenerator
+from src.model.data_generator import DataGenerator
 
 # Training
 EPOCHS = int(1e6)
@@ -51,7 +51,7 @@ def make_attention_model(parameters):
             units=parameters["embedding_out"],
             activation=parameters["ff_activation"]
         )(x)
-        x = Dropout(parameters["dropout"])(x)
+        sub_x = Dropout(parameters["dropout"])(sub_x)
         x = LayerNormalization()(x + sub_x)
 
     x = Flatten()(x)
@@ -116,7 +116,7 @@ class TuningModel(HyperModel):
         return make_attention_model(parameters)
 
     def search(self, x, y, val=None, epochs=EPOCHS):
-        train = DataGenerator(x, y, BATCH_SIZE)
+        train = DataGenerator(x, y, train=True, batch_size=BATCH_SIZE)
 
         tuner = Hyperband(
             self,
@@ -135,7 +135,7 @@ class TuningModel(HyperModel):
         )
 
         if val is not None:
-            val = DataGenerator(val[0], val[1], batch_size=BATCH_SIZE)
+            val = DataGenerator(val[0], val[1], train=False, batch_size=BATCH_SIZE)
 
         tuner.search(
             train,
@@ -162,7 +162,7 @@ class Model:
         parameters = {
             "dropout": 0.1,
             "input_dim": self.input_dim,
-            "embedding_out": 512,
+            "embedding_out": 128,
             "num_transformers": 12,
             "attention_heads": 12,
             "attention_keys": 12,
@@ -180,7 +180,7 @@ class Model:
         return model
 
     def train(self, x, y, val=None, epochs=EPOCHS):
-        train = DataGenerator(x, y, BATCH_SIZE)
+        train = DataGenerator(x, y, train=True, batch_size=BATCH_SIZE)
 
         callbacks = []
 
@@ -194,7 +194,7 @@ class Model:
             callbacks.append(early_stopping)
 
         if val is not None:
-            val = DataGenerator(val[0], val[1], batch_size=BATCH_SIZE)
+            val = DataGenerator(val[0], val[1], train=False, batch_size=BATCH_SIZE)
 
         history = self.model.fit(
             train,

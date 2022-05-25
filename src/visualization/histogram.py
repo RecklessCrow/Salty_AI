@@ -1,8 +1,9 @@
+import time
+
 import matplotlib.pyplot as plt
 import numpy as np
-from src.Model.expiraments import train
 from src.Model.model import Model
-import time
+
 from src.database_handler import DatabaseHandler
 
 database = DatabaseHandler(test_data_is_recent=True, seed=1)

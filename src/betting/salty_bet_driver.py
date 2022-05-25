@@ -129,13 +129,12 @@ class SaltyBetDriver:
         return red.strip(), blue.strip()
 
     def is_tournament(self):
-        balance_wrapper = self.driver.find_element(By.ID, "balancewrapper")
-        balance_wrapper = balance_wrapper.find_elements(By.CSS_SELECTOR, "*")
-        return 'dollar purpletext' in [element.get_attribute("class") for element in balance_wrapper]
+        element = self.driver.find_element(By.ID, "balancewrapper").text.lower()
+        return "tournament" in element
 
 
 if __name__ == '__main__':
     driver = SaltyBetDriver(headless=True)
     while True:
-        print(driver.get_odds())
+        print(driver.is_tournament())
         time.sleep(1)

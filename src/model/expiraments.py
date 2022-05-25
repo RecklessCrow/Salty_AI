@@ -80,6 +80,7 @@ def test_model():
     y_pred = np.around(y_pred)
 
     print(classification_report(y_true, y_pred))
+    model.save()
 
 
 def train(filepath=None):
