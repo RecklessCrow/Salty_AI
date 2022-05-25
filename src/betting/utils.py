@@ -10,7 +10,7 @@ Utilities for the state machines
 
 DATABASE = DatabaseHandler()
 
-MODEL_FILE = "saved_models/model_17.47.06"
+MODEL_FILE = "saved_models/model_11.06.20"
 
 UNKNOWN_FIGHTER = 0
 
@@ -82,13 +82,10 @@ def calc_bet_amount(driver, confidence):
     return bet_amount
 
 
-def calc_bet_amount2(driver, confidence, matchup_count):
+def calc_bet_amount2(driver, confidence):
     is_tournament = driver.is_tournament()
     bailout = driver.get_bailout(is_tournament)
     balance = driver.get_balance()
-
-    matchup_rate = lambda count_seen: 1 - ((2 - count_seen) * 0.1)
-    confidence = confidence * matchup_rate(matchup_count)
 
     # Tournament betting rules
     if is_tournament:
