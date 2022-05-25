@@ -8,7 +8,7 @@ from sklearn.model_selection import StratifiedKFold
 from model import Model, TuningModel
 from src.database_handler import DatabaseHandler
 
-DATABASE = DatabaseHandler(test_data_is_recent=True, seed=1)
+DATABASE = DatabaseHandler(test_data_is_recent=False, seed=1)
 
 
 def hyperparameter_tuning(continue_tuning=True):
@@ -97,7 +97,7 @@ def train(filepath=None):
         # train a new model
         model = Model(DATABASE.get_num_characters() + 1)
 
-    history = model.train(x, y, epochs=27)
+    history = model.train(x, y, epochs=155)
     model.save()
 
     return history
