@@ -1,7 +1,7 @@
 import numpy as np
 
 from salty_bet_driver import SaltyBetDriver
-from src.Model.model import Model
+from src.model.model import Model
 from utils import *
 
 
@@ -53,7 +53,7 @@ def main(headless):
                 f"Blue Team: {blue}\n"
                 f"Betting ${bet_amount:,} on {pred_str.capitalize()} Team\n"
                 f"Model confidence: {confidence:.2%}\n"
-                f"Matchup count: {matchup_count:}\n"
+                f"Matchup count: {matchup_count:}"
             )
 
             driver.bet(max(bet_amount, 1), pred_str)
