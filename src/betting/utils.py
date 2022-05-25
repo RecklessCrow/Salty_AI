@@ -10,7 +10,7 @@ Utilities for the state machines
 
 DATABASE = DatabaseHandler()
 
-MODEL_FILE = "saved_models/0.79acc"
+MODEL_FILE = "saved_models/model_17.47.06"
 
 UNKNOWN_FIGHTER = 0
 
@@ -69,6 +69,46 @@ def calc_bet_amount(driver, confidence):
     else:
         if balance < BALANCE_CAP:
             bet_amount = balance * margin
+        else:
+            bet_amount = balance * 0.05
+
+        bet_amount = min(MAX_NORMAL_BET, bet_amount)
+
+    bet_amount = round(int(bet_amount), sigfigs=3)
+
+    if bet_amount > balance:
+        bet_amount = balance
+
+    return bet_amount
+
+
+def calc_bet_amount2(driver, confidence, matchup_count):
+    is_tournament = driver.is_tournament()
+    bailout = driver.get_bailout(is_tournament)
+    balance = driver.get_balance()
+
+    matchup_rate = lambda count_seen: 1 - ((2 - count_seen) * 0.1)
+    confidence = confidence * matchup_rate(matchup_count)
+
+    # Tournament betting rules
+    if is_tournament:
+        bet_amount = balance * confidence
+
+        if bet_amount < bailout:
+            bet_amount = bailout
+
+    # Bet all in if we're less than 2x bailout
+    elif balance < 2 * bailout:
+        bet_amount = balance
+
+    # Bet all in if we're above a certain confidence level
+    elif confidence > ALL_IN_CONFIDENCE:
+        bet_amount = balance if balance < 1e6 else (balance * confidence) / 2
+    elif confidence > HIGH_CONFIDENCE:
+        bet_amount = (balance * confidence) / 4
+    else:  # normal betting rules
+        if balance < BALANCE_CAP:
+            bet_amount = balance * (confidence / 2)
         else:
             bet_amount = balance * 0.05
 

@@ -342,6 +342,36 @@ class DatabaseHandler:
         """
         return self.encoder.inverse_transform(x)
 
+    def get_matchup_info(self, red, blue):
+
+        self.cur.execute(
+            """
+            select winner 
+            from matches 
+            where red == ? 
+            and blue == ?
+            """,
+            (red, blue)
+        )
+        a = np.array(self.cur.fetchall()).reshape(-1, 1)
+
+        self.cur.execute(
+            """
+            select winner 
+            from matches 
+            where red == ? 
+            and blue == ?
+            """,
+            (blue, red)
+        )
+        b = self.cur.fetchall()
+        if b:
+            b = np.array(self.cur.fetchall()).reshape(-1, 1)
+            b = (b + 1) % 2
+            a = np.concatenate((a, b))
+
+        return a
+
     @staticmethod
     def team_to_int(team):
         return int(team == "red")

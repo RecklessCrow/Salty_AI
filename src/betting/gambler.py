@@ -1,7 +1,7 @@
 import numpy as np
 
 from salty_bet_driver import SaltyBetDriver
-from src.model.model import Model
+from src.Model.model import Model
 from utils import *
 
 
@@ -19,6 +19,7 @@ def main(headless):
         state = await_next_state(driver, state)
 
         if state == STATES["BETS_OPEN"]:
+
             red, blue = driver.get_fighters()
 
             if (red, blue) is None:
@@ -34,13 +35,16 @@ def main(headless):
                 if pred == 0:
                     confidence = 1 - confidence
 
-                bet_amount = calc_bet_amount(driver, confidence)
+                confidence = (confidence - 0.5) * 2
+                matchup_count = len(DATABASE.get_matchup_info(red, blue))
+                bet_amount = calc_bet_amount2(driver, confidence, matchup_count)
 
             # Unknown fighter present
             else:
                 bet_amount = 1
                 pred = np.random.choice([0, 1])  # coin flip
                 confidence = 0
+                matchup_count = 0
 
             pred_str = DATABASE.int_to_team(pred)
 
@@ -49,6 +53,7 @@ def main(headless):
                 f"Blue Team: {blue}\n"
                 f"Betting ${bet_amount:,} on {pred_str.capitalize()} Team\n"
                 f"Model confidence: {confidence:.2%}\n"
+                f"Matchup count: {matchup_count:}\n"
             )
 
             driver.bet(max(bet_amount, 1), pred_str)
