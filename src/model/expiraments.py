@@ -38,7 +38,11 @@ def cross_validation():
     import numpy as np
     import tensorflow as tf
 
-    x, y = DATABASE.get_dataset()
+    x1, y1 = DATABASE.get_train_data()
+    x2, y2 = DATABASE.get_val_data()
+    x, y = np.concatenate((x1, x2)), np.concatenate((y1, y2))
+
+    del x1, x2, y1, y2
 
     scores = []
 
@@ -47,12 +51,12 @@ def cross_validation():
         np.random.seed(1)
         tf.random.set_seed(1)
         model = Model(DATABASE.get_num_characters() + 1)
-        train_x, train_y = x[train_idxs], y[train_idxs]
-        val_x, y_true = x[val_idxs], y[val_idxs]
+        x_train, y_train = x[train_idxs], y[train_idxs]
+        x_val, y_true = x[val_idxs], y[val_idxs]
 
-        model.train(train_x, train_y, (val_x, y_true))
+        model.train(x_train, y_train, (x_val, y_true))
 
-        y_pred = np.around(model.predict(val_x))
+        y_pred = np.around(model.predict(x_val))
 
         scores.append(accuracy_score(y_true, y_pred))
         print(classification_report(y_true, y_pred))

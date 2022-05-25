@@ -1,7 +1,6 @@
 import os
 from datetime import datetime
 
-import numpy as np
 from keras_tuner import HyperModel, HyperParameters, Hyperband
 from tensorflow.keras import Model as TF_Model
 from tensorflow.keras.activations import sigmoid
@@ -14,13 +13,13 @@ from tensorflow.keras.optimizers import Adam
 from data_generator import DataGenerator
 
 # Training
-EPOCHS = 10000
+EPOCHS = int(1e6)
 BATCH_SIZE = 2 ** 12
 
 # Early Stopping
-ENABLE_ES = False
+ENABLE_ES = True
 MIN_DELTA = 0.0001
-PATIENCE = 25
+PATIENCE = 5
 MONITOR = "val_loss"
 
 
@@ -30,9 +29,12 @@ def make_attention_model(parameters):
     :param parameters:
     :return:
     """
+    # todo test dropout on embedding layer before and after
 
     inputs = Input(shape=(2,))
-    x = Embedding(input_dim=parameters["input_dim"], output_dim=parameters["embedding_out"])(inputs)
+
+    x = Embedding(input_dim=parameters["input_dim"], output_dim=parameters["embedding_out"], mask_zero=True)(inputs)
+    x = Dropout(parameters["dropout"])(x)
 
     # Transformer
     for _ in range(parameters["num_transformers"]):
@@ -40,7 +42,7 @@ def make_attention_model(parameters):
         sub_x = MultiHeadAttention(
             num_heads=parameters["attention_heads"],
             key_dim=parameters["attention_keys"],
-            dropout=parameters["dropout"]
+            dropout=parameters["dropout"],
         )(x, x)
         x = LayerNormalization()(x + sub_x)
 
@@ -87,16 +89,15 @@ class TuningModel(HyperModel):
         self.input_dim = input_dim
 
     def build(self, hp: HyperParameters):
-        hp_dropout = hp.Choice("Dropout", [eval(f"0.{x}") for x in range(5, 10)])  # 0.5-0.9
-        hp_output_dim = int(
-            np.ceil(self.input_dim ** 0.25))  # hp.Choice("Embedding Outputs", [2 ** p for p in range(2, 11)])
+        hp_dropout = 0.1  # hp.Choice("Dropout", [eval(f"0.{x}") for x in range(1, 10)])  # 0.1-0.9
+        hp_output_dim = hp.Choice("Embedding Outputs", [2 ** p for p in range(2, 11)])
         hp_transformers = 12  # hp.Int("Transformers", min_value=8, max_value=16)
         hp_heads = 12  # hp.Int("Attention Heads", min_value=4, max_value=12)
         hp_key_dim = 12  # hp.Int("Key Dimention", min_value=4, max_value=12)
-        hp_layers = 4  # hp.Int("Dense Layers", min_value=1, max_value=8)
-        hp_units = 128  # hp.Choice("Dense Units", [2 ** p for p in range(4, 11)])
-        hp_lr = hp.Choice("Learning Rate", [eval(f"1e-{x}") for x in range(1, 8)])  # 0.1 - 1e-7
-        hp_epsilon = 1e-7  # hp.Float("Epsilon", min_value=1e-10, max_value=1)
+        hp_layers = hp.Int("Dense Layers", min_value=1, max_value=4)
+        hp_units = hp.Choice("Dense Units", [2 ** p for p in range(2, 11)])
+        hp_lr = hp.Choice("Learning Rate", [eval(f"1e-{x}") for x in range(3, 8)])
+        hp_epsilon = hp.Choice("Epsilon", [eval(f"1e-{x}") for x in range(1, 8)])
 
         parameters = {
             "dropout": hp_dropout,
@@ -122,8 +123,8 @@ class TuningModel(HyperModel):
             objective=MONITOR,
             directory=os.path.join("src", "model"),
             project_name="tuning",
-            factor=3,
-            hyperband_iterations=3,
+            factor=5,
+            hyperband_iterations=10,
         )
 
         early_stopping = EarlyStopping(
@@ -140,7 +141,7 @@ class TuningModel(HyperModel):
             train,
             validation_data=val,
             epochs=epochs,
-            callbacks=[early_stopping]
+            callbacks=[early_stopping],
         )
 
         return tuner.get_best_hyperparameters()
@@ -159,16 +160,16 @@ class Model:
     def build(self):
 
         parameters = {
-            "dropout": 0.5,
+            "dropout": 0.1,
             "input_dim": self.input_dim,
-            "embedding_out": int(np.ceil(self.input_dim ** 0.25)),
+            "embedding_out": 512,
             "num_transformers": 12,
             "attention_heads": 12,
             "attention_keys": 12,
             "ff_layers": 4,
-            "ff_units": 128,
+            "ff_units": 64,
             "ff_activation": "gelu",
-            "learning_rate": 0.0001,
+            "learning_rate": 1e-5,
             "epsilon": 1e-7
         }
 
@@ -199,7 +200,7 @@ class Model:
             train,
             validation_data=val,
             epochs=epochs,
-            callbacks=callbacks
+            callbacks=callbacks,
         )
 
         return history
