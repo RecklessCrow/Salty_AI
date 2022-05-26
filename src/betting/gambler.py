@@ -25,9 +25,11 @@ def main(headless):
             if (red, blue) is None:
                 continue
 
-            fighter_vector = DATABASE.encode_character([[red], [blue]]).reshape(1, 2)
+            red_int, blue_int = DATABASE.encode_character([red, blue])
 
-            if not np.all(fighter_vector == UNKNOWN_FIGHTER):
+            # At least one fighter known
+            if not (red_int == 0 and blue_int == 0):
+                fighter_vector = np.array([[red_int, blue_int]])
                 confidence = model.predict(fighter_vector)[0][0]
                 pred = np.around(confidence)
 
@@ -104,6 +106,7 @@ def main(headless):
 if __name__ == '__main__':
     import os
 
+    os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
     os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
     headless = None
     while headless is None:

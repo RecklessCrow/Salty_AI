@@ -16,6 +16,12 @@ MATCH_DATA = os.path.join("data", "match_data")
 DB_FILE = os.path.join("data", "salty.db")
 
 
+def merge_databases(database_file_1, database_file_2):
+    d1 = DatabaseHandler(database_file_1)
+    d2 = DatabaseHandler(database_file_2)
+    print(np.where(d1[:, 0] == d2[:, 0] and d1[:, 1] != d2[:, 1]))
+
+
 class DatabaseHandler:
     def __init__(self, remake=False, test_data_is_recent=False, seed=None):
         """
@@ -220,18 +226,23 @@ class DatabaseHandler:
 
         return self.cur.fetchone()[0]
 
-    def get_all_matches(self):
+    def get_all_matches(self, return_id=False):
         """
         :return: All the matches in the database as (red, blue, winner)
         """
         self.cur.execute(
             """
-            select  red, blue, winner 
+            select  match_id, red, blue, winner 
             from matches
             """
         )
 
-        return self.cur.fetchall()
+        matches = self.cur.fetchall()
+
+        if return_id:
+            return np.array(matches)
+        else:
+            return np.array(matches)[:, 1:]
 
     def get_num_characters(self):
         """
@@ -259,18 +270,17 @@ class DatabaseHandler:
 
         return self.cur.fetchall()
 
-    def get_matchup_count(self, red, blue):
-
+    def get_matchup_count(self, fighter_1, fighter_2):
         self.cur.execute(
             """
-            select winner 
+            select count(winner)
             from matches 
             where (red == ? and blue == ?) or (red == ? and blue == ?)
             """,
-            (red, blue, blue, red)
+            (fighter_1, fighter_2, fighter_2, fighter_1)
         )
 
-        return len(self.cur.fetchall())
+        return self.cur.fetchone()[0]
 
     def __make_dataset(self):
         """
@@ -279,7 +289,7 @@ class DatabaseHandler:
         """
 
         # todo if data becomes too large, add generator support
-        matches = np.array(self.get_all_matches())
+        matches = self.get_all_matches()
 
         self.encoder.fit(self.get_all_characters())
         red_vec = self.encoder.transform(np.array(matches[:, 0]).reshape(-1, 1)).flatten()
@@ -350,19 +360,6 @@ class DatabaseHandler:
 
         return decoded
 
-    def add_model_match(self, table, confidence, team_bet_on, current_balance, bet_amount):
-        self.cur.execute(
-            """
-            insert into ? (
-                confidence,
-                team_bet_on,
-                current_balance,
-                bet_amount
-            ) values(?,?,?,?)
-            """,
-            (table, confidence, team_bet_on, current_balance, bet_amount)
-        )
-
     @staticmethod
     def team_to_int(team):
         return int(team == "red")
@@ -374,6 +371,4 @@ class DatabaseHandler:
 
 if __name__ == '__main__':
     database = DatabaseHandler()
-    print(database.encode_character(["!", "new guy on the block"]))
-    print(database.decode_character([1, 9]))
-    print(database.decode_character([1, 0]))
+    print(database.encode_character(["Yujiro-hanma", "Team Sons"]))

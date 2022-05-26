@@ -10,7 +10,7 @@ Utilities for the state machines
 
 DATABASE = DatabaseHandler()
 
-MODEL_FILE = "saved_models/0.77acc"
+MODEL_FILE = "saved_models/model_15.17.46"
 
 UNKNOWN_FIGHTER = 0
 
@@ -76,7 +76,8 @@ def calc_bet_amount(driver, confidence):
 
         bet_amount = min(MAX_NORMAL_BET, bet_amount)
 
-    bet_amount = round(int(bet_amount), sigfigs=len(str(bet_amount)) // 2)
+    bet_amount = int(bet_amount)
+    bet_amount = round(bet_amount, sigfigs=len(str(bet_amount)) // 2)
 
     if bet_amount > balance:
         bet_amount = balance
@@ -115,7 +116,8 @@ def calc_bet_amount2(driver, confidence):
 
         bet_amount = min(MAX_NORMAL_BET, bet_amount)
 
-    bet_amount = round(int(bet_amount), sigfigs=len(str(bet_amount)) // 2)
+    bet_amount = int(bet_amount)
+    bet_amount = round(bet_amount, sigfigs=len(str(bet_amount)) // 2)
 
     if bet_amount > balance:
         bet_amount = balance
@@ -151,7 +153,8 @@ def calc_bet_amount3(driver, confidence):
         bet_amount = balance * confidence * MODIFIER
         bet_amount = min(MAX_BET, bet_amount)
 
-    bet_amount = round(int(bet_amount), sigfigs=len(str(bet_amount)) // 2)
+    bet_amount = int(bet_amount)
+    bet_amount = round(bet_amount, sigfigs=len(str(bet_amount)) // 2)
 
     if bet_amount > balance:
         bet_amount = balance

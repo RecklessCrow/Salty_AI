@@ -1,26 +1,32 @@
 import os
 from datetime import datetime
 
+import numpy as np
 from keras_tuner import HyperModel, HyperParameters, Hyperband
 from tensorflow.keras import Model as TF_Model
 from tensorflow.keras.activations import sigmoid
-from tensorflow.keras.callbacks import EarlyStopping
+from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
 from tensorflow.keras.layers import Input, Dense, Embedding, Flatten, MultiHeadAttention, Dropout, LayerNormalization
 from tensorflow.keras.losses import BinaryCrossentropy
 from tensorflow.keras.models import load_model
-from tensorflow.keras.optimizers import Adam
+from tensorflow_addons.optimizers import RectifiedAdam
 
 from src.model.data_generator import DataGenerator
 
 # Training
-EPOCHS = int(1e6)
-BATCH_SIZE = 2 ** 12
+BATCH_SIZE = 2 ** 13
+EPOCHS = 15
+STEPS = int(np.ceil((1.4e6 / BATCH_SIZE) * EPOCHS))
+
+# Callbacks
+MONITOR = "val_loss"
 
 # Early Stopping
-ENABLE_ES = True
-MIN_DELTA = 0.0001
-PATIENCE = 10
-MONITOR = "val_loss"
+ENABLE_ES = False
+ES_MIN_DELTA = 0.0001
+ES_PATIENCE = 10
+
+MODEL_NAME = os.path.join("saved_models", f"model_{datetime.now().strftime('%H.%M.%S')}")
 
 
 def make_attention_model(parameters):
@@ -69,13 +75,17 @@ def make_attention_model(parameters):
     model = TF_Model(inputs=inputs, outputs=outputs, name="salty_model")
 
     model.compile(
-        optimizer=Adam(
-            learning_rate=parameters["learning_rate"],
-            epsilon=parameters["epsilon"]
+        optimizer=RectifiedAdam(
+            beta_2=0.98,
+            epsilon=1e-6,
+            weight_decay=0.01,
+            learning_rate=1e-3,
+            total_steps=STEPS,
+            warmup_proportion=0.1,
         ),
         loss=BinaryCrossentropy(
             from_logits=True,
-            label_smoothing=0.1
+            label_smoothing=0.05
         ),
         metrics=["accuracy"]
     )
@@ -96,8 +106,6 @@ class TuningModel(HyperModel):
         hp_key_dim = 12  # hp.Int("Key Dimention", min_value=4, max_value=12)
         hp_layers = hp.Int("Dense Layers", min_value=1, max_value=4)
         hp_units = hp.Choice("Dense Units", [2 ** p for p in range(2, 11)])
-        hp_lr = hp.Choice("Learning Rate", [eval(f"1e-{x}") for x in range(3, 8)])
-        hp_epsilon = hp.Choice("Epsilon", [eval(f"1e-{x}") for x in range(1, 8)])
 
         parameters = {
             "dropout": hp_dropout,
@@ -109,8 +117,6 @@ class TuningModel(HyperModel):
             "ff_layers": hp_layers,
             "ff_units": hp_units,
             "ff_activation": "gelu",
-            "learning_rate": hp_lr,
-            "epsilon": hp_epsilon
         }
 
         return make_attention_model(parameters)
@@ -128,8 +134,8 @@ class TuningModel(HyperModel):
         )
 
         early_stopping = EarlyStopping(
-            min_delta=MIN_DELTA,
-            patience=PATIENCE,
+            min_delta=ES_MIN_DELTA,
+            patience=ES_PATIENCE,
             monitor=MONITOR,
             restore_best_weights=True
         )
@@ -162,15 +168,13 @@ class Model:
         parameters = {
             "dropout": 0.1,
             "input_dim": self.input_dim,
-            "embedding_out": 128,
+            "embedding_out": 512,
             "num_transformers": 12,
             "attention_heads": 12,
             "attention_keys": 12,
             "ff_layers": 4,
-            "ff_units": 64,
+            "ff_units": 128,
             "ff_activation": "gelu",
-            "learning_rate": 1e-5,
-            "epsilon": 1e-7
         }
 
         model = make_attention_model(parameters)
@@ -185,16 +189,27 @@ class Model:
         callbacks = []
 
         if val is not None and ENABLE_ES:
-            early_stopping = EarlyStopping(
-                min_delta=MIN_DELTA,
-                patience=PATIENCE,
+            callbacks.append(EarlyStopping(
                 monitor=MONITOR,
+                min_delta=ES_MIN_DELTA,
+                patience=ES_PATIENCE,
                 restore_best_weights=True
-            )
-            callbacks.append(early_stopping)
+            ))
 
         if val is not None:
             val = DataGenerator(val[0], val[1], train=False, batch_size=BATCH_SIZE)
+
+            callbacks.append(ModelCheckpoint(
+                filepath=os.path.join(MODEL_NAME + "_checkpoint_loss"),
+                monitor="val_loss",
+                save_best_only=True
+            ))
+
+            callbacks.append(ModelCheckpoint(
+                filepath=os.path.join(MODEL_NAME + "_checkpoint_acc"),
+                monitor="val_accuracy",
+                save_best_only=True
+            ))
 
         history = self.model.fit(
             train,
@@ -212,7 +227,7 @@ class Model:
     def save(self):
         if not os.path.isdir("saved_models"):
             os.mkdir("saved_models")
-        self.model.save(os.path.join("saved_models", f"model_{datetime.now().strftime('%H.%M.%S')}"))
+        self.model.save(MODEL_NAME)
 
     def load(self, filepath):
 

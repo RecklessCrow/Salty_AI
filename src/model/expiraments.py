@@ -8,7 +8,7 @@ from sklearn.model_selection import StratifiedKFold
 from model import Model, TuningModel
 from src.database_handler import DatabaseHandler
 
-DATABASE = DatabaseHandler(test_data_is_recent=False, seed=1)
+DATABASE = DatabaseHandler(test_data_is_recent=True, seed=1)
 
 
 def hyperparameter_tuning(continue_tuning=True):
@@ -98,7 +98,7 @@ def train(filepath=None):
         # train a new model
         model = Model(DATABASE.get_num_characters() + 1)
 
-    history = model.train(x, y, epochs=155)
+    history = model.train(x, y)
     model.save()
 
     return history
@@ -119,6 +119,7 @@ def main():
 
 
 if __name__ == '__main__':
+    os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
     gpu = input("Use gpu? y/n: ")
     if gpu == "n":
         os.environ["CUDA_VISIBLE_DEVICES"] = "-1"

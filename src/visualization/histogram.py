@@ -2,9 +2,9 @@ import time
 
 import matplotlib.pyplot as plt
 import numpy as np
-from src.Model.model import Model
 
 from src.database_handler import DatabaseHandler
+from src.model.model import Model
 
 database = DatabaseHandler(test_data_is_recent=True, seed=1)
 
@@ -25,17 +25,19 @@ counts = np.array(counts)
 
 ##################################################################################
 
-model = Model(filepath='./saved_models/model_11.06.20')
+model_type = "loss"
+model = Model(filepath=f'./saved_models/model_14.53.20_checkpoint_{model_type}')
 
 # pred_train = model.predict(train_x[:100], batch_size=4096)
 pred_test = model.predict(test_x[:1000], batch_size=4096)
 
 # plt.hist(pred_train, bins=100)
-red_win  = pred_test[test_y[:1000] == 0]
+red_win = pred_test[test_y[:1000] == 0]
 blue_win = pred_test[test_y[:1000] == 1]
 
 plt.hist(red_win, alpha=0.5, color='red', range=(0, 1), bins=20)
 plt.hist(blue_win, alpha=0.5, color='blue', range=(0, 1), bins=20)
+plt.title(f"Tuned to val {model_type}")
 plt.show()
 
 mod_rate = lambda count_seen: 1 - ((2 - count_seen) * 0.1)
@@ -48,6 +50,7 @@ blue_win = pred_test[test_y[:1000] == 1]
 
 plt.hist(red_win, alpha=0.5, color='red', range=(0, 1), bins=20)
 plt.hist(blue_win, alpha=0.5, color='blue', range=(0, 1), bins=20)
+plt.title(f"Tuned to val {model_type} (scaled)")
 plt.show()
 
 
