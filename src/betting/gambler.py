@@ -64,6 +64,7 @@ def main(headless):
                 f"Matchup count: {matchup_count:}"
             )
 
+            betting_balance = driver.get_balance()
             driver.bet(max(bet_amount, 1), pred_str)
             continue
 
@@ -92,10 +93,13 @@ def main(headless):
             else:
                 acc = 0
 
+            current_balance = driver.get_balance()
+            winnings = current_balance - betting_balance
             print(
                 f"{colored(winner.upper(), winner)} Team Wins!\n"
                 f"Current Model Accuracy: {acc:.2%} | {matches} matches\n"
-                f"Ending Balance: {colored(f'${driver.get_balance():,}', 'green')}\n"
+                f"Winnings: {colored(f'${winnings:,}', 'green' if winnings > 0 else 'red')}\n"
+                f"Ending Balance: ${current_balance:,}\n"
                 f"{'-' * 30}"
             )
 
