@@ -1,4 +1,5 @@
 import numpy as np
+from termcolor import colored
 
 from salty_bet_driver import SaltyBetDriver
 from src.model.model import Model
@@ -55,9 +56,9 @@ def main(headless):
             pred_str = DATABASE.int_to_team(pred)
 
             print(
-                f"Red  Team: {red}\n"
-                f"Blue Team: {blue}\n"
-                f"Betting ${bet_amount:,} on {pred_str.upper()} Team \n"
+                f"Red  Team: {colored(red, 'red')}\n"
+                f"Blue Team: {colored(blue, 'blue')}\n"
+                f"Betting {colored(f'${bet_amount:,}', 'green')} on {colored(pred_str.upper(), pred_str)} Team \n"
                 f"Model confidence:  {confidence:<7.2%}\n"
                 f"Scaled confidence: {scaled_confidence:<7.2%}\n"
                 f"Matchup count: {matchup_count:}"
@@ -92,9 +93,9 @@ def main(headless):
                 acc = 0
 
             print(
-                f"{winner.upper()} Team Wins!\n"
+                f"{colored(winner.upper(), winner)} Team Wins!\n"
                 f"Current Model Accuracy: {acc:.2%} | {matches} matches\n"
-                f"Ending Balance: ${driver.get_balance():,}\n"
+                f"Ending Balance: {colored(f'${driver.get_balance():,}', 'green')}\n"
                 f"{'-' * 30}"
             )
 
