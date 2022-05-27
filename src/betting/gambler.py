@@ -15,6 +15,7 @@ def main(headless):
     pred = None
     wins = 0
     matches = 0
+    winnings_list = []
 
     while True:
         state = await_next_state(driver, state)
@@ -95,10 +96,12 @@ def main(headless):
 
             current_balance = driver.get_balance()
             winnings = current_balance - betting_balance
+            winnings_list.append(winnings)
             print(
                 f"{colored(winner.upper(), winner)} Team Wins!\n"
-                f"Current Model Accuracy: {acc:.2%} | {matches} matches\n"
-                f"Winnings: {colored(f'${winnings:,}', 'green' if winnings > 0 else 'red')}\n"
+                f"Model Accuracy: {acc:.2%} | {matches} matches\n"
+                f"Model Winnings: {colored(f'${sum(winnings_list):,}', 'green' if sum(winnings_list) > 0 else 'red')}\n"
+                f"Match Winnings: {colored(f'${winnings:,}', 'green' if winnings > 0 else 'red')}\n"
                 f"Ending Balance: ${current_balance:,}\n"
                 f"{'-' * 30}"
             )

@@ -10,7 +10,7 @@ Utilities for the state machines
 
 DATABASE = DatabaseHandler()
 
-MODEL_FILE = "saved_models/model_15.17.46"
+MODEL_FILE = "saved_models/model_14.53.20_checkpoint_loss"
 
 UNKNOWN_FIGHTER = 0
 
@@ -18,7 +18,7 @@ UNKNOWN_FIGHTER = 0
 BALANCE_CAP = 100_000
 HIGH_CONFIDENCE = 0.8
 ALL_IN_CONFIDENCE = 0.9
-MODIFIER = 1 / 3
+MODIFIER = 1 / 33
 MAX_BET = 1_000_000
 MAX_NORMAL_BET = 5_000
 

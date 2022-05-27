@@ -15,8 +15,8 @@ from src.model.data_generator import DataGenerator
 
 # Training
 BATCH_SIZE = 2 ** 13
-EPOCHS = 15
-STEPS = int(np.ceil((1.4e6 / BATCH_SIZE) * EPOCHS))
+EPOCHS = 100
+STEPS = int(np.ceil((1_317_223 / BATCH_SIZE) * EPOCHS))
 
 # Callbacks
 MONITOR = "val_loss"
@@ -79,7 +79,7 @@ def make_attention_model(parameters):
             beta_2=0.98,
             epsilon=1e-6,
             weight_decay=0.01,
-            learning_rate=1e-3,
+            learning_rate=1e-4,
             total_steps=STEPS,
             warmup_proportion=0.1,
         ),
