@@ -8,12 +8,12 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import OrdinalEncoder
 from tqdm import tqdm
 
-if not os.path.isdir("data"):
-    os.mkdir("data")
+if not os.path.isdir("database"):
+    os.mkdir("database")
 
-ZIP_FILE = os.path.join("data", "match_data.zip")
-MATCH_DATA = os.path.join("data", "match_data")
-DB_FILE = os.path.join("data", "salty.db")
+ZIP_FILE = os.path.join("database", "match_data.zip")
+MATCH_DATA = os.path.join("database", "match_data")
+DB_FILE = os.path.join("database", "salty.db")
 
 
 def merge_databases(database_file_1, database_file_2):
@@ -72,9 +72,9 @@ class DatabaseHandler:
         """
         Initializes the database if the database file does not exist
         """
-        # extract data from zip files
+        # extract database from zip files
         with zipfile.ZipFile(ZIP_FILE, "r") as zip_ref:
-            zip_ref.extractall("data")
+            zip_ref.extractall("database")
 
         # make tables
         self.cur.execute("pragma foreign_keys = on;")
@@ -284,11 +284,11 @@ class DatabaseHandler:
 
     def __make_dataset(self):
         """
-        Formats the data for machine learning
+        Formats the database for machine learning
         :return: x and y, the observation target pair
         """
 
-        # todo if data becomes too large, add generator support
+        # todo if database becomes too large, add generator support
         matches = self.get_all_matches()
 
         self.encoder.fit(self.get_all_characters())

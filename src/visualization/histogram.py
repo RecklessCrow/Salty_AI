@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 
-from src.database_handler import DatabaseHandler
+from src.model.database_handler import DatabaseHandler
 from src.model.model import Model
 
 database = DatabaseHandler(test_data_is_recent=True, seed=1)
@@ -58,7 +58,7 @@ plt.show()
 # print(history.history.keys())
 # plt.plot(history.history['accuracy'])
 # plt.plot(history.history['val_accuracy'])
-# plt.title('Model accuracy')
+# plt.title('model accuracy')
 # plt.ylabel('Accuracy')
 # plt.xlabel('Epoch')
 # plt.legend(['Train', 'Test'], loc='upper left')

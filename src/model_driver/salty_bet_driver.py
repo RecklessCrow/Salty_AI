@@ -1,29 +1,21 @@
-import os
 import re
 import sys
-import time
 
 # from dotenv import load_dotenv
 from selenium import webdriver
 from selenium.common.exceptions import StaleElementReferenceException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.firefox.options import Options
-from selenium.webdriver.firefox.service import Service
-from webdriver_manager.firefox import GeckoDriverManager
-
-# load_dotenv()
 
 
 class SaltyBetDriver:
-    def __init__(self, headless=False):
+    def __init__(self):
         """
         Object to interact with SaltyBet
         :param headless: run web browser in headless mode
         """
         options = Options()
-
-        if headless:
-            options.add_argument("--headless")
+        options.add_argument("--headless")
 
         self.driver = webdriver.Firefox(
             options=options
@@ -133,9 +125,3 @@ class SaltyBetDriver:
         element = self.driver.find_element(By.ID, "balancewrapper").text.lower()
         return "tournament" in element
 
-
-if __name__ == '__main__':
-    driver = SaltyBetDriver(headless=True)
-    while True:
-        print(driver.is_tournament())
-        time.sleep(1)

@@ -37,7 +37,7 @@ class DataGenerator(Sequence):
 
     def on_epoch_end(self):
         """
-        Shuffle data
+        Shuffle database
         :return:
         """
         if self.shuffle:

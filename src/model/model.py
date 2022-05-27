@@ -9,7 +9,7 @@ from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
 from tensorflow.keras.layers import Input, Dense, Embedding, Flatten, MultiHeadAttention, Dropout, LayerNormalization
 from tensorflow.keras.losses import BinaryCrossentropy
 from tensorflow.keras.models import load_model
-from tensorflow_addons.optimizers import RectifiedAdam
+# from tensorflow_addons.optimizers import RectifiedAdam
 
 from src.model.data_generator import DataGenerator
 
@@ -31,7 +31,7 @@ MODEL_NAME = os.path.join("saved_models", f"model_{datetime.now().strftime('%H.%
 
 def make_attention_model(parameters):
     """
-    Model with the transformer architecture
+    model with the transformer architecture
     :param parameters:
     :return:
     """

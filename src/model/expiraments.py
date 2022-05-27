@@ -5,8 +5,8 @@ import numpy as np
 from sklearn.metrics import classification_report, accuracy_score
 from sklearn.model_selection import StratifiedKFold
 
-from model import Model, TuningModel
-from src.database_handler import DatabaseHandler
+from src.model.model import Model
+from src.model.database_handler import DatabaseHandler
 
 DATABASE = DatabaseHandler(test_data_is_recent=False, seed=1)
 
@@ -32,7 +32,7 @@ def hyperparameter_tuning(continue_tuning=True):
 def cross_validation():
     """
     Run 5-fold cross validation to test effectiveness of model architecture
-    :param data:
+    :param database:
     :return:
     """
     import numpy as np
