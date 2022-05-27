@@ -10,6 +10,7 @@ class DataGenerator(Sequence):
         :param batch_size:
         :param shuffle:
         """
+
         self.x, self.y = x, y
         self.batch_size = batch_size
         self.train = train
@@ -30,8 +31,9 @@ class DataGenerator(Sequence):
             batch_y = (batch_y + 1) % 2
 
         # Randomly mask characters out to help when unknown characters are in matches
-        if self.rng.random() > 0.5 and self.train:
-            self.x[:][int(np.around(self.rng.random()))] = 0
+        if self.train:
+            idxs = self.rng.integers(2, size=(len(batch_x)))
+            batch_x[idxs, self.rng.choice([0, 1])] = 0
 
         return batch_x, batch_y
 

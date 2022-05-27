@@ -1,19 +1,18 @@
 import os
 import sqlite3
 
-
 DB_FILE = os.path.join("../", "../", "database", "salty.db")
 
 
 class DatabaseHandler:
-    def __init__(self, remake=False):
+    def __init__(self, db_file=DB_FILE):
         """
         Object to interact with the database
         """
 
-        assert os.path.exists(DB_FILE)
+        assert os.path.exists(db_file)
 
-        self.connection = sqlite3.connect(DB_FILE, check_same_thread=False)
+        self.connection = sqlite3.connect(db_file, check_same_thread=False)
         self.cur = self.connection.cursor()
 
     def __del__(self):
@@ -26,6 +25,70 @@ class DatabaseHandler:
         Commit changes to database file
         """
         self.connection.commit()
+
+    def __add_character(self, name: str):
+        """
+        Add a character to the database
+        :param name: Name of the character
+        """
+        self.cur.execute(
+            """ 
+            insert into characters (
+                name,
+                num_wins,
+                num_matches
+            )
+            values (?, ?, ?)
+            """,
+            (name, 0, 0)
+        )
+
+    def __add_match(self, red: str, blue: str, winner: str):
+        """
+        Add a match to the database
+        :param red: The red fighter
+        :param blue: The blue fighter
+        :param winner: Winning team of match, either "red" or "blue"
+        """
+
+        assert winner in ["red", "blue"]
+
+        self.cur.execute(
+            """
+            insert into matches(
+                red,
+                blue,
+                winner
+            )
+            values (?, ?, ?)
+            """,
+            (red, blue, winner)
+        )
+
+    def __increment_match_count(self, character: str, is_winner: bool):
+        """
+        Increment the match counter for a character
+        :param character: Character to increment
+        :param is_winner: If the character won the match, also increment their wins
+        """
+        if is_winner:
+            self.cur.execute(
+                """
+                update characters
+                set num_wins = num_wins + 1
+                where name = ?
+                """,
+                (character,)
+            )
+
+        self.cur.execute(
+            """
+            update characters
+            set num_matches = num_matches + 1
+            where name = ?
+            """,
+            (character,)
+        )
 
     def get_all_characters(self):
         """
@@ -63,5 +126,28 @@ class DatabaseHandler:
         )
 
         return self.cur.fetchone()[0]
+
+    def get_all_matches(self, return_id=False):
+        """
+        :return: All the matches in the database as (red, blue, winner)
+        """
+
+        if return_id:
+            self.cur.execute(
+                """
+                select  match_id, red, blue, winner 
+                from matches
+                """
+            )
+        else:
+            self.cur.execute(
+                """
+                select  red, blue, winner 
+                from matches
+                """
+            )
+
+        return self.cur.fetchall()
+
 
 DATABASE = DatabaseHandler()

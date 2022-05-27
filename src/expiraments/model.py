@@ -3,20 +3,21 @@ from datetime import datetime
 
 import numpy as np
 from keras_tuner import HyperModel, HyperParameters, Hyperband
+from sklearn.preprocessing import OrdinalEncoder
 from tensorflow.keras import Model as TF_Model
 from tensorflow.keras.activations import sigmoid
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
 from tensorflow.keras.layers import Input, Dense, Embedding, Flatten, MultiHeadAttention, Dropout, LayerNormalization
 from tensorflow.keras.losses import BinaryCrossentropy
 from tensorflow.keras.models import load_model
-# from tensorflow_addons.optimizers import RectifiedAdam
+from tensorflow_addons.optimizers import RectifiedAdam
 
-from src.model.data_generator import DataGenerator
+from src.expiraments.data_generator import DataGenerator
 
 # Training
-BATCH_SIZE = 2 ** 13
+BATCH_SIZE = 2 ** 12
 EPOCHS = 100
-STEPS = int(np.ceil((1_317_223 / BATCH_SIZE) * EPOCHS))
+STEPS = int(np.ceil((1.4e6 / BATCH_SIZE) * EPOCHS))
 
 # Callbacks
 MONITOR = "val_loss"
@@ -25,8 +26,6 @@ MONITOR = "val_loss"
 ENABLE_ES = False
 ES_MIN_DELTA = 0.0001
 ES_PATIENCE = 10
-
-MODEL_NAME = os.path.join("saved_models", f"model_{datetime.now().strftime('%H.%M.%S')}")
 
 
 def make_attention_model(parameters):
@@ -76,10 +75,10 @@ def make_attention_model(parameters):
 
     model.compile(
         optimizer=RectifiedAdam(
+            learning_rate=parameters["learning_rate"],
+            epsilon=parameters["epsilon"],
             beta_2=0.98,
-            epsilon=1e-6,
             weight_decay=0.01,
-            learning_rate=1e-4,
             total_steps=STEPS,
             warmup_proportion=0.1,
         ),
@@ -94,18 +93,24 @@ def make_attention_model(parameters):
 
 
 class TuningModel(HyperModel):
-    def __init__(self, input_dim):
+    def __init__(self, char_list):
         super().__init__()
-        self.input_dim = input_dim
+
+        self.characters = char_list
+        self.input_dim = len(self.characters) + 1
+        self.tokenizer = OrdinalEncoder()
+        self.tokenizer.fit(np.array(self.characters).reshape(-1, 1))
 
     def build(self, hp: HyperParameters):
-        hp_dropout = 0.1  # hp.Choice("Dropout", [eval(f"0.{x}") for x in range(1, 10)])  # 0.1-0.9
-        hp_output_dim = hp.Choice("Embedding Outputs", [2 ** p for p in range(2, 11)])
+        hp_dropout = hp.Choice("Dropout", [eval(f"0.{x}") for x in range(1, 10)])  # 0.1-0.9
+        hp_output_dim = hp.Choice("Embedding Outputs", [2 ** p for p in range(2, 10)])
         hp_transformers = 12  # hp.Int("Transformers", min_value=8, max_value=16)
         hp_heads = 12  # hp.Int("Attention Heads", min_value=4, max_value=12)
         hp_key_dim = 12  # hp.Int("Key Dimention", min_value=4, max_value=12)
         hp_layers = hp.Int("Dense Layers", min_value=1, max_value=4)
-        hp_units = hp.Choice("Dense Units", [2 ** p for p in range(2, 11)])
+        hp_units = hp.Choice("Dense Units", [2 ** p for p in range(2, 10)])
+        hp_lr = hp.Float("Learning Rate", min_value=0, max_value=1e-3)
+        hp_epsilon = hp.Float("epsilon", min_value=0, max_value=1e-3)
 
         parameters = {
             "dropout": hp_dropout,
@@ -117,20 +122,27 @@ class TuningModel(HyperModel):
             "ff_layers": hp_layers,
             "ff_units": hp_units,
             "ff_activation": "gelu",
+            "learning_rate": hp_lr,
+            "epsilon": hp_epsilon
         }
 
         return make_attention_model(parameters)
 
     def search(self, x, y, val=None, epochs=EPOCHS):
+        import math
+        iterations = 10
+        factor = 10
+        total_epochs = epochs * (math.log(epochs, factor) ** 2) * iterations
+        print(total_epochs)
+
         train = DataGenerator(x, y, train=True, batch_size=BATCH_SIZE)
 
         tuner = Hyperband(
             self,
             objective=MONITOR,
-            directory=os.path.join("src", "model"),
             project_name="tuning",
-            factor=5,
-            hyperband_iterations=10,
+            factor=factor,
+            hyperband_iterations=iterations,
         )
 
         early_stopping = EarlyStopping(
@@ -150,18 +162,34 @@ class TuningModel(HyperModel):
             callbacks=[early_stopping],
         )
 
-        return tuner.get_best_hyperparameters()
+    def transform(self, x):
+        if isinstance(x, str):
+            try:
+                return self.tokenizer.transform([[x]])[0][0]
+            except ValueError:  # Unknown character
+                return 0
+
+        return self.tokenizer.transform(x.reshape(-1, 1)).reshape(len(x), 2) + 1
 
 
 class Model:
-    def __init__(self, input_dim=None, filepath=None):
-        if input_dim is not None:
-            self.input_dim = input_dim
-            self.model = self.build()
+    def __init__(self, char_list):
+        if isinstance(char_list, str):
+            self.load(char_list)
 
         else:
-            assert filepath is not None, "Must have one of input_dim or filepath not None"
-            self.load(filepath)
+            self.characters = char_list
+            self.input_dim = len(self.characters) + 1
+            self.tokenizer = OrdinalEncoder()
+            self.tokenizer.fit(np.array(self.characters).reshape(-1, 1))
+
+            if not os.path.isdir("saved_models"):
+                os.mkdir("saved_models")
+
+            self.model_dir = os.path.join("saved_models", f"{datetime.now().strftime('%H.%M.%S')}")
+            os.mkdir(self.model_dir)
+
+            self.model = self.build()
 
     def build(self):
 
@@ -175,20 +203,22 @@ class Model:
             "ff_layers": 4,
             "ff_units": 128,
             "ff_activation": "gelu",
+            "epsilon": 1e-6,
+            "learning_rate": 1e-4,
         }
 
         model = make_attention_model(parameters)
 
-        model.summary()
+        # model.summary()
 
         return model
 
-    def train(self, x, y, val=None, epochs=EPOCHS):
+    def train(self, x, y, val=None, epochs=EPOCHS, early_stopping=False, checkpointing=False, **kwargs):
         train = DataGenerator(x, y, train=True, batch_size=BATCH_SIZE)
 
         callbacks = []
 
-        if val is not None and ENABLE_ES:
+        if val is not None and early_stopping:
             callbacks.append(EarlyStopping(
                 monitor=MONITOR,
                 min_delta=ES_MIN_DELTA,
@@ -196,17 +226,17 @@ class Model:
                 restore_best_weights=True
             ))
 
-        if val is not None:
+        if val is not None and checkpointing:
             val = DataGenerator(val[0], val[1], train=False, batch_size=BATCH_SIZE)
 
             callbacks.append(ModelCheckpoint(
-                filepath=os.path.join(MODEL_NAME + "_checkpoint_loss"),
+                filepath=os.path.join(self.model_dir + "/model_checkpoint_loss"),
                 monitor="val_loss",
                 save_best_only=True
             ))
 
             callbacks.append(ModelCheckpoint(
-                filepath=os.path.join(MODEL_NAME + "_checkpoint_acc"),
+                filepath=os.path.join(self.model_dir + "/model_checkpoint_acc"),
                 monitor="val_accuracy",
                 save_best_only=True
             ))
@@ -214,21 +244,45 @@ class Model:
         history = self.model.fit(
             train,
             validation_data=val,
-            epochs=epochs,
             callbacks=callbacks,
+            epochs=epochs,
+            **kwargs
         )
 
         return history
 
     def predict(self, x, **kwargs):
-        predictions = self.model.predict(x, **kwargs)
+        predictions = self.model.predict(x.reshape(-1, 2), **kwargs)
         return sigmoid(predictions).numpy()
 
+    def predict_match(self, red, blue):
+        red = self.transform(red)
+        blue = self.transform(blue)
+
+        if not red and not blue:
+            return 0
+
+        return self.predict(np.array([[red, blue]]))[0][0]
+
+    def transform(self, x):
+        if isinstance(x, str):
+            try:
+                return self.tokenizer.transform([[x]])[0][0]
+            except ValueError:  # Unknown character
+                return 0
+
+        return self.tokenizer.transform(x.reshape(-1, 1)).reshape(len(x), 2) + 1
+
     def save(self):
-        if not os.path.isdir("saved_models"):
-            os.mkdir("saved_models")
-        self.model.save(MODEL_NAME)
+        self.model.save(self.model_dir + '/model')
+        with open(self.model_dir + "/characters.txt", "w+") as f:
+            for character in self.characters:
+                f.write(character[0] + "\n")
 
-    def load(self, filepath):
-
-        self.model = load_model(filepath)
+    def load(self, model_dir):
+        self.model_dir = model_dir
+        self.model = load_model(self.model_dir + '/model')
+        self.tokenizer = OrdinalEncoder()
+        with open(self.model_dir + "/characters.txt", "r") as f:
+            self.characters = [character.strip("\n") for character in f]
+            self.tokenizer.fit(np.array(self.characters).reshape(-1, 1))

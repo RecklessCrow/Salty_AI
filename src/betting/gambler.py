@@ -2,7 +2,7 @@ import numpy as np
 from termcolor import colored
 
 from salty_bet_driver import SaltyBetDriver
-from src.model.model import Model
+from src.expiraments.model import Model
 from utils import *
 
 

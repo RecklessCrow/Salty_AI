@@ -2,3 +2,4 @@
 /data/*.db
 /.env
 *.log
+/src/expiraments/saved_models/

@@ -1,19 +1,24 @@
-import salty_bet_driver
-import database_handler
-from src.base_gambler import Gambler
-from src.model.model import Model
-from utils import *
 import sys
+
+import numpy as np
+
+import salty_bet_driver
+from src.base_gambler import Gambler
+from src.expiraments.model import Model
+from src.model_driver.database_handler import DatabaseHandler
+from utils import *
 
 
 def main(model_name: str, gambler: Gambler, user, enyc_pass):
-    model = Model(filepath=f'../../saved_models/{model_name}')
-    driver = salty_bet_driver.SaltyBetDriver()
-    database = database_handler.DatabaseHandler(model_name)
+    # Initialize
+    driver = salty_bet_driver.SaltyBetDriver(user, enyc_pass)
+    model = Model(f'../../saved_models/{model_name}/')
+    model_database = DatabaseHandler(model_name)
 
-    # initialize variables
     state = STATES["START"]
     betting_balance = None
+    confidence = None
+    predicted_winner = None
 
     while True:
         state = await_next_state(driver, state)
@@ -25,27 +30,25 @@ def main(model_name: str, gambler: Gambler, user, enyc_pass):
             if (red, blue) is None:
                 continue
 
-            red_int, blue_int = encode_character([red, blue])
+            confidence = model.predict([red, blue])
 
             # At least one fighter known
-            if not (red_int == 0 and blue_int == 0):
-                fighter_vector = np.array([[red_int, blue_int]])
-                confidence = model.predict(fighter_vector)[0][0]
+            if confidence:
                 predicted_winner = np.around(confidence)
 
-                # Adjust confidence to reflect predicted pred_str as the larger number
+                # Adjust confidence to reflect predicted team as the larger number
                 if predicted_winner == 0:
                     confidence = 1 - confidence
 
                 bet_amount = gambler.calculate_bet(confidence, driver)
 
-            # Both fighters unknown, bet on random team
+            # Both fighters unknown, todo define behavior
             else:
                 continue
 
-            pred_str = int_to_team(predicted_winner)
+            predicted_winner = int_to_team(predicted_winner)
             betting_balance = driver.get_balance()
-            driver.bet(max(bet_amount, 1), pred_str)
+            driver.bet(max(bet_amount, 1), predicted_winner)
 
             # todo - update model's webpage with fighters and confidence and betting amount
             continue
@@ -70,22 +73,26 @@ def main(model_name: str, gambler: Gambler, user, enyc_pass):
             winnings = end_balance - betting_balance
             predicted_correctly = winner == predicted_winner
 
-            database.add_entry(predicted_correctly, confidence, end_balance)
+            model_database.add_entry(predicted_correctly, confidence, end_balance)
             # todo create feed panel with results
 
 
-if __name__ == '__main__':
+def arg_handler():
     if len(sys.argv) != 2:
         print("Usage: python3 main.py <model_path>")
         sys.exit(1)
 
     assert sys.argv[1].isnumeric()
+
     from src.base_database_handler import DATABASE
     from src.base_gambler import GAMBLER_ID_DICT
+
     model_name, gambler_id, user, password = DATABASE.get_model_config_by_id(int(sys.argv[1]))
     gambler = GAMBLER_ID_DICT[gambler_id]
+
     # todo decrypt password
-    main('good_model', gambler, user, password)
+    main(model_name, gambler, user, password)
 
 
-
+if __name__ == '__main__':
+    arg_handler()

@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
-
 from src.model.database_handler import DatabaseHandler
-from src.model.model import Model
+
+from src.expiraments.model import Model
 
 database = DatabaseHandler(test_data_is_recent=True, seed=1)
 

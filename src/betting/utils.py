@@ -1,7 +1,6 @@
 import time
 
 from sigfig import round
-
 from src.model.database_handler import DatabaseHandler
 
 """
