@@ -2,6 +2,7 @@ import os
 from datetime import datetime
 
 import numpy as np
+import tensorflow as tf
 from keras_tuner import HyperModel, HyperParameters, Hyperband
 from sklearn.preprocessing import OrdinalEncoder
 from tensorflow.keras import Model as TF_Model
@@ -12,15 +13,16 @@ from tensorflow.keras.losses import BinaryCrossentropy
 from tensorflow.keras.models import load_model
 from tensorflow_addons.optimizers import RectifiedAdam
 
-from src.expiraments.data_generator import DataGenerator
+from src.experiments.data_generator import DataGenerator
 
 # Training
+SEED = 4
 BATCH_SIZE = 2 ** 12
 EPOCHS = 100
 STEPS = int(np.ceil((1.4e6 / BATCH_SIZE) * EPOCHS))
 
 # Callbacks
-MONITOR = "val_loss"
+MONITOR = "val_accuracy"
 
 # Early Stopping
 ENABLE_ES = False
@@ -34,7 +36,9 @@ def make_attention_model(parameters):
     :param parameters:
     :return:
     """
-    # todo test dropout on embedding layer before and after
+    # set random state for consistent weight initialization
+    np.random.seed(SEED)
+    tf.random.set_seed(SEED)
 
     inputs = Input(shape=(2,))
 
@@ -84,7 +88,7 @@ def make_attention_model(parameters):
         ),
         loss=BinaryCrossentropy(
             from_logits=True,
-            label_smoothing=0.05
+            label_smoothing=parameters["smoothing"],
         ),
         metrics=["accuracy"]
     )
@@ -111,6 +115,7 @@ class TuningModel(HyperModel):
         hp_units = hp.Choice("Dense Units", [2 ** p for p in range(2, 10)])
         hp_lr = hp.Float("Learning Rate", min_value=0, max_value=1e-3)
         hp_epsilon = hp.Float("epsilon", min_value=0, max_value=1e-3)
+        hp_smoothing = hp.Float("Label Smoothing", min_value=0, max_value=0.2)
 
         parameters = {
             "dropout": hp_dropout,
@@ -123,7 +128,8 @@ class TuningModel(HyperModel):
             "ff_units": hp_units,
             "ff_activation": "gelu",
             "learning_rate": hp_lr,
-            "epsilon": hp_epsilon
+            "epsilon": hp_epsilon,
+            "smoothing": hp_smoothing,
         }
 
         return make_attention_model(parameters)
@@ -173,14 +179,15 @@ class TuningModel(HyperModel):
 
 
 class Model:
-    def __init__(self, char_list):
-        if isinstance(char_list, str):
-            self.load(char_list)
+    def __init__(self, char_list=None):
+        self.tokenizer = OrdinalEncoder()
+
+        if char_list is None:
+            pass
 
         else:
             self.characters = char_list
             self.input_dim = len(self.characters) + 1
-            self.tokenizer = OrdinalEncoder()
             self.tokenizer.fit(np.array(self.characters).reshape(-1, 1))
 
             if not os.path.isdir("saved_models"):
@@ -200,11 +207,12 @@ class Model:
             "num_transformers": 12,
             "attention_heads": 12,
             "attention_keys": 12,
-            "ff_layers": 4,
+            "ff_layers": 1,
             "ff_units": 128,
             "ff_activation": "gelu",
             "epsilon": 1e-6,
             "learning_rate": 1e-4,
+            "smoothing": 0.1,
         }
 
         model = make_attention_model(parameters)
@@ -279,10 +287,12 @@ class Model:
             for character in self.characters:
                 f.write(character[0] + "\n")
 
-    def load(self, model_dir):
+    def load(self, model_dir, model_name="model"):
         self.model_dir = model_dir
-        self.model = load_model(self.model_dir + '/model')
-        self.tokenizer = OrdinalEncoder()
-        with open(self.model_dir + "/characters.txt", "r") as f:
-            self.characters = [character.strip("\n") for character in f]
-            self.tokenizer.fit(np.array(self.characters).reshape(-1, 1))
+        self.model = load_model(self.model_dir + f'/{model_name}')
+        try:
+            with open(self.model_dir + "/characters.txt", "r") as f:
+                self.characters = [character.strip("\n") for character in f]
+                self.tokenizer.fit(np.array(self.characters).reshape(-1, 1))
+        except FileNotFoundError:
+            pass

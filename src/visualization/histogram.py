@@ -1,12 +1,28 @@
 import matplotlib.pyplot as plt
-from src.model.database_handler import DatabaseHandler
+import numpy as np
+from sklearn.model_selection import train_test_split
 
-from src.expiraments.model import Model
+from src.base_database_handler import DatabaseHandler
+from src.experiments.model import Model
 
-database = DatabaseHandler(test_data_is_recent=True, seed=1)
+SEED = 16
 
-train_x, train_y = database.get_train_data()
-test_x, test_y = database.get_test_data()
+# Create the dataset
+model = Model()
+model.load("../experiments/saved_models/02.39.02", "model_checkpoint_loss")
+db = DatabaseHandler()
+matches = np.array(db.get_all_matches())
+x, y = matches[:, :-1], matches[:, -1]
+del matches
+model.tokenizer.fit(x.reshape(-1, 1))
+x = model.transform(x).astype(int)
+y = (y == "red").astype(int).reshape(-1, 1)
+
+# split data
+test_size = 0.2
+val_size = 0.1 / (1 - test_size)
+train_x, test_x, train_y, test_y = train_test_split(x, y, test_size=test_size, random_state=SEED)
+train_x, val_x, train_y, val_y = train_test_split(train_x, train_y, test_size=val_size, random_state=SEED)
 
 # print("Starting")
 # start_time = time.time()
@@ -22,19 +38,16 @@ test_x, test_y = database.get_test_data()
 
 ##################################################################################
 
-model_type = "loss"
-model = Model(filepath=f'./saved_models/model_14.53.20_checkpoint_{model_type}')
-
 # pred_train = model.predict(train_x[:100], batch_size=4096)
-pred_test = model.predict(test_x[:1000], batch_size=4096)
+pred_test = model.predict(test_x, batch_size=4096)
 
 # plt.hist(pred_train, bins=100)
-red_win = pred_test[test_y[:1000] == 0]
-blue_win = pred_test[test_y[:1000] == 1]
+red_win = pred_test[test_y == 0]
+blue_win = pred_test[test_y == 1]
 
 plt.hist(red_win, alpha=0.5, color='red', range=(0, 1), bins=20)
 plt.hist(blue_win, alpha=0.5, color='blue', range=(0, 1), bins=20)
-plt.title(f"Tuned to val {model_type}")
+plt.title("Tuned to val loss")
 plt.show()
 
 # mod_rate = lambda count_seen: 1 - ((2 - count_seen) * 0.1)

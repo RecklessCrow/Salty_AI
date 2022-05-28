@@ -4,7 +4,7 @@ import numpy as np
 
 import salty_bet_driver
 from src.base_gambler import Gambler
-from src.expiraments.model import Model
+from src.experiments.model import Model
 from src.model_driver.database_handler import DatabaseHandler
 from utils import *
 
