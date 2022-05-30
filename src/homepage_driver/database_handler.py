@@ -1,12 +1,12 @@
 import os
 import sqlite3
 
-import src.base_database_handler
+import src.base.base_database_handler
 
 DB_FILE = os.path.join("../", "../", "database", "salty.db")
 
 
-class DatabaseHandler(src.base_database_handler.DatabaseHandler):
+class DatabaseHandler(src.base.base_database_handler.DatabaseHandler):
     def __init__(self, remake=False):
         """
         Object to interact with the database

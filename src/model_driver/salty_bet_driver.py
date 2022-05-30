@@ -2,10 +2,10 @@ import sys
 
 from selenium.webdriver.common.by import By
 
-import src.base_salty_bet_driver
+import src.base.base_salty_bet_driver
 
 
-class SaltyBetDriver(src.base_salty_bet_driver.SaltyBetDriver):
+class SaltyBetDriver(src.base.base_salty_bet_driver.SaltyBetDriver):
     def __init__(self, username, password):
         """
         Object to interact with SaltyBet

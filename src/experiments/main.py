@@ -1,7 +1,7 @@
 import numpy as np
 from sklearn.model_selection import train_test_split
 
-from src.base_database_handler import DatabaseHandler
+from src.base.base_database_handler import DatabaseHandler
 from src.experiments.model import Model
 
 SEED = 16

@@ -107,8 +107,8 @@ def arg_handler():
 
     assert sys.argv[1].isnumeric()
 
-    from src.base_database_handler import DATABASE
-    from src.base_gambler import GAMBLER_ID_DICT
+    from src.base.base_database_handler import DATABASE
+    from src.base.base_gambler import GAMBLER_ID_DICT
 
     model_name, gambler_id, user, password = DATABASE.get_model_config_by_id(int(sys.argv[1]))
     gambler = GAMBLER_ID_DICT[gambler_id]

@@ -1,7 +1,7 @@
 import os
 import sqlite3
 
-DB_FILE = os.path.join("../", "../", "database", "salty.db")
+DB_FILE = os.path.join("../../", "../", "database", "salty.db")
 
 
 class DatabaseHandler:
