@@ -45,9 +45,11 @@ class WebPageHandler:
                              (1 if predicted_correct else 0)) / self.num_of_matches
             self.balance_deque.append(end_balance)
 
-
-
-        elif odds:
+        if odds is None:
+            # No odds available
+            self.current_match_info = create_current_match(match_confidence, team_prediction,
+                                                           red_name, blue_name, bet_amount)
+        else:
             # Betting Locked
             if team_prediction == 'red':
                 award_amount = bet_amount * odds[1]
@@ -58,10 +60,6 @@ class WebPageHandler:
 
             self.current_match_info = update_current_match(match_confidence, team_prediction,
                                                       red_name, blue_name, odds, award_amount, bet_amount)
-        else:
-            # Betting Open
-            self.current_match_info = create_current_match(match_confidence, team_prediction,
-                                                           red_name, blue_name, bet_amount)
 
         self.generate_html_page()
 
