@@ -6,7 +6,7 @@ def get_all_status():
     root_dir = '/opt/saltybet/saved_models/'
 
     try:
-        stdout = sh.grep(sh.ps("aux"), 'python3')
+        stdout = sh.grep(sh.ps("aux"), 'model_driver_main.py')
         active_model_full = stdout.split('\n')
         active_model_names = [x.split(' ')[-1] for x in active_model_full]
     except sh.ErrorReturnCode_1:
