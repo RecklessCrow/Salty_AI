@@ -7,6 +7,7 @@ def get_all_status():
     root_dir = '/opt/saltybet/saved_models/'
     ps = subprocess.run(['ps', '-ax', "-o", "command"], capture_output=True, text=True)
     stdout = ps.stdout
+    print(stdout)
 
     regex = r"\model_driver_main.py .*\b"
     active_model_names = re.search(regex, stdout)
