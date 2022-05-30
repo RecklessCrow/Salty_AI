@@ -1,6 +1,7 @@
 import sys
-from selenium.webdriver.common.by import By
+
 from base import base_salty_bet_driver
+from selenium.webdriver.common.by import By
 
 
 class SaltyBetDriver(base_salty_bet_driver.SaltyBetDriver):

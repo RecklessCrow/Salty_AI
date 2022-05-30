@@ -3,13 +3,13 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 
 from src.base.base_database_handler import DatabaseHandler
-from src.experiments.model import Model
+from dev.model import Model
 
 SEED = 16
 
 # Create the dataset
 model = Model()
-model.load("../experiments/saved_models/02.39.02", "model_checkpoint_loss")
+model.load("../dev/saved_models/02.39.02", "model_checkpoint_loss")
 db = DatabaseHandler()
 matches = np.array(db.get_all_matches())
 x, y = matches[:, :-1], matches[:, -1]

@@ -1,8 +1,8 @@
 import numpy as np
 from termcolor import colored
 
-from salty_bet_driver import SaltyBetDriver
-from src.experiments.model import Model
+from dev.betting.salty_bet_driver import SaltyBetDriver
+from dev.model import Model
 from utils import *
 
 

@@ -1,8 +1,9 @@
-import numpy as np
-from webpage_driver.html_builder import *
-import plotly.express as px
 from collections import deque
+
+import numpy as np
+import plotly.express as px
 import plotly.io as pio
+from webpage_driver.html_builder import *
 
 
 class WebPageHandler:
@@ -97,7 +98,7 @@ class WebPageHandler:
         labels = ['Incorrect', 'Correct']
         values = [1 - self.accuracy, self.accuracy]
 
-        pie = px.pie(labels=labels, values=values, hole=.3, title='Model Accuracy', template='plotly_dark')
+        pie = px.pie(labels=labels, values=values, hole=.3, title='model Accuracy', template='plotly_dark')
 
         scatter = pio.to_html(scatter, full_html=False)
         pie = pio.to_html(pie, full_html=False)

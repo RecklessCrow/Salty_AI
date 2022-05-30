@@ -2,4 +2,4 @@
 /data/*.db
 /.env
 *.log
-/src/experiments/saved_models/
+/dev/saved_models/

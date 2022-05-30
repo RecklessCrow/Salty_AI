@@ -1,7 +1,6 @@
 import time
 
-import database_handler
-import salty_bet_driver
+from homepage_utils import database_handler, salty_bet_driver
 
 STATES = {
     "IDLE": 0,

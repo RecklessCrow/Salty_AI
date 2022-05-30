@@ -13,7 +13,7 @@ from tensorflow.keras.losses import BinaryCrossentropy
 from tensorflow.keras.models import load_model
 from tensorflow_addons.optimizers import RectifiedAdam
 
-from src.experiments.data_generator import DataGenerator
+from dev.data_generator import DataGenerator
 
 # Training
 SEED = 4

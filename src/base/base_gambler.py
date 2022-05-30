@@ -1,9 +1,8 @@
-import sigfig
 from abc import ABC, abstractmethod
 
+import sigfig
 from base.base_database_handler import DATABASE
 from base.base_salty_bet_driver import SaltyBetDriver
-
 
 
 class Gambler(ABC):
