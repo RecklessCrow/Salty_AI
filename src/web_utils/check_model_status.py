@@ -35,8 +35,8 @@ def create_block(name, status):
         <td>{name}</td>
         <td>{status}</td>
         <td><form method="post"><button type="submit" 
-        name="{'spawn_button' if status == 'inactive' else 'kill_button'}" 
-        value="{name}">{'Spawn Model' if status == 'inactive' else 'Kill'}</button></form></td>
+        name="{'spawn_button' if status == 'Inactive' else 'kill_button'}" 
+        value="{name}">{'Spawn Model' if status == 'Inactive' else 'Kill'}</button></form></td>
     </tr>
     """
 
