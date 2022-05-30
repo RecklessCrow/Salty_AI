@@ -82,7 +82,7 @@ body {{
 
 <Div class="main" style="background-color: #121212">
     <h2 style="font-size: 4rem; color: #FFFFFF; margin-left: 15px;padding-top: 30px;">{model_name}</h1>
-    <h3 style="font-size: 2rem; color: #FFFFFF; margin-left: 30px;margin-top: -40px;">Balance: ${balance:<9,}</h2>
+    <h3 id = "balance" style="font-size: 2rem; color: #FFFFFF; margin-left: 30px;margin-top: -40px;">Balance: ${balance:<9,}</h2>
 
     <Div style="width: 1560px; height: 500px;">
         <Div id="plot1" style="width: 960px; height: 500px;display:inline-block;"></Div>
@@ -124,6 +124,7 @@ $(document).ready(function(){{
 setInterval(function(){{
       $("#current_match_info").load(" #current_match_info > *");
       $("#boxes").load(" #boxes > *");
+      $("#balance").load(" #balance > *");
       
 }}, 3000);
 }});

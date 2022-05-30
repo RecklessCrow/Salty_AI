@@ -1,3 +1,5 @@
+import json
+import os
 import sys
 
 import numpy as np
@@ -111,20 +113,35 @@ def main(model_name: str, gambler: Gambler, user, enyc_pass):
 
 
 def start():
-    if len(sys.argv) != 2:
-        print("Usage: python3 model_driver_main.py <model_name>")
+    if len(sys.argv) != 4:
+        print("Usage: python3 model_driver_main.py <model_name> <gambler_id> <user_id>")
         sys.exit(1)
 
+    print(sys.argv)
+
     model_name = sys.argv[1]
+    gambler_id = sys.argv[2]
+    user_id = sys.argv[3]
 
-    from base.base_database_handler import DATABASE
     from base.base_gambler import GAMBLER_ID_DICT
+    gambler = GAMBLER_ID_DICT[int(gambler_id)]
 
-    model_name, gambler_id, user, password = DATABASE.get_model_config_by_name(model_name)
-    gambler = GAMBLER_ID_DICT[gambler_id]
+    with open('/opt/saltybet/database/user_id.json') as f:
+        users = json.load(f)['users']
 
-    # todo decrypt password
-    main(model_name, gambler, user, password)
+    email = None
+    password = None
+    for user in users:
+        if user['name'] == user_id:
+            email = user['user_email']
+            password = user['user_password']
+            break
+
+    if email is None or password is None:
+        print("Could not find user with id " + user_id)
+        sys.exit(1)
+
+    main(model_name, gambler, email, password)
 
 
 if __name__ == '__main__':
