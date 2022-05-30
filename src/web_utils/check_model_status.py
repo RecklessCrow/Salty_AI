@@ -1,6 +1,5 @@
 import os
 import subprocess
-import re
 
 
 def get_all_status():

@@ -1,5 +1,3 @@
-import sys
-
 from base import base_salty_bet_driver
 from selenium.webdriver.common.by import By
 
