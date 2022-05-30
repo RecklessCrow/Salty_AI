@@ -29,3 +29,6 @@ class SaltyBetDriver(base_salty_bet_driver.SaltyBetDriver):
         password_element.send_keys(password)
 
         self.driver.find_element(By.CLASS_NAME, 'graybutton').click()
+
+        # assert successful login
+        assert "authenticate" not in self.driver.current_url.lower(), "Could not login using given credentials."
