@@ -9,6 +9,7 @@ def kill_pid(model_name):
     output = subprocess.check_output(('grep', f'model_driver_main.py {model_name}'), stdin=ps.stdout)
     ps.wait()
 
+    print(output)
     active_pid = output.decode('utf-8').split(' ')[0]
     subprocess.call(('kill', active_pid))
 
