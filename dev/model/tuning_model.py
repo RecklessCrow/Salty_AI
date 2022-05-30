@@ -20,7 +20,7 @@ class TuningModel(HyperModel):
         hp_units = hp.Choice("Dense Units", [2 ** p for p in range(2, 10)], default=64)
         hp_lr = hp.Float("Learning Rate", min_value=0, max_value=5e-3, default=1e-3)
         hp_epsilon = hp.Float("Epsilon", min_value=0, max_value=1e-3, default=1e-7)
-        hp_smoothing = hp.Choice("Label Smoothing", [0, 0.01, 0.05, 0.1, 0.15, 0.2], default=0.0)
+        hp_smoothing = hp.Choice("Label Smoothing", [0.0, 0.01, 0.05, 0.1, 0.15, 0.2], default=0.0)
         hp_activation = hp.Choice("Activation", ["relu", "tanh", "gelu", "selu", "elu", "softplus", "softsign"],
                                   default="relu")
 
