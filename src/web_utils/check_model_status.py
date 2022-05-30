@@ -8,7 +8,8 @@ def get_all_status():
     try:
         stdout = sh.grep(sh.ps("aux"), 'python')
         active_model_full = stdout.split('\n')
-        active_model_names = [x.split(' ')[-1] for x in active_model_full]
+        print(active_model_full)
+        active_model_names = [x.split(' ') for x in active_model_full]
         print(active_model_names)
     except sh.ErrorReturnCode_1:
         active_model_names = []
