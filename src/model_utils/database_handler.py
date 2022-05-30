@@ -26,7 +26,6 @@ class DatabaseHandler(base_database_handler.DatabaseHandler):
         self.cur.execute("pragma foreign_keys = on;")
         self.cur.execute(
             """
-
             create table {}(
                 match_id            integer     primary key,
                 predicted_correctly boolean     not null,
@@ -46,3 +45,23 @@ class DatabaseHandler(base_database_handler.DatabaseHandler):
                 end_balance
             ) values (?, ?, ?)
         """, (predicted_correctly, confidence, end_balance))
+
+    def get_balances(self):
+        self.cur.execute(
+            f"""
+            select end_balance
+            from {self.model_name}
+            """
+        )
+
+        return self.cur.fetchall()
+
+    def get_predicted_correctly(self):
+        self.cur.execute(
+            f"""
+            select predicted_correctly
+            from {self.model_name}
+            """
+        )
+
+        return self.cur.fetchall()
