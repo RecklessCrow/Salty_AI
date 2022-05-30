@@ -31,7 +31,7 @@ def get_gamblers():
 
     options = [f"<option value='{uid}'>{name}</option>" for uid, name in gamblers.items()]
     return f"""
-    <select id="selected_gambler">
+    <select name="selected_gambler">
         {''.join(options)}
     </select>
     """
@@ -43,7 +43,7 @@ def get_users():
 
     options = [f"<option value='{user['name']}'>{user['name']}</option>" for user in users]
     return f"""
-        <select id="selected_user">
+        <select name="selected_user">
             {''.join(options)}
         </select>
         """
