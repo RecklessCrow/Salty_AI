@@ -1,15 +1,16 @@
+import subprocess
 import sys
 import sh
 
 
 def kill_pid(model_name):
-    try:
-        stdout = sh.grep(sh.ps("ax"), model_name)
-        active_pid = int(stdout.split(' ')[0])
-    except sh.ErrorReturnCode_1:
-        print("found nothing")
 
-    sh.kill(active_pid)
+    ps = subprocess.Popen(('ps', '-ax'), stdout=subprocess.PIPE)
+    output = subprocess.check_output(('grep', f'model_driver_main.py {model_name}'), stdin=ps.stdout)
+    ps.wait()
+
+    active_pid = output.decode('utf-8').split(' ')[0]
+    subprocess.call(('kill', active_pid))
 
 
 if __name__ == '__main__':
