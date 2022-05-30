@@ -16,7 +16,7 @@ def get_all_status():
 
     saved_models = [f.name for f in os.scandir(root_dir) if f.is_dir()]
     print(type(saved_models[0]))
-    print(saved_models[0])
+    print(str(saved_models[0]))
 
     blocks = []
     for model_name in saved_models:
