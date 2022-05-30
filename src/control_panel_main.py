@@ -13,9 +13,7 @@ def get_all_status():
 
     stdout = output
     active_model_names = [stdout.split()[-1].decode('utf-8') for stdout in stdout.splitlines()]
-    print(active_model_names)
     saved_models = [f.name for f in os.scandir(root_dir) if f.is_dir()]
-    print(saved_models)
 
     blocks = []
     for model_name in saved_models:
@@ -56,6 +54,7 @@ def create_block(name, status):
     <tr>
         <td>{name}</td>
         <td>{status}</td>
+        <td>{get_gamblers()}</td>
         <td><form method="post"><button type="submit" 
         name="{'spawn_button' if status == 'Inactive' else 'kill_button'}" 
         value="{name}">{'Spawn Model' if status == 'Inactive' else 'Kill'}</button></form></td>
