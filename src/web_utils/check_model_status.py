@@ -7,11 +7,10 @@ def get_all_status():
 
     try:
         stdout = sh.grep(sh.ps("aux"), 'python3')
+        active_model_full = stdout.split('\n')
+        active_model_names = [x.split(' ')[-1] for x in active_model_full]
     except sh.ErrorReturnCode_1:
-        return build_table([])
-
-    active_model_full = stdout.split('\n')
-    active_model_names = [x.split(' ')[-1] for x in active_model_full]
+        active_model_names = []
 
     walker = os.walk(root_dir)
     next(walker) # skip the first one
