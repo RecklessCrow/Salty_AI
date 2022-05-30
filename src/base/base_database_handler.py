@@ -11,6 +11,7 @@ class DatabaseHandler:
         """
 
         assert os.path.exists(db_file)
+        print(os.path.exists(db_file), " here")
 
         self.connection = sqlite3.connect(db_file, check_same_thread=False)
         self.cur = self.connection.cursor()
