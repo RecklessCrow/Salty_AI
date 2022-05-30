@@ -1,15 +1,13 @@
 import os
 from base import base_database_handler
 
-DB_FILE = os.path.join("../", "../", "database", "salty.db")
-
 
 class DatabaseHandler(base_database_handler.DatabaseHandler):
     def __init__(self, model_name: str, remake=False):
         """
         Object to interact with the database
         """
-        super(DatabaseHandler, self).__init__(DB_FILE)
+        super(DatabaseHandler, self).__init__()
 
         self.model_name = model_name
 

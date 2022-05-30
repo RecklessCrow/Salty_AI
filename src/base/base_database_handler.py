@@ -107,14 +107,14 @@ class DatabaseHandler:
 
         return self.cur.fetchall()
 
-    def get_model_config_by_id(self, identifier):
+    def get_model_config_by_name(self, model_name):
         self.cur.execute(
             """
             select model_name, gambler_id, user, pass
             from model_configs
-            where model_id = ?
+            where model_name = ?
             """,
-            (identifier,)
+            (model_name,)
         )
 
         return self.cur.fetchone()

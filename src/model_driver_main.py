@@ -1,3 +1,4 @@
+import os
 import sys
 import numpy as np
 from tensorflow.keras.models import load_model
@@ -104,19 +105,24 @@ def main(model_name: str, gambler: Gambler, user, enyc_pass):
 
 def start():
     if len(sys.argv) != 2:
-        print("Usage: python3 model_driver_main.py <model_path>")
+        print("Usage: python3 model_driver_main.py <model_name>")
         sys.exit(1)
 
-    assert sys.argv[1].isnumeric()
+    model_name = sys.argv[1]
+    model_path = os.path.join("..", "saved_models", model_name)
 
-    from src.base.base_database_handler import DATABASE
-    from src.base.base_gambler import GAMBLER_ID_DICT
+    if not os.path.exists(model_path):
+        print("Model file not found!")
+        sys.exit(1)
+
+    from base.base_database_handler import DATABASE
+    from base.base_gambler import GAMBLER_ID_DICT
 
     model_name, gambler_id, user, password = DATABASE.get_model_config_by_id(int(sys.argv[1]))
     gambler = GAMBLER_ID_DICT[gambler_id]
 
     # todo decrypt password
-    main('good_model', gambler, user, password)
+    main(model_name, gambler, user, password)
 
 
 if __name__ == '__main__':
