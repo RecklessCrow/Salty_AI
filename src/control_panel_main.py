@@ -1,6 +1,6 @@
+import json
 import os
 import subprocess
-import json
 
 
 def get_all_status():

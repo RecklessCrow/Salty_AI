@@ -7,8 +7,6 @@ STATES = {
     "PAYOUT": 3,
 }
 
-UNKNOWN_FIGHTER = 0
-
 
 def team_to_int(team):
     return int(team == "red")
