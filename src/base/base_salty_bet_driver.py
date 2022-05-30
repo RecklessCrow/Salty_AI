@@ -81,7 +81,7 @@ class SaltyBetDriver(ABC):
         odds_text = betting_text.split("|")[-1].strip()
 
         if odds_text == "":
-            return 0, 0
+            return None
 
         red, blue = tuple(odds_text.split(":"))
         return float(red), float(blue)

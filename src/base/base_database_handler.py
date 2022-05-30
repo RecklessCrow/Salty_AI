@@ -23,7 +23,6 @@ class DatabaseHandler:
             self.cur.close()
             self.connection.close()
 
-
     def commit(self):
         """
         Commit changes to database file
