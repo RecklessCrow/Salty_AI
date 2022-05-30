@@ -1,6 +1,6 @@
 import os
 import subprocess
-import re
+from base.base_gambler import GAMBLER_ID_DICT
 
 
 def get_all_status():
@@ -27,11 +27,22 @@ def get_all_status():
     return build_table(blocks)
 
 
+def get_gamblers():
+    gamblers = [(i, x.__name__) for i, x in GAMBLER_ID_DICT.values()]
+    options = [f"<option value='{x[0]}'>{x[1]}</option>" for x in gamblers]
+    return f"""
+    <select id="gamblers">
+        {''.join(options)}
+    </select>
+    """
+
+
 def create_block(name, status):
     return f"""
     <tr>
         <td>{name}</td>
         <td>{status}</td>
+        <td>{get_gamblers()}</td>
         <td><form method="post"><button type="submit" 
         name="{'spawn_button' if status == 'Inactive' else 'kill_button'}" 
         value="{name}">{'Spawn Model' if status == 'Inactive' else 'Kill'}</button></form></td>
