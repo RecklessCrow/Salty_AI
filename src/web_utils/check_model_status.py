@@ -13,7 +13,7 @@ def get_all_status():
         active_model_names = []
 
     walker = os.walk(root_dir)
-    next(walker) # skip the first one
+    next(walker)  # skip the first one
     saved_models = [x[0].split('/')[-1] for x in walker]
 
     blocks = []
