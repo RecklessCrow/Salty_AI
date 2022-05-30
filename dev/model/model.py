@@ -2,11 +2,12 @@ import os
 from datetime import datetime
 
 from sklearn.utils.extmath import softmax
-from tensorflow.python.keras.callbacks import ModelCheckpoint, EarlyStopping
-from tensorflow.python.keras.models import load_model
+from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping
+from tensorflow.keras.models import load_model
+from tensorflow_addons.optimizers import RectifiedAdam
 
 from dev.model.data_generator import DataGenerator
-from dev.model.make_model import make_attention_model
+from dev.model.make_model import make_attention_model, alpha_loss
 from dev.model.utils import *
 
 
@@ -14,12 +15,13 @@ class Model:
     MODEL_DIR = "../saved_models"
 
     def __init__(self, model_name=None):
-        if model_name is not None:
+        if model_name is None:
             self.model_name = f"{datetime.now().strftime('%H.%M.%S')}"
             self.model_dir = f"{self.MODEL_DIR}/{self.model_name}"
             self.model = self.__build()
         else:
             self.model_name = model_name
+            self.model_dir = f"{self.MODEL_DIR}/{self.model_name}"
             self.__load()
 
     @staticmethod
@@ -43,7 +45,8 @@ class Model:
         return model
 
     def __load(self):
-        self.model = load_model(f"{self.MODEL_DIR}/{self.model_name}/model")
+        custom_objects = {"alpha_loss": alpha_loss, "RectifiedAdam": RectifiedAdam}
+        self.model = load_model(self.model_dir, custom_objects)
 
     def train(self, x, y, val=None, epochs=EPOCHS, early_stopping=False, checkpointing=False, **kwargs):
         train = DataGenerator(x, y, train=True, batch_size=BATCH_SIZE)
@@ -62,13 +65,13 @@ class Model:
             val = DataGenerator(val[0], val[1], train=False, batch_size=BATCH_SIZE)
 
             callbacks.append(ModelCheckpoint(
-                filepath=os.path.join(self.model_dir + "/model_checkpoint_loss"),
+                filepath=os.path.join(self.model_dir + "_checkpoint_loss"),
                 monitor="val_loss",
                 save_best_only=True
             ))
 
             callbacks.append(ModelCheckpoint(
-                filepath=os.path.join(self.model_dir + "/model_checkpoint_acc"),
+                filepath=os.path.join(self.model_dir + "_checkpoint_acc"),
                 monitor="val_accuracy",
                 save_best_only=True
             ))
@@ -89,4 +92,4 @@ class Model:
         return predictions
 
     def save(self):
-        self.model.save(self.model_dir + '/model')
+        self.model.save(self.model_dir)

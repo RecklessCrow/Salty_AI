@@ -2,7 +2,6 @@ import tensorflow.keras.backend as K
 from tensorflow.keras.layers import Input, Dense, Embedding, Flatten, MultiHeadAttention, Dropout, LayerNormalization, \
     StringLookup
 from tensorflow.keras.models import Model as KerasModel
-from tensorflow.python.ops.gen_nn_ops import softmax
 from tensorflow_addons.optimizers import RectifiedAdam
 
 from dev.model.utils import *
@@ -19,14 +18,14 @@ def alpha_loss(y_true, y_pred):
     """
     y_true = tf.convert_to_tensor(y_true)
     y_pred = tf.convert_to_tensor(y_pred)
-    y_pred = softmax(y_pred)
 
     my_alpha = 4.0
 
-    if my_alpha == 1.0:  # standard binary cross entropy
-        loss = K.mean(K.sum(-y_true * K.log(y_pred + K.epsilon()), axis=-1))
+    if my_alpha == 1.0:  # cross entropy from logits
+        loss = tf.nn.sigmoid_cross_entropy_with_logits(labels=y_true, logits=y_pred)
 
     else:  # weighted binary cross entropy
+        y_pred = K.softmax(y_pred)
         alpha = tf.constant([my_alpha])
         one = tf.constant([1.0])
         loss = (alpha / (alpha - one)) * K.mean(K.sum(y_true * (one - K.pow(y_pred, one - (one / alpha))), axis=-1))

@@ -2,21 +2,22 @@ from sklearn.metrics import classification_report, accuracy_score
 from sklearn.model_selection import StratifiedKFold
 
 from dev.model.tuning_model import TuningModel
+from dev.model.utils import *
+from dev.model.utils import y_test
 from model.model import Model
-from model.utils import *
 
 
 def train_and_evaluate():
     # initialize the model
-    # model = Model()
-    # model.train(x_train, y_train, val=(x_val, y_val), epochs=EPOCHS, checkpointing=True, early_stopping=False)
-    # model.save()
-    model = Model('12.39.01')
+    model = Model()
+    model.train(x_train, y_train, val=(x_val, y_val), epochs=EPOCHS, checkpointing=True, early_stopping=False)
+    model.save()
 
     # test
-    y_pred = model.predict(x_test)
-    print(
-        classification_report(np.argmax([y_test], axis=-1).reshape(-1, 1), np.argmax([y_pred], axis=-1).reshape(-1, 1)))
+    y_pred = model.predict(x_test, batch_size=BATCH_SIZE)
+    y_pred = np.argmax(y_pred, axis=-1).reshape(-1, 1)
+    report = classification_report(np.argmax(y_test, axis=-1).reshape(-1, 1), y_pred)
+    print(report)
 
 
 def cross_validation():
