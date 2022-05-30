@@ -5,11 +5,16 @@ import re
 
 def get_all_status():
     root_dir = '/opt/saltybet/saved_models/'
-    ps = subprocess.run(['ps', '-ax'], capture_output=True, text=True)
-    stdout = ps.stdout
+
+    # look up here?
+    ps = subprocess.Popen(('ps', '-ax'), stdout=subprocess.PIPE)
+    output = subprocess.check_output(('grep', 'model_driver_main.py'), stdin=ps.stdout)
+    ps.wait()
+
+    stdout = output
     print(stdout)
 
-    ## might be stdout
+    ## its cutting short
 
     regex = r"model_driver_main\.py"
     active_model_names = re.match(regex, stdout)
