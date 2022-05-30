@@ -2,7 +2,7 @@ import sigfig
 from abc import ABC, abstractmethod
 
 from base.base_database_handler import DATABASE
-from base.salty_bet_driver import SaltyBetDriver
+from base.base_salty_bet_driver import SaltyBetDriver
 
 
 
