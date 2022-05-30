@@ -35,7 +35,7 @@ x_train, x_val, y_train, y_val = train_test_split(x_train, y_train, test_size=va
 
 # Training
 BATCH_SIZE = 2 ** 12
-EPOCHS = 100
+EPOCHS = 40
 MAX_TRAINING_STEPS = int(np.ceil((len(x) / BATCH_SIZE) * EPOCHS))
 
 # Tuning
