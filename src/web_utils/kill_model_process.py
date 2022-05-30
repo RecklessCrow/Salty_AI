@@ -1,6 +1,5 @@
 import subprocess
 import sys
-import sh
 
 
 def kill_pid(model_name):

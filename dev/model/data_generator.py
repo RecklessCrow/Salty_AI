@@ -1,5 +1,6 @@
-import numpy as np
 from tensorflow.keras.utils import Sequence
+
+from dev.model.utils import *
 
 
 class DataGenerator(Sequence):
@@ -33,7 +34,7 @@ class DataGenerator(Sequence):
         # Randomly mask characters out to help when unknown characters are in matches
         if self.train:
             idxs = self.rng.integers(2, size=(len(batch_x)))
-            batch_x[idxs, self.rng.choice([0, 1])] = 0
+            batch_x[idxs, self.rng.choice([0, 1])] = UNKNOWN_FIGHTER
 
         return batch_x, batch_y
 

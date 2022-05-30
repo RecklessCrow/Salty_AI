@@ -1,5 +1,4 @@
 import json
-import os
 import sys
 
 import numpy as np
@@ -37,22 +36,18 @@ def main(model_name: str, gambler: Gambler, user, enyc_pass):
 
             print(f'{red} vs {blue}')
 
-            confidence = model.predict_match(red, blue)
+            prediction = model.predict_match(red, blue)
 
-            if confidence is None:  # both characters unknown, wait for next match
+            if prediction is None:  # both characters unknown, wait for next match
                 time.sleep(5)
                 state = STATES['START']
                 continue
 
             else:  # At least one fighter known
-                predicted_winner = int_to_team(np.around(confidence))
+                predicted_winner = int_to_team(np.argmax(prediction))
 
-                # Adjust confidence to reflect predicted pred_str as the larger number
-                if predicted_winner == 'blue':
-                    confidence = 1 - confidence
-
-                confidence = min(max(confidence, 0.5), 1.0)             # confidence is now limited between 0.5 and 1
-                confidence = (confidence - 0.5) * 2                     # confidence is now scaled between 0 and 1
+                confidence = np.max(prediction)
+                confidence = (confidence - 0.5) * 2  # confidence is now scaled between 0 and 1
                 bet_amount = gambler.calculate_bet(confidence, driver)  # calculate bet amount
 
             driver.bet(max(bet_amount, 1), predicted_winner)

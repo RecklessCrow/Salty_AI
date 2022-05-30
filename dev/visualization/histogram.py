@@ -2,8 +2,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.model_selection import train_test_split
 
+from dev.model.model import Model
 from src.base.base_database_handler import DatabaseHandler
-from dev.model import Model
 
 SEED = 16
 
