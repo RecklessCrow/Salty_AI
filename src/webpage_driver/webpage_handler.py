@@ -1,5 +1,5 @@
 import numpy as np
-from src.webpage_driver.html_builder import *
+from webpage_driver.html_builder import *
 import plotly.express as px
 from collections import deque
 import plotly.io as pio
