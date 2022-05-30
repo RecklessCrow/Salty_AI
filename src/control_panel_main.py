@@ -28,7 +28,7 @@ def get_all_status():
 
 
 def get_gamblers():
-    with open('/opt/saltybet/database/gamblers.json') as f:
+    with open('/opt/saltybet/database/gambler_id.json') as f:
         gamblers = json.load(f)
 
     options = [f"<option value='{uid}'>{name}</option>" for uid, name in gamblers.items()]
