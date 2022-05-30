@@ -9,8 +9,8 @@ def get_all_status():
     stdout = ps.stdout
     # print(stdout)
 
-    regex = r"\model_driver_main.py .*\b"
-    active_model_names = re.search(regex, stdout)
+    regex = r".py .*\b"
+    active_model_names = re.match(regex, stdout)
     print(active_model_names)
 
     saved_models = [f.name for f in os.scandir(root_dir) if f.is_dir()]
