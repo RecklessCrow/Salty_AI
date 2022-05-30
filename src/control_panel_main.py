@@ -31,7 +31,7 @@ def get_gamblers():
 
     options = [f"<option value='{uid}'>{name}</option>" for uid, name in gamblers.items()]
     return f"""
-    <select id="gamblers">
+    <select id="selected_gambler">
         {''.join(options)}
     </select>
     """
@@ -43,7 +43,7 @@ def get_users():
 
     options = [f"<option value='{user['name']}'>{user['name']}</option>" for user in users]
     return f"""
-        <select id="users">
+        <select id="selected_user">
             {''.join(options)}
         </select>
         """
@@ -54,11 +54,14 @@ def create_block(name, status):
     <tr>
         <td>{name}</td>
         <td>{status}</td>
+        
+        <form method="post">
         <td>{get_gamblers()}</td>
-        <td>{get_users()}</td>
-        <td><form method="post"><button type="submit" 
-        name="{'spawn_button' if status == 'Inactive' else 'kill_button'}" 
-        value="{name}">{'Spawn Model' if status == 'Inactive' else 'Kill'}</button></form></td>
+        <td>{get_users()}</td> 
+        <td><button type="submit" name="{'spawn_button' if status == 'Inactive' else 'kill_button'}" value="{name}">
+        {'Spawn Model' if status == 'Inactive' else 'Kill'}</button></td>
+        </form>
+        
     </tr>
     """
 
