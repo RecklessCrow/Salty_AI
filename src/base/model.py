@@ -18,6 +18,9 @@ class Model:
         self.model_name = model_name
         self.model_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", '..', 'saved_models', self.model_name)
 
+        if not os.path.exists(self.model_path):
+            exit("model file not found!")
+
         # check if tokenizer exists
         tokenizer_path = os.path.join(self.model_path, "tokenizer.pkl")
         if not os.path.exists(tokenizer_path):

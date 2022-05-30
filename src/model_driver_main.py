@@ -117,11 +117,6 @@ def start():
         sys.exit(1)
 
     model_name = sys.argv[1]
-    model_path = os.path.join("..", "saved_models", model_name)
-
-    if not os.path.exists(model_path):
-        print("model file not found!")
-        sys.exit(1)
 
     from base.base_database_handler import DATABASE
     from base.base_gambler import GAMBLER_ID_DICT
