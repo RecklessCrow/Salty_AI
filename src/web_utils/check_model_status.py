@@ -5,7 +5,7 @@ import re
 
 def get_all_status():
     root_dir = '/opt/saltybet/saved_models/'
-    ps = subprocess.run(['ps', '-ax', "-o", "command"], capture_output=True, text=True)
+    ps = subprocess.run(['ps', '-ax'], capture_output=True, text=True)
     stdout = ps.stdout
     # print(stdout)
 
