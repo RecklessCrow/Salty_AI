@@ -117,6 +117,8 @@ def start():
         print("Usage: python3 model_driver_main.py <model_name> <gambler_id> <user_id>")
         sys.exit(1)
 
+    print(sys.argv)
+
     model_name = sys.argv[1]
     gambler_id = sys.argv[2]
     user_id = sys.argv[3]
