@@ -6,7 +6,7 @@ def get_all_status():
     root_dir = '/opt/saltybet/saved_models/'
 
     try:
-        stdout = sh.grep(sh.ps("aux"), 'python')
+        stdout = sh.grep(sh.ps("a"), 'python')
         active_model_full = stdout.split('\n')
         print(active_model_full)
         active_model_names = [x.split(' ') for x in active_model_full]
