@@ -73,28 +73,6 @@ body {{
 </head>
 <body style="background-color: #121212">
 
-<script> 
-$(document).ready(function(){{
-setInterval(function(){{
-      $("#current_match_info").load(" #current_match_info > *");
-      $("#boxes").load(" #boxes > *");
-      
-}}, 3000);
-}});
-</script>
-
-<script> 
-$(document).ready(function(){{
-    $("#plot1").load("plot1.html");
-    $("#plot2").load("plot2.html");
-    setInterval(function(){{
-          $("#plot1").load("plot1.html");
-          $("#plot2").load("plot2.html");
-    }}, 30000);
-}});
-</script>
-
-
 <div class="sidenav">
     <h2 class=display-4 style="color: #B3B3B3;margin-left: 15px;">Menu</h2>
   <a href="#">Home</a>
@@ -140,6 +118,28 @@ $(document).ready(function(){{
         </Div>
     </div>
 </div>
+
+<script> 
+$(document).ready(function(){{
+setInterval(function(){{
+      $("#current_match_info").load(" #current_match_info > *");
+      $("#boxes").load(" #boxes > *");
+      
+}}, 3000);
+}});
+</script>
+
+<script> 
+$(document).ready(function(){{
+    $("#plot1").load("plot1.html");
+    $("#plot2").load("plot2.html");
+    setInterval(function(){{
+          $("#plot1").load("plot1.html");
+          $("#plot2").load("plot2.html");
+    }}, 30000);
+}});
+</script>
+
 
 </body>
 </html>
