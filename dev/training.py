@@ -8,15 +8,15 @@ from model.utils import *
 
 def train_and_evaluate():
     # initialize the model
-    model = Model()
-
-    # train
-    model.train(x_train, y_train, val=(x_val, y_val), epochs=EPOCHS, checkpointing=False, early_stopping=False)
-    model.save()
+    # model = Model()
+    # model.train(x_train, y_train, val=(x_val, y_val), epochs=EPOCHS, checkpointing=True, early_stopping=False)
+    # model.save()
+    model = Model('12.39.01')
 
     # test
     y_pred = model.predict(x_test)
-    classification_report(y_test, y_pred)
+    print(
+        classification_report(np.argmax([y_test], axis=-1).reshape(-1, 1), np.argmax([y_pred], axis=-1).reshape(-1, 1)))
 
 
 def cross_validation():

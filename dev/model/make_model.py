@@ -11,6 +11,8 @@ from dev.model.utils import *
 def alpha_loss(y_true, y_pred):
     """
     TF implementation of the alpha loss function
+    Supposedly creates a well calibrated model
+    from https://arxiv.org/pdf/1906.02314.pdf
     :param y_true:
     :param y_pred:
     :return:
@@ -18,7 +20,6 @@ def alpha_loss(y_true, y_pred):
     y_true = tf.convert_to_tensor(y_true)
     y_pred = tf.convert_to_tensor(y_pred)
     y_pred = softmax(y_pred)
-    # y_pred = tf.clip_by_value(y_pred, K.epsilon(), 1. - K.epsilon())
 
     my_alpha = 4.0
 
@@ -49,7 +50,7 @@ def make_attention_model(parameters):
         name='string_lookup'
     )(inputs)
 
-    x = Embedding(input_dim=len(VOCAB) + 1, output_dim=parameters["embedding_out"], mask_zero=True)(x)
+    x = Embedding(input_dim=len(VOCAB) + 2, output_dim=parameters["embedding_out"], mask_zero=True)(x)
     x = Dropout(parameters["dropout"])(x)
 
     # Transformer

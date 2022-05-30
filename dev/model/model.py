@@ -1,8 +1,9 @@
 import os
 from datetime import datetime
 
-from tensorflow.keras.activations import softmax
+from sklearn.utils.extmath import softmax
 from tensorflow.python.keras.callbacks import ModelCheckpoint, EarlyStopping
+from tensorflow.python.keras.models import load_model
 
 from dev.model.data_generator import DataGenerator
 from dev.model.make_model import make_attention_model
@@ -12,30 +13,37 @@ from dev.model.utils import *
 class Model:
     MODEL_DIR = "../saved_models"
 
-    def __init__(self):
-        self.model_name = f"{datetime.now().strftime('%H.%M.%S')}"
-        self.model_dir = f"{self.MODEL_DIR}/{self.model_name}"
-        self.model = self.__build()
+    def __init__(self, model_name=None):
+        if model_name is not None:
+            self.model_name = f"{datetime.now().strftime('%H.%M.%S')}"
+            self.model_dir = f"{self.MODEL_DIR}/{self.model_name}"
+            self.model = self.__build()
+        else:
+            self.model_name = model_name
+            self.__load()
 
     @staticmethod
     def __build():
         parameters = {
             "dropout": 0.1,
-            "embedding_out": 512,
-            "num_transformers": 14,
-            "attention_heads": 8,
-            "attention_keys": 8,
-            "ff_layers": 1,
-            "ff_units": 16,
-            "ff_activation": "softplus",
+            "embedding_out": 128,
+            "num_transformers": 8,
+            "attention_heads": 6,
+            "attention_keys": 6,
+            "ff_layers": 2,
+            "ff_units": 32,
+            "ff_activation": "relu",
             "epsilon": 1e-6,
-            "learning_rate": 3e-3,
-            "smoothing": 0.1,
+            "learning_rate": 1e-3,
+            "smoothing": 0.05,
         }
 
         model = make_attention_model(parameters)
 
         return model
+
+    def __load(self):
+        self.model = load_model(f"{self.MODEL_DIR}/{self.model_name}/model")
 
     def train(self, x, y, val=None, epochs=EPOCHS, early_stopping=False, checkpointing=False, **kwargs):
         train = DataGenerator(x, y, train=True, batch_size=BATCH_SIZE)
@@ -77,7 +85,8 @@ class Model:
 
     def predict(self, x, **kwargs):
         predictions = self.model.predict(x, **kwargs)
-        return softmax(predictions).numpy()
+        predictions = softmax(predictions)
+        return predictions
 
     def save(self):
         self.model.save(self.model_dir + '/model')

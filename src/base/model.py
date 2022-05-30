@@ -1,16 +1,17 @@
 import os
 
+from sklearn.utils.extmath import softmax
+
+from dev.model.make_model import alpha_loss
+
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 
-from tensorflow.keras.activations import softmax
 from tensorflow.keras.models import load_model
 from tensorflow_addons.optimizers import RectifiedAdam
 
 
 class Model:
-    ADAM = RectifiedAdam  # RectifiedAdam optimizer needs to be imported in order to successfully load the model
-
     def __init__(self, model_name=None):
         """
         Initializes the model by loading the model from the disk given the model name
@@ -19,13 +20,14 @@ class Model:
 
         self.model_name = model_name
         self.model_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", '..', 'saved_models',
-                                       self.model_name)
+                                       self.model_name, "model")
 
         if not os.path.exists(self.model_path):
             exit("model file not found!")
 
         # load in model from parameter
-        self.model = load_model(self.model_path)
+        custom_objects = {"alpha_loss": alpha_loss, "RectifiedAdam": RectifiedAdam}
+        self.model = load_model(self.model_path, custom_objects=custom_objects)
         self.vocab = self.model.get_layer('string_lookup').get_vocabulary()
 
     def predict_match(self, red, blue):
@@ -40,4 +42,6 @@ class Model:
         if red not in self.vocab and blue not in self.vocab:
             return None
 
-        return softmax(self.model.predict([[red, blue]])).numpy()[0][0]
+        prediction = self.model.predict([[red, blue]])
+        prediction = softmax(prediction)
+        return prediction[0][0]

@@ -2,7 +2,7 @@ import numpy as np
 import tensorflow as tf
 from sklearn.model_selection import train_test_split
 
-from src.base.base_database_handler import DatabaseHandler
+from src.base.base_database_handler import DATABASE
 
 SEED = 4
 
@@ -17,7 +17,7 @@ def set_random_state():
 
 
 # Data
-DB = DatabaseHandler()
+DB = DATABASE
 UNKNOWN_FIGHTER = '<unknown>'
 VOCAB = np.array(DB.get_all_characters()).flatten()
 dataset = np.array(DB.get_all_matches())
