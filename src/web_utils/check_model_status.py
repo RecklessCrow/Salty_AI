@@ -9,7 +9,7 @@ def get_all_status():
     stdout = ps.stdout
     # print(stdout)
 
-    regex = r".py .*\b"
+    regex = r"model_driver_main\.py"
     active_model_names = re.match(regex, stdout)
     print(active_model_names)
     if not active_model_names:
