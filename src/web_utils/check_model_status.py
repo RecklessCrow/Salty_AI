@@ -12,6 +12,8 @@ def get_all_status():
     regex = r".py .*\b"
     active_model_names = re.match(regex, stdout)
     print(active_model_names)
+    if not active_model_names:
+        active_model_names = []
 
     saved_models = [f.name for f in os.scandir(root_dir) if f.is_dir()]
 
