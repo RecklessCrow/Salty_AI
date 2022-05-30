@@ -10,17 +10,16 @@ class DatabaseHandler:
         Object to interact with the database
         """
 
-        assert os.path.exists(db_file)
-        print(os.path.exists(db_file), " here")
+        if not os.path.exists(db_file):
+            exit("Database file does not exist!")
 
         self.connection = sqlite3.connect(db_file, check_same_thread=False)
         self.cur = self.connection.cursor()
 
     def __del__(self):
-        if self.connection:
-            self.commit()
-            self.cur.close()
-            self.connection.close()
+        self.commit()
+        self.cur.close()
+        self.connection.close()
 
     def commit(self):
         """
