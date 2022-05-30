@@ -4,7 +4,7 @@ import sh
 
 def kill_pid(model_name):
     try:
-        stdout = sh.grep(sh.ps("a"), model_name)
+        stdout = sh.grep(sh.ps("ax"), model_name)
         active_pid = int(stdout.split(' ')[0])
     except sh.ErrorReturnCode_1:
         print("found nothing")
