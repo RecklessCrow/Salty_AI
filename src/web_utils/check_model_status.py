@@ -1,19 +1,16 @@
 import os
-import sh
+import subprocess
+import re
 
 
 def get_all_status():
     root_dir = '/opt/saltybet/saved_models/'
+    ps = subprocess.run(['ps', '-ax', "-o", "command"], capture_output=True, text=True)
+    stdout = ps.stdout
 
-    try:
-        stdout = sh.grep(sh.ps("ax", "-o", "command"), ".py")
-        active_model_full = stdout.split('\n')
-        print(active_model_full)
-        active_model_names = [x.split(' ')[-1] for x in active_model_full]
-        print(active_model_names)
-    except sh.ErrorReturnCode_1:
-        active_model_names = []
-        print("found nothing")
+    regex = r"\model_driver_main.py .*\b"
+    active_model_names = re.search(regex, stdout)
+    print(active_model_names)
 
     saved_models = [f.name for f in os.scandir(root_dir) if f.is_dir()]
 
