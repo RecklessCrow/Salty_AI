@@ -85,10 +85,12 @@ setInterval(function(){{
 
 <script> 
 $(document).ready(function(){{
-setInterval(function(){{
-      $("#plot1").load("plot1.html");
-      $("#plot2").load("plot2.html");
-}}, 30000);
+    $("#plot1").load("plot1.html");
+    $("#plot2").load("plot2.html");
+    setInterval(function(){{
+          $("#plot1").load("plot1.html");
+          $("#plot2").load("plot2.html");
+    }}, 30000);
 }});
 </script>
 
