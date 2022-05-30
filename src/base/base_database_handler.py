@@ -11,6 +11,8 @@ class DatabaseHandler:
         """
 
         self.connection = None
+        # print current working directory
+        print(os.getcwd())
         if not os.path.exists(self.DB_FILE):
             exit("Database file does not exist!")
 
