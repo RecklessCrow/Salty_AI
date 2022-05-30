@@ -17,7 +17,7 @@ class Model:
         # check if tokenizer exists
         tokenizer_path = os.path.join(self.model_path, "tokenizer.pkl")
         if not os.path.exists(tokenizer_path):
-            self.create_tokenizer()
+            self.__create_tokenizer()
 
         self.tokenizer = pickle.load(open(tokenizer_path, "rb"))
 
@@ -48,8 +48,8 @@ class Model:
 
         return self.tokenizer.transform(x.reshape(-1, 1)).reshape(len(x), 2) + 1
 
-    def create_tokenizer(self):
-        from base_database_handler import DATABASE
+    def __create_tokenizer(self):
+        from base.base_database_handler import DATABASE
         characters = DATABASE.get_all_characters()
         tokenizer = OrdinalEncoder()
         tokenizer.fit(np.array(characters).reshape(-1, 1))
