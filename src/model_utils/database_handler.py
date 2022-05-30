@@ -25,14 +25,14 @@ class DatabaseHandler(base_database_handler.DatabaseHandler):
         # make tables
         self.cur.execute("pragma foreign_keys = on;")
         self.cur.execute(
-            """
-            create table {}(
+            f"""
+            create table {self.model_name}(
                 match_id            integer     primary key,
                 predicted_correctly boolean     not null,
                 confidence          real        not null,
                 end_balance         integer     not null
             );
-            """.format(self.model_name)
+            """
         )
 
         self.commit()

@@ -14,11 +14,8 @@ class SaltyBetDriver(base_salty_bet_driver.SaltyBetDriver):
 
         # Login
         self.driver.get("https://www.saltybet.com/authenticate?signin=1")
-        try:
-            assert "Salty" in self.driver.title
-        except AssertionError:
-            print('Failed to load into website. Maybe saltybet.com is down?')
-            sys.exit()
+
+        assert "Salty Bet" == self.driver.title, 'Failed to load into website. Maybe saltybet.com is down?'
 
         username_element = self.driver.find_element(By.ID, "email")
         username_element.clear()
