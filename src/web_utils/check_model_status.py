@@ -12,18 +12,8 @@ def get_all_status():
     ps.wait()
 
     stdout = output
-    print(stdout)
 
     active_model_names = [stdout.split()[-1].decode('utf-8') for stdout in stdout.splitlines()]
-    print(active_model_names)
-
-    ## its cutting short
-
-    regex = r"model_driver_main\.py"
-    active_model_names = re.match(regex, stdout)
-    print(active_model_names)
-    if not active_model_names:
-        active_model_names = []
 
     saved_models = [f.name for f in os.scandir(root_dir) if f.is_dir()]
 
