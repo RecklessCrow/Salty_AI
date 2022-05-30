@@ -6,7 +6,7 @@ from selenium.common.exceptions import StaleElementReferenceException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.firefox.service import Service
-from webdriver_manager.firefox import GeckoDriverManager
+# from webdriver_manager.firefox import GeckoDriverManager
 
 
 class SaltyBetDriver(ABC):
@@ -20,10 +20,7 @@ class SaltyBetDriver(ABC):
         if headless:
             options.add_argument("--headless")
 
-        self.driver = webdriver.Firefox(
-            service=Service(executable_path=GeckoDriverManager().install()),
-            options=options
-        )
+        self.driver = webdriver.Firefox(options=options)
 
     def __del__(self):
         self.driver.close()
