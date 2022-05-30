@@ -14,9 +14,7 @@ def get_all_status():
     stdout = output
     active_model_names = [stdout.split()[-1].decode('utf-8') for stdout in stdout.splitlines()]
 
-    saved_models = [f.name for f in os.scandir(root_dir) if f.is_dir()]
-    print(type(saved_models[0]))
-    print(str(saved_models[0]))
+    saved_models = [str(f.name) for f in os.scandir(root_dir) if f.is_dir()]
 
     blocks = []
     for model_name in saved_models:
