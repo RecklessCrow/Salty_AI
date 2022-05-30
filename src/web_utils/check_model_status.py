@@ -7,6 +7,7 @@ def get_all_status():
 
     ps_grep = subprocess.run(['ps', 'aux', '|', 'grep', 'model_driver_main.py'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, shell=True)
     stdout = ps_grep.stdout
+    print(stdout)
     active_model_full = stdout.split('\n')
     active_model_names = [x.split(' ')[-1] for x in active_model_full]
 
