@@ -39,12 +39,24 @@ def get_gamblers():
     """
 
 
+def get_users():
+    with open('/opt/saltybet/database/user_id.json') as f:
+        users = json.load(f)['users']
+        options = [f"<option value='{user['name']}'>{user['name']}</option>" for user in users]
+        return f"""
+            <select id="users">
+                {''.join(options)}
+            </select>
+            """
+
+
 def create_block(name, status):
     return f"""
     <tr>
         <td>{name}</td>
         <td>{status}</td>
         <td>{get_gamblers()}</td>
+        <td>{get_users()}</td>
         <td><form method="post"><button type="submit" 
         name="{'spawn_button' if status == 'Inactive' else 'kill_button'}" 
         value="{name}">{'Spawn Model' if status == 'Inactive' else 'Kill'}</button></form></td>
@@ -60,6 +72,7 @@ def build_table(blocks):
         <tr>
             <th>Model Name</th>
             <th>Status</th>
+            <th>Gambler_id</th>
         </tr>
         {"".join(blocks)}
     </table>
