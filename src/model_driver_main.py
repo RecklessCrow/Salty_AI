@@ -39,6 +39,7 @@ def main(model_name: str, gambler: Gambler, user, enyc_pass):
             confidence = model.predict_match(red, blue)
 
             if confidence is None:  # both characters unknown, wait for next match
+                time.sleep(5)
                 state = STATES['START']
                 continue
 
