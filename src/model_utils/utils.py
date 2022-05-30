@@ -4,7 +4,7 @@ STATES = {
     "START": 0,
     "BETS_OPEN": 1,
     "BETS_CLOSED": 2,
-    "PAYOUT": 3
+    "PAYOUT": 3,
 }
 
 UNKNOWN_FIGHTER = 0
@@ -28,7 +28,7 @@ def decode_state(encoded_state):
     if "payout" in encoded_state:
         return STATES["PAYOUT"]
 
-    return STATES["START"]
+    return None
 
 
 def await_next_state(driver, last_state):
