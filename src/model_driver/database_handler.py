@@ -1,5 +1,5 @@
 import os
-import base.base_database_handler
+from base import base_database_handler
 
 DB_FILE = os.path.join("../", "../", "database", "salty.db")
 
