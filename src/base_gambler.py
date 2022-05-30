@@ -72,10 +72,12 @@ class NumMatchWeighted(Gambler):
     MAX_NORMAL_BET = 5_000
 
     def calculate_bet(self, confidence: float, driver: SaltyBetDriver) -> int:
-        confidence = (confidence - 0.5) * 2
-        matchup_count = DATABASE.get_matchup_count()
+        r, b = driver.get_fighters()
+        matchup_count = DATABASE.get_matchup_count(r, b)
+        print("Matchup count:", matchup_count)
         matchup_rate = lambda count_seen: 1 - ((2 - count_seen) * 0.1)
-        confidence = confidence * matchup_rate(matchup_count)
+        matchup_weight = min(matchup_rate(matchup_count), 1.0)
+        confidence = confidence * matchup_weight
 
         is_tournament = driver.is_tournament()
         bailout = driver.get_bailout(is_tournament)
@@ -111,4 +113,5 @@ class NumMatchWeighted(Gambler):
 
 GAMBLER_ID_DICT = {
     0: AllIn(),
+    1: NumMatchWeighted(),
 }
