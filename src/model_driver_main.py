@@ -118,7 +118,7 @@ def start():
     from base.base_database_handler import DATABASE
     from base.base_gambler import GAMBLER_ID_DICT
 
-    model_name, gambler_id, user, password = DATABASE.get_model_config_by_id(int(sys.argv[1]))
+    model_name, gambler_id, user, password = DATABASE.get_model_config_by_name(int(sys.argv[1]))
     gambler = GAMBLER_ID_DICT[gambler_id]
 
     # todo decrypt password
