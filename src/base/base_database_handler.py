@@ -10,6 +10,7 @@ class DatabaseHandler:
         Object to interact with the database
         """
 
+        self.connection = None
         if not os.path.exists(db_file):
             exit("Database file does not exist!")
 
@@ -17,9 +18,11 @@ class DatabaseHandler:
         self.cur = self.connection.cursor()
 
     def __del__(self):
-        self.commit()
-        self.cur.close()
-        self.connection.close()
+        if self.connection:
+            self.commit()
+            self.cur.close()
+            self.connection.close()
+
 
     def commit(self):
         """
