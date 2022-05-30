@@ -12,7 +12,8 @@ from model_driver import salty_bet_driver
 
 
 def main(model_name: str, gambler: Gambler, user, enyc_pass):
-    model = load_model(f'../../saved_models/{model_name}')
+    model_path = os.path.join("..", "saved_models", model_name)
+    model = load_model(model_path)
     driver = salty_bet_driver.SaltyBetDriver(user, enyc_pass)
     database = database_handler.DatabaseHandler(model_name)
     website_handler = webpage_handler.WebPageHandler(model_name, database.get_balances(),
