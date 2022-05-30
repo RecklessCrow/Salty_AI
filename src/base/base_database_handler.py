@@ -5,7 +5,7 @@ import sqlite3
 class DatabaseHandler:
     # join
 
-    DB_FILE = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "database", "salty.db")
+    DB_FILE = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "..", "database", "salty.db")
 
     def __init__(self):
         """

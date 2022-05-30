@@ -16,7 +16,7 @@ UNKNOWN_CHARACTER = 0
 class Model:
     def __init__(self, model_name=None):
         self.model_name = model_name
-        self.model_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 'saved_models', self.model_name)
+        self.model_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", '..', 'saved_models', self.model_name)
 
         # check if tokenizer exists
         tokenizer_path = os.path.join(self.model_path, "tokenizer.pkl")
