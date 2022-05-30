@@ -5,11 +5,7 @@ import sh
 def get_all_status():
     root_dir = '/opt/saltybet/saved_models/'
 
-    # print(sh.grep(sh.ps("aux"), 'python3'))
-    ps_grep = subprocess.run(['ps', 'aux'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, shell=True)
-    print(ps_grep.args)
-    stdout = ps_grep.stdout
-    print(stdout)
+    stdout = sh.grep(sh.ps("aux"), 'python3')
     active_model_full = stdout.split('\n')
     active_model_names = [x.split(' ')[-1] for x in active_model_full]
 
