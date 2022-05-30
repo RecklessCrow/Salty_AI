@@ -22,9 +22,10 @@ UNKNOWN_FIGHTER = '<unknown>'
 VOCAB = np.array(DB.get_all_characters()).flatten()
 dataset = np.array(DB.get_all_matches())
 x, y = dataset[:, :-1], dataset[:, -1]
+y = np.array([[i == "red", i == "blue"] for i in y]).astype(np.float32)
+# y = (y == "red").astype(np.float32).reshape(-1, 1)  # Convert to binary
 del dataset
-
-y = (y == "red").astype(int).reshape(-1, 1)  # Convert to binary
+BUCKETS = 5
 
 # split data 70/20/10
 test_size = 0.2
@@ -35,10 +36,12 @@ x_train, x_val, y_train, y_val = train_test_split(x_train, y_train, test_size=va
 # Training
 BATCH_SIZE = 2 ** 12
 EPOCHS = 100
-STEPS = int((1.4e6 / BATCH_SIZE) * EPOCHS)
+MAX_TRAINING_STEPS = int(np.ceil((len(x) / BATCH_SIZE) * EPOCHS))
 
 # Tuning
-TUNER_OBJECTIVE = 'val_loss'
+TUNER_OBJECTIVE = 'val_accuracy'
+ITERATIONS = 16
+FACTOR = 2
 
 # Early Stopping
 ENABLE_ES = False

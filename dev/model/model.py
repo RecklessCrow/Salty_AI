@@ -1,7 +1,7 @@
 import os
 from datetime import datetime
 
-from tensorflow.keras.activations import sigmoid
+from tensorflow.keras.activations import softmax
 from tensorflow.python.keras.callbacks import ModelCheckpoint, EarlyStopping
 
 from dev.model.data_generator import DataGenerator
@@ -22,14 +22,14 @@ class Model:
         parameters = {
             "dropout": 0.1,
             "embedding_out": 512,
-            "num_transformers": 12,
-            "attention_heads": 12,
-            "attention_keys": 12,
+            "num_transformers": 14,
+            "attention_heads": 8,
+            "attention_keys": 8,
             "ff_layers": 1,
-            "ff_units": 128,
-            "ff_activation": "gelu",
+            "ff_units": 16,
+            "ff_activation": "softplus",
             "epsilon": 1e-6,
-            "learning_rate": 1e-4,
+            "learning_rate": 3e-3,
             "smoothing": 0.1,
         }
 
@@ -76,8 +76,8 @@ class Model:
         return history
 
     def predict(self, x, **kwargs):
-        predictions = self.model.predict(x.reshape(-1, 2), **kwargs)
-        return sigmoid(predictions).numpy()
+        predictions = self.model.predict(x, **kwargs)
+        return softmax(predictions).numpy()
 
     def save(self):
         self.model.save(self.model_dir + '/model')

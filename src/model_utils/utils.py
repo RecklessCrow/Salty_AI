@@ -9,11 +9,11 @@ STATES = {
 
 
 def team_to_int(team):
-    return int(team == "red")
+    return int(team == "blue")
 
 
 def int_to_team(number):
-    return "red" if number else "blue"
+    return "red" if number == 0 else "blue"
 
 
 def decode_state(encoded_state):

@@ -3,7 +3,7 @@ import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 
-from tensorflow.keras.activations import sigmoid
+from tensorflow.keras.activations import softmax
 from tensorflow.keras.models import load_model
 from tensorflow_addons.optimizers import RectifiedAdam
 
@@ -40,4 +40,4 @@ class Model:
         if red not in self.vocab and blue not in self.vocab:
             return None
 
-        return sigmoid(self.model.predict([[red, blue]])).numpy()[0][0]
+        return softmax(self.model.predict([[red, blue]])).numpy()[0][0]
