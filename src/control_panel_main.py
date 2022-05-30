@@ -1,6 +1,6 @@
 import os
 import subprocess
-from base.base_gambler import GAMBLER_ID_DICT
+import json
 
 
 def get_all_status():
@@ -28,8 +28,10 @@ def get_all_status():
 
 
 def get_gamblers():
-    gamblers = [(i, x.__name__) for i, x in GAMBLER_ID_DICT.values()]
-    options = [f"<option value='{x[0]}'>{x[1]}</option>" for x in gamblers]
+    with open('/opt/saltybet/database/gamblers.json') as f:
+        gamblers = json.load(f)
+
+    options = [f"<option value='{uid}'>{name}</option>" for uid, name in gamblers.items()]
     return f"""
     <select id="gamblers">
         {''.join(options)}
