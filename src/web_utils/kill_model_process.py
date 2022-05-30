@@ -10,7 +10,7 @@ def kill_pid(model_name):
     ps.wait()
 
     print(output)
-    active_pid = output.decode('utf-8').split(' ')[0]
+    active_pid = output.decode('utf-8').split(' ')[1]
     subprocess.call(('kill', active_pid))
 
 
