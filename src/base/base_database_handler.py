@@ -5,16 +5,16 @@ import sqlite3
 class DatabaseHandler:
     DB_FILE = os.path.join("..", "database", "salty.db")
 
-    def __init__(self, db_file=DB_FILE):
+    def __init__(self):
         """
         Object to interact with the database
         """
 
         self.connection = None
-        if not os.path.exists(db_file):
+        if not os.path.exists(self.DB_FILE):
             exit("Database file does not exist!")
 
-        self.connection = sqlite3.connect(db_file, check_same_thread=False)
+        self.connection = sqlite3.connect(self.DB_FILE, check_same_thread=False)
         self.cur = self.connection.cursor()
 
     def __del__(self):
