@@ -14,6 +14,9 @@ def get_all_status():
     stdout = output
     print(stdout)
 
+    active_model_names = [stdout.split()[-1].decode('utf-8') for stdout in stdout.splitlines()]
+    print(active_model_names)
+
     ## its cutting short
 
     regex = r"model_driver_main\.py"
