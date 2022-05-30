@@ -15,9 +15,7 @@ def get_all_status():
         active_model_names = []
         print("found nothing")
 
-    walker = os.walk(root_dir)
-    next(walker)  # skip the first one
-    saved_models = [x[0].split('/')[-1] for x in walker]
+    saved_models = [f.name for f in os.scandir(root_dir) if f.is_dir()]
 
     blocks = []
     for model_name in saved_models:
