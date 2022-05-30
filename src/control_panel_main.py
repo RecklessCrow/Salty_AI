@@ -55,6 +55,7 @@ def create_block(name, status):
         <td>{name}</td>
         <td>{status}</td>
         <td>{get_gamblers()}</td>
+        <td>{get_users()}</td>
         <td><form method="post"><button type="submit" 
         name="{'spawn_button' if status == 'Inactive' else 'kill_button'}" 
         value="{name}">{'Spawn Model' if status == 'Inactive' else 'Kill'}</button></form></td>
