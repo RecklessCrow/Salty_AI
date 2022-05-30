@@ -1,3 +1,4 @@
+import os
 from collections import deque
 
 import numpy as np
@@ -72,13 +73,17 @@ class WebPageHandler:
         base = base_html_page(feed_boxes, self.model_name, balance, self.current_match_info)
         p1, p2 = self.generate_graphs()
 
-        with open(f'{self.model_name}.html', 'w') as f:
+        path = os.path.join(os.getcwd(), self.model_name)
+        if not os.path.exists(path):
+            os.mkdir(path)
+
+        with open(os.path.join(path, f'{self.model_name}.html'), 'w') as f:
             f.write(base)
 
-        with open(f'plot1.html', 'w') as f:
+        with open(os.path.join(path, 'plot1.html'), 'w') as f:
             f.write(p1)
 
-        with open(f'plot2.html', 'w') as f:
+        with open(os.path.join(path, 'plot2.html'), 'w') as f:
             f.write(p2)
 
         return
