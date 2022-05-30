@@ -1,12 +1,13 @@
 import sys
-
 import numpy as np
+from tensorflow.keras.models import load_model
+from tensorflow.keras.activations import sigmoid
 
-import salty_bet_driver
-from src.base_gambler import Gambler
-from src.experiments.model import Model
-from src.model_driver.database_handler import DatabaseHandler
-from utils import *
+from webpage_driver import webpage_handler
+from base.base_gambler import Gambler
+from model_driver.utils import *
+from model_driver import database_handler
+from model_driver import salty_bet_driver
 
 
 def main(model_name: str, gambler: Gambler, user, enyc_pass):
@@ -96,13 +97,14 @@ def main(model_name: str, gambler: Gambler, user, enyc_pass):
             winnings = end_balance - betting_balance
             predicted_correctly = winner == predicted_winner
 
-            model_database.add_entry(predicted_correctly, confidence, end_balance)
-            # todo create feed panel with results
+            database.add_entry(predicted_correctly, confidence, end_balance)
+            website_handler.update_page(confidence, predicted_winner,
+                                        red, blue, bet_amount, odds=odds, winner=winner, end_balance=end_balance)
 
 
-def arg_handler():
+def start():
     if len(sys.argv) != 2:
-        print("Usage: python3 main.py <model_path>")
+        print("Usage: python3 model_driver_main.py <model_path>")
         sys.exit(1)
 
     assert sys.argv[1].isnumeric()
@@ -118,4 +120,4 @@ def arg_handler():
 
 
 if __name__ == '__main__':
-    arg_handler()
+    start()
