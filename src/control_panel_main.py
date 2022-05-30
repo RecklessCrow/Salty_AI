@@ -81,6 +81,6 @@ def build_table(blocks):
 
 if __name__ == '__main__':
     print("TESTING STATUS")
-    html_table = get_all_st atus()
+    html_table = get_all_status()
     print(html_table)
     print("Done")
