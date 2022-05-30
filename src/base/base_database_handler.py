@@ -17,9 +17,10 @@ class DatabaseHandler:
         self.cur = self.connection.cursor()
 
     def __del__(self):
-        self.commit()
-        self.cur.close()
-        self.connection.close()
+        if self.connection:
+            self.commit()
+            self.cur.close()
+            self.connection.close()
 
     def commit(self):
         """
