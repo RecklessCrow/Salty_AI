@@ -20,7 +20,13 @@ progress {{
 #redbar::-webkit-progress-value {{
     background: red;
 }}
+#redbar::-moz-progress-bar {{
+    background: red;
+}}
 #bluebar::-webkit-progress-value {{
+    background: blue;
+}}
+#bluebar::-moz-progress-bar {{
     background: blue;
 }}
 
