@@ -13,9 +13,10 @@ from web_utils import webpage_handler
 def main(model_name: str, gambler: Gambler, user, enyc_pass):
     model = Model(model_name)
     driver = salty_bet_driver.SaltyBetDriver(user, enyc_pass)
-    database = database_handler.DatabaseHandler(model_name)
-    website_handler = webpage_handler.WebPageHandler(model_name, database.get_balances(),
-                                                     database.get_predicted_correctly())
+    model_database = database_handler.DatabaseHandler(model_name)
+    website_handler = webpage_handler.WebPageHandler(model_name,
+                                                     model_database.get_balances(),
+                                                     model_database.get_predicted_correctly())
 
     # initialize variables
     state = STATES["START"]
@@ -96,7 +97,7 @@ def main(model_name: str, gambler: Gambler, user, enyc_pass):
             end_balance = driver.get_balance()
             predicted_correctly = winner == predicted_winner
 
-            database.add_entry(predicted_correctly, confidence, end_balance)
+            model_database.add_entry(predicted_correctly, confidence, end_balance)
             website_handler.update_page(
                 match_confidence=confidence,
                 team_prediction=predicted_winner,
