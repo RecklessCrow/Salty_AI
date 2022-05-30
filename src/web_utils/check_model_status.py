@@ -1,11 +1,15 @@
 import os
-import subprocess
 import sh
+
 
 def get_all_status():
     root_dir = '/opt/saltybet/saved_models/'
 
-    stdout = sh.grep(sh.ps("aux"), 'p')
+    try:
+        stdout = sh.grep(sh.ps("aux"), 'python3')
+    except sh.ErrorReturnCode_1:
+        return build_table([])
+
     active_model_full = stdout.split('\n')
     active_model_names = [x.split(' ')[-1] for x in active_model_full]
 
