@@ -16,7 +16,7 @@ def get_all_status():
 
     saved_models = [f.name for f in os.scandir(root_dir) if f.is_dir()]
     # strip of unessecary characters
-    saved_models = [model.strip() for model in saved_models]
+    saved_models = [print(repr(model)) for model in saved_models]
 
     blocks = []
     for model_name in saved_models:
