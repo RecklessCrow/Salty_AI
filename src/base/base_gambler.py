@@ -105,7 +105,10 @@ class ExpScaledConfidence(ScaledConfidence):
 
         bet_factor += bet_bias
 
-        return bet_factor * balance
+        bet_amount = int(bet_factor * balance)
+        bet_amount = sigfig.round(bet_amount, sigfigs=len(str(bet_amount)) // 2)
+
+        return bet_amount
 
 
 class NumMatchWeighted(Gambler):
