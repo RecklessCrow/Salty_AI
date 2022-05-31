@@ -1,20 +1,16 @@
-import os
 import re
-import sys
-import time
+from abc import ABC
 
-from dotenv import load_dotenv
 from selenium import webdriver
 from selenium.common.exceptions import StaleElementReferenceException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.firefox.options import Options
-from selenium.webdriver.firefox.service import Service
-from webdriver_manager.firefox import GeckoDriverManager
-
-load_dotenv()
 
 
-class SaltyBetDriver:
+# from webdriver_manager.firefox import GeckoDriverManager
+
+
+class SaltyBetDriver(ABC):
     def __init__(self, headless=False):
         """
         Object to interact with SaltyBet
@@ -25,28 +21,7 @@ class SaltyBetDriver:
         if headless:
             options.add_argument("--headless")
 
-        self.driver = webdriver.Firefox(
-            service=Service(executable_path=GeckoDriverManager().install()),
-            options=options
-        )
-
-        # login
-        self.driver.get("https://www.saltybet.com/authenticate?signin=1")
-        try:
-            assert "Salty" in self.driver.title
-        except AssertionError:
-            print('Failed to load into website. Maybe saltybet.com is down?')
-            sys.exit()
-
-        username = self.driver.find_element(By.ID, "email")
-        username.clear()
-        username.send_keys(os.getenv("email"))
-
-        password = self.driver.find_element(By.NAME, "pword")
-        password.clear()
-        password.send_keys(os.getenv("password"))
-
-        self.driver.find_element(By.CLASS_NAME, 'graybutton').click()
+        self.driver = webdriver.Firefox(options=options)
 
     def __del__(self):
         self.driver.close()
@@ -85,7 +60,7 @@ class SaltyBetDriver:
         """
         return self.driver.find_element(By.ID, 'betstatus').text.lower()
 
-    def bet(self, amount: int, team: str):
+    def place_bet(self, amount: int, team: str):
         """
         Bet some amount on a team
         :param amount: Amount to bet on the team
@@ -106,7 +81,7 @@ class SaltyBetDriver:
         odds_text = betting_text.split("|")[-1].strip()
 
         if odds_text == "":
-            return 0, 0
+            return None
 
         red, blue = tuple(odds_text.split(":"))
         return float(red), float(blue)
@@ -131,10 +106,3 @@ class SaltyBetDriver:
     def is_tournament(self):
         element = self.driver.find_element(By.ID, "balancewrapper").text.lower()
         return "tournament" in element
-
-
-if __name__ == '__main__':
-    driver = SaltyBetDriver(headless=True)
-    while True:
-        print(driver.is_tournament())
-        time.sleep(1)

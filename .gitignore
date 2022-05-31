@@ -1,4 +1,5 @@
-/data/*.csv
-/data/*.db
-/.env
+*.csv
+*.db
+*.env
 *.log
+/dev/saved_models/

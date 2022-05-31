@@ -1,8 +1,7 @@
 import time
 
 from sigfig import round
-
-from src.database_handler import DatabaseHandler
+from src.model.database_handler import DatabaseHandler
 
 """
 Utilities for the state machines
