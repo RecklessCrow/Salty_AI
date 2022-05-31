@@ -47,7 +47,7 @@ class DatabaseHandler(base_database_handler.DatabaseHandler):
                 confidence, 
                 end_balance
             ) values (?, ?, ?)
-        """, (predicted_correctly, confidence, end_balance))
+        """, (predicted_correctly, float(confidence), int(end_balance)))
 
     def get_balances(self):
         self.cur.execute(
