@@ -17,11 +17,10 @@ class DatabaseHandler(base_database_handler.DatabaseHandler):
 
     def check_if_tables_exist(self):
         try:
-            self.cur.execute(f"SELECT name FROM sqlite_master WHERE type='table' AND name={self.model_name};")
+            self.get_balances()
             return True
         except sqlite3.OperationalError:
             return False
-
 
     def __create_tables(self):
         """
