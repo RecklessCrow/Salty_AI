@@ -12,9 +12,9 @@ class DatabaseHandler:
         self.connection = None
         password = self.__get_password()
         self.connection = mysql.connector.connect(
-                              host="localhost",
+                              host="10.0.0.2",
                               user="saltybet",
-                              password="r-)D5!?/9nZmhGfc",
+                              password=password,
                               database="saltybet"
                             )
         self.cur = self.connection.cursor()
