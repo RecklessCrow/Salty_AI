@@ -94,7 +94,9 @@ def main(model_name: str, gambler: Gambler, user, enyc_pass):
             end_balance = driver.get_balance()
             predicted_correctly = winner == predicted_winner
 
-            model_database.add_entry(predicted_correctly, confidence, end_balance)
+            if not driver.is_tournament():
+                model_database.add_entry(predicted_correctly, confidence, end_balance)
+
             website_handler.update_page(
                 match_confidence=confidence,
                 team_prediction=predicted_winner,
