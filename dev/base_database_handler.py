@@ -32,7 +32,7 @@ class DatabaseHandler:
         self.connection.commit()
 
     def __get_password(self):
-        if not os.path.exists("../database_pass.txt"):
+        if not os.path.exists("../database/database_pass.txt"):
             exit("Database password file not found")
         with open("../database_pass.txt", "r") as f:
             return f.read()
