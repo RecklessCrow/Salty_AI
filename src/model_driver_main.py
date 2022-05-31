@@ -108,6 +108,7 @@ def main(model_name: str, gambler: Gambler, user, enyc_pass):
 
 
 def start():
+
     if len(sys.argv) != 4:
         print("Usage: python3 model_driver_main.py <model_name> <gambler_id> <user_id>")
         sys.exit(1)

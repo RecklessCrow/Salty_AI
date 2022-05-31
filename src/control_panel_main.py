@@ -13,7 +13,11 @@ def get_all_status():
 
     stdout = output
     active_model_names = [stdout.split()[-1].decode('utf-8') for stdout in stdout.splitlines()]
+
     saved_models = [f.name for f in os.scandir(root_dir) if f.is_dir()]
+    print(f"""
+    value="{saved_models[0]}"
+    """)
 
     blocks = []
     for model_name in saved_models:
@@ -31,7 +35,7 @@ def get_gamblers():
 
     options = [f"<option value='{uid}'>{name}</option>" for uid, name in gamblers.items()]
     return f"""
-    <select id="selected_gambler">
+    <select name="selected_gambler">
         {''.join(options)}
     </select>
     """
@@ -43,7 +47,7 @@ def get_users():
 
     options = [f"<option value='{user['name']}'>{user['name']}</option>" for user in users]
     return f"""
-        <select id="selected_user">
+        <select name="selected_user">
             {''.join(options)}
         </select>
         """
@@ -56,10 +60,9 @@ def create_block(name, status):
         <td>{status}</td>
         
         <form method="post">
+        <td>{get_users()}</td>
         <td>{get_gamblers()}</td>
-        <td>{get_users()}</td> 
-        <td><button type="submit" name="{'spawn_button' if status == 'Inactive' else 'kill_button'}" value="{name}">
-        {'Spawn Model' if status == 'Inactive' else 'Kill'}</button></td>
+        <td><button type="submit" value="{repr(name)}" name="{'spawn_button' if status == 'Inactive' else 'kill_button'}">{'Spawn Model' if status == 'Inactive' else 'Kill'}</button></td>
         </form>
         
     </tr>
