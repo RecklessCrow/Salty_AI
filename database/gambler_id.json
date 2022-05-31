@@ -1,4 +1,5 @@
 {
   "0": "AllIn",
-  "1": "NumMatchWeighted"
+  "1": "NumMatchWeighted",
+  "2": "ScaledConfidence"
 }
