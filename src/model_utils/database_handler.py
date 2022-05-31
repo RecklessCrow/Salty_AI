@@ -30,7 +30,7 @@ class DatabaseHandler(base_database_handler.DatabaseHandler):
         self.cur.execute(
             f"""
             create table {self.model_name}(
-                match_id            integer     primary key,
+                match_id            integer     AUTO_INCREMENT PRIMARY KEY,
                 predicted_correctly boolean     not null,
                 confidence          real        not null,
                 end_balance         integer     not null
