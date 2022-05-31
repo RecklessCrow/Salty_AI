@@ -8,6 +8,7 @@ from base.model import Model
 from model_utils import database_handler, salty_bet_driver
 from model_utils.utils import *
 from web_utils import webpage_handler
+import web_utils.utils
 
 
 def main(model_name: str, gambler: Gambler, user, enyc_pass):
@@ -17,6 +18,7 @@ def main(model_name: str, gambler: Gambler, user, enyc_pass):
     website_handler = webpage_handler.WebPageHandler(model_name,
                                                      model_database.get_balances(),
                                                      model_database.get_predicted_correctly())
+    web_utils.utils.create_run_config(model_name, gambler, user)
 
     # initialize variables
     state = STATES["START"]

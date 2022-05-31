@@ -29,28 +29,43 @@ def get_all_status():
     return build_table(blocks)
 
 
-def get_gamblers():
+def get_gamblers(name, status):
     with open('/opt/saltybet/database/gambler_id.json') as f:
         gamblers = json.load(f)
 
     options = [f"<option value='{uid}'>{name}</option>" for uid, name in gamblers.items()]
-    return f"""
-    <select name="selected_gambler">
-        {''.join(options)}
-    </select>
-    """
+
+    if status == 'Inactive':
+        return f"""
+            <select name="selected_gambler">
+                {''.join(options)}
+            </select>
+            """
+    else:
+        if not os.path.exists(f'/opt/saltybet/saved_models/{name}/run_config.json'):
+            return "<p>Unknown</p>"
+        with open(f'/opt/saltybet/saved_models/{name}/run_config.json') as f:
+            run_config = json.load(f)
+            return f"<p>{run_config['gambler']}</p>"
 
 
-def get_users():
+def get_users(name, status):
     with open('/opt/saltybet/database/user_id.json') as f:
         users = json.load(f)['users']
 
     options = [f"<option value='{user['name']}'>{user['name']}</option>" for user in users]
-    return f"""
-        <select name="selected_user">
-            {''.join(options)}
-        </select>
-        """
+    if status == 'Inactive':
+        return f"""
+            <select name="selected_user">
+                {''.join(options)}
+            </select>
+            """
+    else:
+        if not os.path.exists(f'/opt/saltybet/saved_models/{name}/run_config.json'):
+            return "<p>Unknown</p>"
+        with open(f'/opt/saltybet/saved_models/{name}/run_config.json') as f:
+            run_config = json.load(f)
+            return f"<p>{run_config['user']}</p>"
 
 
 def create_block(name, status):
@@ -60,8 +75,8 @@ def create_block(name, status):
         <td>{status}</td>
         
         <form method="post">
-        <td>{get_users()}</td>
-        <td>{get_gamblers()}</td>
+        <td>{get_users(name, status)}</td>
+        <td>{get_gamblers(name, status)}</td>
         <td><button type="submit" value="{repr(name)}" name="{'spawn_button' if status == 'Inactive' else 'kill_button'}">{'Spawn Model' if status == 'Inactive' else 'Kill'}</button></td>
         </form>
         

@@ -1,5 +1,4 @@
 import time
-
 from homepage_utils import database_handler, salty_bet_driver
 
 STATES = {
