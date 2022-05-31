@@ -1,3 +1,5 @@
+import sqlite3
+
 from base import base_database_handler
 
 
@@ -14,8 +16,12 @@ class DatabaseHandler(base_database_handler.DatabaseHandler):
             self.__create_tables()
 
     def check_if_tables_exist(self):
-        self.cur.execute(f"SELECT name FROM sqlite_master WHERE type='table' AND name={self.model_name};")
-        return self.cur.fetchone() is not None
+        try:
+            self.cur.execute(f"SELECT name FROM sqlite_master WHERE type='table' AND name={self.model_name};")
+            return True
+        except sqlite3.OperationalError:
+            return False
+
 
     def __create_tables(self):
         """
