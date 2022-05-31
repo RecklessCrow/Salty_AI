@@ -69,3 +69,15 @@ class DatabaseHandler(base_database_handler.DatabaseHandler):
         )
 
         return self.cur.fetchall()
+
+    def clear_model_history(self):
+        """
+        Add a character to the database
+        :param name: Name of the character
+        """
+        self.cur.execute(
+            f""" 
+            DROP TABLE {self.model_name};
+            """
+        )
+        self.__create_tables()
