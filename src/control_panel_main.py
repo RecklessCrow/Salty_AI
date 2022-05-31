@@ -77,8 +77,8 @@ def create_block(name, status):
         <form method="post">
         <td>{get_users(name, status)}</td>
         <td>{get_gamblers(name, status)}</td>
-        <td><button type="submit" value="{name}" name="spawn_button" {'disabled' if status == 'Inactive' else ''}>Spawn Model</button></td>
-        <td><button type="submit" value="{name}" name="kill_button"  {'disabled' if status != 'Inactive' else ''}>Kill</button></td>
+        <td><button type="submit" value="{name}" name="spawn_button" {'disabled' if status != 'Inactive' else ''}>Spawn Model</button></td>
+        <td><button type="submit" value="{name}" name="kill_button"  {'disabled' if status == 'Inactive' else ''}>Kill</button></td>
         <td><button type="submit" value="{name}" name="reset_button">Reset History</button></td>
         </form>
         
