@@ -22,7 +22,7 @@ def alpha_loss(y_true, y_pred):
     my_alpha = 4.0
 
     if my_alpha == 1.0:  # cross entropy from logits
-        loss = tf.nn.sigmoid_cross_entropy_with_logits(labels=y_true, logits=y_pred)
+        loss = tf.nn.softmax_cross_entropy_with_logits(labels=y_true, logits=y_pred)
 
     else:  # weighted binary cross entropy
         y_pred = K.softmax(y_pred)
