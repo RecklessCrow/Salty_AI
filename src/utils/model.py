@@ -10,8 +10,8 @@ from sklearn.utils.extmath import softmax
 class Model:
     def __init__(self, model_name=None):
         """
-        Initializes the model by loading the model from the disk given the model name
-        :param model_name: the name of the model to load
+        Initializes the utils by loading the utils from the disk given the utils name
+        :param model_name: the name of the utils to load
         """
 
         self.model_name = model_name
@@ -19,9 +19,9 @@ class Model:
                                        self.model_name)
 
         if not os.path.exists(self.model_path):
-            exit("model file not found!")
+            exit("utils file not found!")
 
-        # load in model from parameter
+        # load in utils from parameter
         self.model = load_model(self.model_path, compile=False)
         self.vocab = self.model.get_layer('string_lookup').get_vocabulary()
 

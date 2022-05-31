@@ -1,11 +1,19 @@
 import sys
-from model_utils import database_handler
+
+from utils.database_handler import ModelDatabaseHandler
 
 
-if __name__ == '__main__':
+def reset_table():
+    """
+    Reset the table for a particular model.
+    """
     if len(sys.argv) != 2:
         sys.exit(1)
 
     model_name = sys.argv[1]
-    database = database_handler.DatabaseHandler(model_name)
-    database.reset_table()
+    database = ModelDatabaseHandler(model_name)
+    database.clear_history()
+
+
+if __name__ == '__main__':
+    reset_table()

@@ -2,19 +2,19 @@ import numpy as np
 from sklearn.metrics import classification_report, accuracy_score
 from sklearn.model_selection import StratifiedKFold
 
-from dev.model.tuning_model import TuningModel
-from dev.model.utils import Dataset, ModelConstants, SEED
 from model.model import Model
+from model.tuning_model import TuningModel
+from model.utils import Dataset, ModelConstants, SEED
 
 
 def train_and_evaluate():
     # Load the data
-    dataset = Dataset(make_val=True)
+    dataset = Dataset(val_size=0.1)
     x_train, y_train, = dataset.get_train_dataset()
     x_val, y_val, = dataset.get_val_dataset()
     x_test, y_test, = dataset.get_test_dataset()
 
-    # Initialize and train the model
+    # Initialize and train the utils
     model = Model()
     model.train(
         x_train, y_train,
@@ -25,7 +25,7 @@ def train_and_evaluate():
     )
     model.save()
 
-    # Test the model
+    # Test the utils
     y_pred = model.predict(x_test, batch_size=ModelConstants.BATCH_SIZE)
     y_pred = np.argmax(y_pred, axis=-1).reshape(-1, 1)
     report = classification_report(np.argmax(y_test, axis=-1).reshape(-1, 1), y_pred)
@@ -33,7 +33,7 @@ def train_and_evaluate():
 
 
 def cross_validation():
-    dataset = Dataset(make_val=False)
+    dataset = Dataset()
     x, y, = dataset.get_train_dataset()
 
     accuracies = []
@@ -48,7 +48,7 @@ def cross_validation():
         x_train, y_train = x[train_idxs], y[train_idxs]
         x_val, y_val = x[val_idxs], y[val_idxs]
 
-        # Initialize and train the model
+        # Initialize and train the utils
         model = Model()
         model.train(
             x_train, y_train,
@@ -58,7 +58,7 @@ def cross_validation():
             early_stopping=False
         )
 
-        # Test the model
+        # Test the utils
         y_pred = np.argmax(model.predict(x_val))
         y_true = np.argmax(y_val)
         accuracy = accuracy_score(y_true, y_pred)
@@ -70,11 +70,11 @@ def cross_validation():
 
 def hyper_parameter_tuning():
     # Load the data
-    dataset = Dataset(make_val=True)
+    dataset = Dataset(val_size=0.1)
     x_train, y_train, = dataset.get_train_dataset()
     x_val, y_val, = dataset.get_val_dataset()
 
-    # Initialize and train the model
+    # Initialize and train the utils
     model = TuningModel()
     model.search(x_train, y_train, val=(x_val, y_val), epochs=ModelConstants.EPOCHS)
 
@@ -82,9 +82,9 @@ def hyper_parameter_tuning():
 def train_for_production():
     # Load the data
     dataset = Dataset()
-    x, y, = dataset.get_all_dataset()
+    x, y, = dataset.get_whole_dataset()
 
-    # Initialize and train the model
+    # Initialize and train the utils
     model = Model()
     model.train(x, y, val=None, epochs=ModelConstants.EPOCHS, checkpointing=False, early_stopping=False)
     model.save()
@@ -93,8 +93,8 @@ def train_for_production():
 def main():
     # Get user input for run mode
     while True:
-        mode = input("Enter 'train' to train the model, 'cv' to cross validate the model, 'tuning' to tune the model, "
-                     "or 'prod' to train the model for production: ")
+        mode = input("Enter 'train' to train the utils, 'cv' to cross validate the utils, 'tuning' to tune the utils, "
+                     "or 'prod' to train the utils for production: ")
 
         if mode == "train":
             train_and_evaluate()

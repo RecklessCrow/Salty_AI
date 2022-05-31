@@ -1,19 +1,18 @@
 import tensorflow.keras.backend as K
+from tensorflow import string
 from tensorflow.keras.layers import Input, Dense, Embedding, Flatten, MultiHeadAttention, Dropout, LayerNormalization, \
     StringLookup
 from tensorflow.keras.models import Model as FunctionalModel
 from tensorflow_addons.optimizers import RectifiedAdam
 
-from utils import ModelConstants, set_random_state
+from dev.model.utils import ModelConstants, set_random_state
 
 
 # todo make a metric for the model's calibration
-
-
 def alpha_loss(y_true, y_pred):
     """
     TF implementation of the alpha loss function
-    Supposedly creates a well calibrated model
+    Supposedly creates a well calibrated utils
     from https://arxiv.org/pdf/1906.02314.pdf
     :param y_true:
     :param y_pred:
@@ -34,13 +33,13 @@ def alpha_loss(y_true, y_pred):
 
 def make_attention_model(parameters):
     """
-    model with the transformer architecture
+    utils with the transformer architecture
     :param parameters:
     :return:
     """
     set_random_state()
 
-    inputs = Input(shape=(2,), dtype=str)
+    inputs = Input(shape=(2,), dtype=string)
     x = StringLookup(
         mask_token=ModelConstants.UNKNOWN_FIGHTER,
         vocabulary=ModelConstants.VOCAB,

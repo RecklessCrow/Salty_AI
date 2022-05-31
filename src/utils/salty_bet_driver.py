@@ -7,9 +7,6 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.firefox.options import Options
 
 
-# from webdriver_manager.firefox import GeckoDriverManager
-
-
 class SaltyBetDriver(ABC):
     def __init__(self, headless=False):
         """
@@ -75,6 +72,7 @@ class SaltyBetDriver(ABC):
 
     def get_odds(self):
         """
+        Get the odds of the current match
         :return:
         """
         betting_text = self.driver.find_element(By.ID, "lastbet").text
@@ -106,3 +104,44 @@ class SaltyBetDriver(ABC):
     def is_tournament(self):
         element = self.driver.find_element(By.ID, "balancewrapper").text.lower()
         return "tournament" in element
+
+
+class HomepageDriver(SaltyBetDriver):
+    def __init__(self):
+        """
+        Object to interact with SaltyBet
+        :param headless: run web browser in headless mode
+        """
+        super(SaltyBetDriver, self).__init__(headless=True)
+
+        # Load into the website
+        self.driver.get("https://www.saltybet.com")
+        assert "Salty Bet" == self.driver.title, 'Failed to load into website. Maybe saltybet.com is down?'
+
+
+class ModelDriver(SaltyBetDriver):
+    def __init__(self, username, password):
+        """
+        Object to interact with SaltyBet
+        :param headless: run web browser in headless mode
+        """
+        super(SaltyBetDriver, self).__init__(headless=True)
+
+        # Load into the website
+        self.driver.get("https://www.saltybet.com/authenticate?signin=1")
+        assert "Salty Bet" == self.driver.title, 'Failed to load into website. Maybe saltybet.com is down?'
+
+        # Login
+        username_element = self.driver.find_element(By.ID, "email")
+        username_element.clear()
+        username_element.send_keys(username)
+
+        password_element = self.driver.find_element(By.NAME, "pword")
+        password_element.clear()
+        password_element.send_keys(password)
+
+        self.driver.find_element(By.CLASS_NAME, 'graybutton').click()
+
+        # Check if we are logged in
+        assert "authenticate" not in self.driver.current_url.lower(), \
+            "Could not successfully login using given credentials. "

@@ -67,7 +67,7 @@ class Model:
                     restore_best_weights=True
                 ))
 
-            # Make the model checkpoint callback
+            # Make the utils checkpoint callback
             if checkpointing:
                 callbacks.append(ModelCheckpoint(
                     filepath=os.path.join(self.model_dir + "_checkpoint_loss"),

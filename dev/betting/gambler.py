@@ -1,17 +1,19 @@
 import numpy as np
 from termcolor import colored
-
-from dev.betting.salty_bet_driver import SaltyBetDriver
-from src.base.base_gambler import ExpScaledConfidence
-from src.base.model import Model
-from src.model_utils.utils import int_to_team
 from utils import *
 
+from dev.betting.salty_bet_driver import SaltyBetDriver
+from dev.dev_database_handler import DatabaseHandler
+from src.utils.gamblers import ExpScaledConfidence
+from src.utils.model import Model
+from src.utils.state_machine_utils import int_to_team
 
-def main(headless):
+
+def main(headless: bool):
     model = Model("")
     driver = SaltyBetDriver(headless=headless)
     gambler = ExpScaledConfidence()
+    database = DatabaseHandler()
 
     state = STATES["IDLE"]
 
@@ -39,7 +41,6 @@ def main(headless):
 
             else:  # At least one fighter known
                 predicted_winner = int_to_team(np.argmax(prediction))
-
                 confidence = np.max(prediction)
                 confidence = (confidence - 0.5) * 2  # confidence is now scaled between 0 and 1
                 bet_amount = gambler.calculate_bet(confidence, driver)  # calculate bet amount
@@ -47,14 +48,12 @@ def main(headless):
             print(
                 f"Red  Team: {colored(red, 'red')}\n"
                 f"Blue Team: {colored(blue, 'blue')}\n"
-                f"Betting {colored(f'${bet_amount:,}', 'green')} on {colored(pred_str.upper(), pred_str)} Team \n"
+                f"Betting {colored(f'${bet_amount:,}', 'green')} on {colored(predicted_winner.upper(), predicted_winner)} Team \n"
                 f"Model confidence:  {confidence:<7.2%}\n"
-                f"Scaled confidence: {scaled_confidence:<7.2%}\n"
-                f"Matchup count: {matchup_count:}"
             )
 
             betting_balance = driver.get_balance()
-            driver.place_bet(max(bet_amount, 1), pred_str)
+            driver.place_bet(max(bet_amount, 1), predicted_winner)
             continue
 
         # Match over
@@ -73,7 +72,7 @@ def main(headless):
 
             if confidence > 0:
                 matches += 1
-                if pred_str == winner:
+                if predicted_winner == winner:
                     wins += 1
 
             # prevent division by zero
@@ -96,7 +95,7 @@ def main(headless):
 
             red, blue = driver.get_fighters()
             if not ("team" == red.lower()[:4] or "team" == blue.lower()[:4]):
-                DATABASE.match_over(red, blue, winner)
+                database.add_match(red, blue, winner)
 
 
 if __name__ == '__main__':

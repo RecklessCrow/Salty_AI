@@ -7,13 +7,17 @@ STATES = {
     "PAYOUT": 3,
 }
 
+TEAM_LIST = ['red', 'blue']
+
 
 def team_to_int(team):
-    return int(team == "blue")
+    assert team in TEAM_LIST, "Invalid team"
+    return TEAM_LIST.index(team)
 
 
 def int_to_team(number):
-    return "red" if number == 0 else "blue"
+    assert number in [0, 1], "Invalid team number"
+    return TEAM_LIST[number]
 
 
 def decode_state(encoded_state):

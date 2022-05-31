@@ -111,7 +111,7 @@ class WebPageHandler:
             names=labels,
             hole=.3,
             color_discrete_sequence=["green", "red"],
-            title='model Accuracy',
+            title='utils Accuracy',
             template='plotly_dark'
         )
 

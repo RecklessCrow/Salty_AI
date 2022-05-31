@@ -3,21 +3,24 @@ import sys
 
 import numpy as np
 
-import web_utils.utils
-from base.base_gambler import Gambler
-from base.model import Model
-from model_utils import database_handler, salty_bet_driver
-from model_utils.utils import *
-from web_utils import webpage_handler
+import website.utils
+from src.utils.database_handler import ModelDatabaseHandler
+from src.utils.gamblers import Gambler
+from src.utils.salty_bet_driver import ModelDriver
+from src.utils.state_machine_utils import *
+from utils.model import Model
+from website import webpage_handler
 
 
 def main(model_name: str, gambler: Gambler, user, enyc_pass):
     model = Model(model_name)
-    driver = salty_bet_driver.SaltyBetDriver(user, enyc_pass)
-    model_database = database_handler.DatabaseHandler(model_name)
-    website_handler = webpage_handler.WebPageHandler(model_name,
-                                                     model_database.get_balances(),
-                                                     model_database.get_predicted_correctly())
+    driver = ModelDriver(user, enyc_pass)
+    model_database = ModelDatabaseHandler(model_name)
+    website_handler = webpage_handler.WebPageHandler(
+        model_name,
+        model_database.get_balances(),
+        model_database.get_predicted_correctly()
+    )
 
     # initialize variables
     state = STATES["START"]
@@ -64,7 +67,7 @@ def main(model_name: str, gambler: Gambler, user, enyc_pass):
             print("Bets closed")
             odds = driver.get_odds()
 
-            # wait for odds to be readable if we could not grab them in the first pass
+            # Wait for odds to be readable if we could not grab them in the first pass
             while odds is None:
                 odds = driver.get_odds()
                 time.sleep(1)
@@ -92,10 +95,13 @@ def main(model_name: str, gambler: Gambler, user, enyc_pass):
                 continue
 
             end_balance = driver.get_balance()
-            predicted_correctly = winner == predicted_winner
 
             if not driver.is_tournament():
-                model_database.add_entry(predicted_correctly, confidence, end_balance)
+                model_database.add_match(
+                    predicted_correctly=winner == predicted_winner,
+                    confidence=confidence,
+                    end_balance=end_balance,
+                )
 
             website_handler.update_page(
                 match_confidence=confidence,
@@ -110,9 +116,8 @@ def main(model_name: str, gambler: Gambler, user, enyc_pass):
 
 
 def start():
-
     if len(sys.argv) != 4:
-        print("Usage: python3 model_driver_main.py <model_name> <gambler_id> <user_id>")
+        print("Usage: python3 model_state_machine.py <model_name> <gambler_id> <user_id>")
         sys.exit(1)
 
     print(sys.argv)
@@ -121,7 +126,7 @@ def start():
     gambler_id = sys.argv[2]
     user_id = sys.argv[3]
 
-    from base.base_gambler import GAMBLER_ID_DICT
+    from src.utils.gamblers import GAMBLER_ID_DICT
     gambler = GAMBLER_ID_DICT[int(gambler_id)]
 
     with open('/opt/saltybet/database/user_id.json') as f:
@@ -139,7 +144,7 @@ def start():
         print("Could not find user with id " + user_id)
         sys.exit(1)
 
-    web_utils.utils.create_run_config(model_name, gambler, user_id)
+    website.utils.create_run_config(model_name, gambler, user_id)
     main(model_name, gambler, email, password)
 
 

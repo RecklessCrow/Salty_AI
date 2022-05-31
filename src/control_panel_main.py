@@ -8,7 +8,7 @@ def get_all_status():
 
     # look up here?
     ps = subprocess.Popen(('ps', '-ax'), stdout=subprocess.PIPE)
-    output = subprocess.check_output(('grep', 'model_driver_main.py'), stdin=ps.stdout)
+    output = subprocess.check_output(('grep', 'model_state_machine.py'), stdin=ps.stdout)
     ps.wait()
 
     stdout = output

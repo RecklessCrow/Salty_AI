@@ -1,8 +1,8 @@
 from abc import ABC, abstractmethod
 
 import sigfig
-from base.base_database_handler import DATABASE
-from base.base_salty_bet_driver import SaltyBetDriver
+from utils.base_database_handler import DATABASE
+from utils.base_salty_bet_driver import SaltyBetDriver
 
 
 class Gambler(ABC):
@@ -13,7 +13,7 @@ class Gambler(ABC):
     def bet(self, confidence: float, driver: SaltyBetDriver) -> int:
         """
         Places a bet on the given team.
-        :param confidence: Confidence of the model.
+        :param confidence: Confidence of the utils.
         :param driver: Object that interacts with the website.
         :param team: Team to bet on.
         :return:

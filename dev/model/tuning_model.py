@@ -3,7 +3,7 @@ from tensorflow.python.keras.callbacks import EarlyStopping
 
 from dev.model.data_generator import DataGenerator
 from dev.model.make_model import make_attention_model
-from utils import ModelConstants
+from dev.model.utils import ModelConstants
 
 
 class TuningModel(HyperModel):

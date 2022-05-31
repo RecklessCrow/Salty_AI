@@ -1,25 +1,20 @@
 import matplotlib.pyplot as plt
 import numpy as np
-
-from model_database_handler import DatabaseHandler
 from scipy.ndimage import gaussian_filter1d
-# from dev.model.model import Model
-# from dev.model.utils import *
 
-# model = Model("21.18.40_checkpoint_loss")
+from dev_database_handler import ModelDatabaseHandler
 
-# pred_train = model.predict(x_test[:100], batch_size=BATCH_SIZE)
-# pred_test = model.predict(x_test, batch_size=BATCH_SIZE)
+# from dev.utils.utils import Model
+# from dev.utils.utils import *
+# utils = Model("21.18.40_checkpoint_loss")
+# pred_train = utils.predict(x_test[:100], batch_size=BATCH_SIZE)
+# pred_test = utils.predict(x_test, batch_size=BATCH_SIZE)
 # red_confidences = pred_test[:, 0][y_test == [1, 0]]
 # blue_confidences = pred_test[:, 1][y_test == [0, 1]]
-
-
 # print(pred_test.shape)
 # red_value = pred_test[:, 0]
-
 # prediction[winner == 0] = 1 - prediction[winner == 0]
 # plt.hist(pred_train, bins=100)
-
 # red_confidences = red_value[y_test[:, 0] == 0]
 # blue_confidences = red_value[y_test[:, 0] == 1]
 # plt.hist(red_confidences, alpha=0.5, color='red', range=(0, 1), bins=20)
@@ -27,7 +22,6 @@ from scipy.ndimage import gaussian_filter1d
 # plt.title("Test matches: Tuned to validation loss")
 # plt.yscale('log')
 # plt.show()
-
 # mod_rate = lambda count_seen: 1 - ((2 - count_seen) * 0.1)
 # mods = np.array([mod_rate(count) for count in counts])
 # mods = mods.reshape(-1, 1)
@@ -40,31 +34,25 @@ from scipy.ndimage import gaussian_filter1d
 # plt.hist(blue_win, alpha=0.5, color='blue', range=(0, 1), bins=20)
 # plt.title(f"Tuned to val {model_type} (scaled)")
 # plt.show()
-
-
 ################################################################################
-
 # history = train()
 # ## Plot training & validation accuracy values
 # print(history.history.keys())
 # plt.plot(history.history['accuracy'])
 # plt.plot(history.history['val_accuracy'])
-# plt.title('model accuracy')
+# plt.title('utils accuracy')
 # plt.ylabel('Accuracy')
 # plt.xlabel('Epoch')
 # plt.legend(['Train', 'Test'], loc='upper left')
 # plt.show()
-
 ################################################################################
-
-
-database = DatabaseHandler("linear_err")
+database = ModelDatabaseHandler("linear_err")
 confidences = np.array(database.get_confidences())
 predicted_correctly = np.array(database.get_predicted_correctly())
 print(confidences)
 
 incorrect = confidences[predicted_correctly == 0]
-correct   = confidences[predicted_correctly == 1]
+correct = confidences[predicted_correctly == 1]
 print(incorrect)
 
 inc_bins, bin_edges, *_ = plt.hist(incorrect, alpha=0.5, color='red', range=(0, 1), bins=10)
