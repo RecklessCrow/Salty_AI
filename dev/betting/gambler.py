@@ -2,13 +2,16 @@ import numpy as np
 from termcolor import colored
 
 from dev.betting.salty_bet_driver import SaltyBetDriver
-from dev.model.model import Model
+from src.base.base_gambler import ExpScaledConfidence
+from src.base.model import Model
+from src.model_utils.utils import int_to_team
 from utils import *
 
 
 def main(headless):
-    model = Model(filepath=MODEL_FILE)
+    model = Model("")
     driver = SaltyBetDriver(headless=headless)
+    gambler = ExpScaledConfidence()
 
     state = STATES["IDLE"]
 
@@ -27,34 +30,19 @@ def main(headless):
             if (red, blue) is None:
                 continue
 
-            red_int, blue_int = DATABASE.encode_character([red, blue])
+            prediction = model.predict_match(red, blue)
 
-            # At least one fighter known
-            if not (red_int == 0 and blue_int == 0):
-                fighter_vector = np.array([[red_int, blue_int]])
-                confidence = model.predict(fighter_vector)[0][0]
-                pred = np.around(confidence)
+            if prediction is None:  # both characters unknown, wait for next match
+                time.sleep(5)
+                state = STATES['START']
+                continue
 
-                # Adjust confidence to reflect predicted pred_str as the larger number
-                if pred == 0:
-                    confidence = 1 - confidence
+            else:  # At least one fighter known
+                predicted_winner = int_to_team(np.argmax(prediction))
 
-                confidence = (confidence - 0.5) * 2
-                matchup_count = DATABASE.get_matchup_count(red, blue)
-                matchup_rate = lambda count_seen: 1 - ((2 - count_seen) * 0.1)
-                scaled_confidence = confidence * matchup_rate(matchup_count)
-
-                bet_amount = calc_bet_amount3(driver, scaled_confidence)
-
-            # Both fighters unknown, bet on random team
-            else:
-                bet_amount = 1
-                pred = np.random.choice([0, 1])  # coin flip
-                confidence = 0
-                scaled_confidence = 0
-                matchup_count = 0
-
-            pred_str = DATABASE.int_to_team(pred)
+                confidence = np.max(prediction)
+                confidence = (confidence - 0.5) * 2  # confidence is now scaled between 0 and 1
+                bet_amount = gambler.calculate_bet(confidence, driver)  # calculate bet amount
 
             print(
                 f"Red  Team: {colored(red, 'red')}\n"
@@ -66,7 +54,7 @@ def main(headless):
             )
 
             betting_balance = driver.get_balance()
-            driver.bet(max(bet_amount, 1), pred_str)
+            driver.place_bet(max(bet_amount, 1), pred_str)
             continue
 
         # Match over

@@ -1,10 +1,13 @@
 import tensorflow.keras.backend as K
 from tensorflow.keras.layers import Input, Dense, Embedding, Flatten, MultiHeadAttention, Dropout, LayerNormalization, \
     StringLookup
-from tensorflow.keras.models import Model as KerasModel
+from tensorflow.keras.models import Model as FunctionalModel
 from tensorflow_addons.optimizers import RectifiedAdam
 
-from dev.model.utils import *
+from utils import ModelConstants, set_random_state
+
+
+# todo make a metric for the model's calibration
 
 
 def alpha_loss(y_true, y_pred):
@@ -16,18 +19,14 @@ def alpha_loss(y_true, y_pred):
     :param y_pred:
     :return:
     """
-    y_true = tf.convert_to_tensor(y_true)
-    y_pred = tf.convert_to_tensor(y_pred)
 
-    my_alpha = 0.95
+    if ModelConstants.ALPHA == 1.0:  # Use regular cross entropy loss
+        loss = K.categorical_crossentropy(y_true, y_pred, from_logits=True)
 
-    if my_alpha == 1.0:  # cross entropy from logits
-        loss = tf.nn.softmax_cross_entropy_with_logits(labels=y_true, logits=y_pred)
-
-    else:  # weighted binary cross entropy
+    else:  # Use the alpha loss function
         y_pred = K.softmax(y_pred)
-        alpha = tf.constant([my_alpha])
-        one = tf.constant([1.0])
+        alpha = K.constant([ModelConstants.ALPHA])
+        one = K.constant([1.0])
         loss = (alpha / (alpha - one)) * K.mean(K.sum(y_true * (one - K.pow(y_pred, one - (one / alpha))), axis=-1))
 
     return loss
@@ -41,15 +40,19 @@ def make_attention_model(parameters):
     """
     set_random_state()
 
-    inputs = Input(shape=(2,), dtype=tf.string)
+    inputs = Input(shape=(2,), dtype=str)
     x = StringLookup(
-        mask_token=UNKNOWN_FIGHTER,
-        vocabulary=VOCAB,
+        mask_token=ModelConstants.UNKNOWN_FIGHTER,
+        vocabulary=ModelConstants.VOCAB,
         output_mode='int',
         name='string_lookup'
     )(inputs)
 
-    x = Embedding(input_dim=len(VOCAB) + 2, output_dim=parameters["embedding_out"], mask_zero=True)(x)
+    x = Embedding(
+        input_dim=ModelConstants.EMBEDDING_INPUT_DIM,
+        output_dim=parameters["embedding_out"],
+        mask_zero=True
+    )(x)
     x = Dropout(parameters["dropout"])(x)
 
     # Transformer
@@ -82,21 +85,17 @@ def make_attention_model(parameters):
 
     outputs = Dense(units=2)(x)
 
-    model = KerasModel(inputs=inputs, outputs=outputs, name="salty_model")
+    model = FunctionalModel(inputs=inputs, outputs=outputs, name="salty_model")
 
     model.compile(
         optimizer=RectifiedAdam(
             learning_rate=parameters["learning_rate"],
             epsilon=parameters["epsilon"],
-            beta_2=0.98,
+            beta_2=parameters["beta_2"],
             weight_decay=0.01,
-            total_steps=MAX_TRAINING_STEPS,
+            total_steps=ModelConstants.MAX_TRAINING_STEPS,
             warmup_proportion=0.1,
         ),
-        # loss=BinaryCrossentropy(
-        #     from_logits=True,
-        #     label_smoothing=parameters["smoothing"],
-        # ),
         loss=alpha_loss,
         metrics=["accuracy"]
     )

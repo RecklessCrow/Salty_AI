@@ -9,11 +9,11 @@ class DatabaseHandler:
 
         self.connection = None
         self.connection = mysql.connector.connect(
-                              host="localhost",
-                              user="saltybet",
-                              password="Dn9axQ`MCP^De<5x",
-                              database="saltybet"
-                            )
+            host="localhost",
+            user="saltybet",
+            password="Dn9axQ`MCP^De<5x",
+            database="saltybet"
+        )
         self.cur = self.connection.cursor()
 
     def __del__(self):
@@ -125,7 +125,7 @@ class DatabaseHandler:
         if return_id:
             self.cur.execute(
                 """
-                select  match_number, red, blue, winner 
+                select  match_id, red, blue, winner 
                 from matches
                 """
             )

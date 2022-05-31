@@ -5,7 +5,7 @@ def base_html_page(boxes, model_name, balance, current_match_info):
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>Salty AI</title>
     
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script src="https://cdn.plot.ly/plotly-2.12.1.min.js"></script>

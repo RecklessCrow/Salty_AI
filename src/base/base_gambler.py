@@ -10,6 +10,19 @@ class Gambler(ABC):
     def calculate_bet(self, confidence: float, driver: SaltyBetDriver) -> int:
         pass
 
+    def bet(self, confidence: float, driver: SaltyBetDriver, team: str) -> int:
+        """
+        Places a bet on the given team.
+        :param confidence: Confidence of the model.
+        :param driver: Object that interacts with the website.
+        :param team: Team to bet on.
+        :return:
+        """
+        bet_amount = self.calculate_bet(confidence, driver)
+        bet_amount = max(int(bet_amount), 1)
+        driver.place_bet(bet_amount, team)
+        return bet_amount
+
     @staticmethod
     def on_tournament(confidence: float, driver: SaltyBetDriver) -> int:
         balance = driver.get_balance()

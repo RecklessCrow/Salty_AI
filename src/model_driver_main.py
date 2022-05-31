@@ -3,12 +3,12 @@ import sys
 
 import numpy as np
 
+import web_utils.utils
 from base.base_gambler import Gambler
 from base.model import Model
 from model_utils import database_handler, salty_bet_driver
 from model_utils.utils import *
 from web_utils import webpage_handler
-import web_utils.utils
 
 
 def main(model_name: str, gambler: Gambler, user, enyc_pass):
@@ -46,12 +46,10 @@ def main(model_name: str, gambler: Gambler, user, enyc_pass):
 
             else:  # At least one fighter known
                 predicted_winner = int_to_team(np.argmax(prediction))
-
                 confidence = np.max(prediction)
                 confidence = (confidence - 0.5) * 2  # confidence is now scaled between 0 and 1
-                bet_amount = gambler.calculate_bet(confidence, driver)  # calculate bet amount
+                bet_amount = gambler.bet(confidence, driver, predicted_winner)  # calculate bet amount
 
-            driver.bet(max(bet_amount, 1), predicted_winner)
             website_handler.update_page(
                 match_confidence=confidence,
                 team_prediction=predicted_winner,

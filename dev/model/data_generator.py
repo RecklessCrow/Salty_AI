@@ -1,15 +1,17 @@
+import numpy as np
 from tensorflow.keras.utils import Sequence
 
-from dev.model.utils import *
+from dev.model.utils import ModelConstants
 
 
 class DataGenerator(Sequence):
     def __init__(self, x, y, train=False, batch_size=32, shuffle=True, seed=None):
         """
-        :param x:
-        :param y:
-        :param batch_size:
-        :param shuffle:
+        :param x: List of input data
+        :param y: List of output data
+        :param batch_size: Batch size
+        :param shuffle: Shuffle data
+        :param seed: Random seed
         """
 
         self.x, self.y = x, y
@@ -34,14 +36,13 @@ class DataGenerator(Sequence):
         # Randomly mask characters out to help when unknown characters are in matches
         if self.train:
             idxs = self.rng.integers(2, size=(len(batch_x)))
-            batch_x[idxs, self.rng.choice([0, 1])] = UNKNOWN_FIGHTER
+            batch_x[idxs, self.rng.choice([0, 1])] = ModelConstants.UNKNOWN_FIGHTER
 
         return batch_x, batch_y
 
     def on_epoch_end(self):
         """
-        Shuffle database
-        :return:
+        Shuffle database on epoch end
         """
         if self.shuffle:
             idxs = np.arange(len(self.x))
