@@ -12,7 +12,7 @@ def get_all_status():
     ps.wait()
 
     stdout = output
-    active_model_names = [stdout.split()[-1].decode('utf-8') for stdout in stdout.splitlines()]
+    active_model_names = [stdout.split()[-3].decode('utf-8') for stdout in stdout.splitlines()]
 
     saved_models = [f.name for f in os.scandir(root_dir) if f.is_dir()]
     print(f"""
