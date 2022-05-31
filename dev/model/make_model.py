@@ -19,7 +19,7 @@ def alpha_loss(y_true, y_pred):
     y_true = tf.convert_to_tensor(y_true)
     y_pred = tf.convert_to_tensor(y_pred)
 
-    my_alpha = 4.0
+    my_alpha = 0.95
 
     if my_alpha == 1.0:  # cross entropy from logits
         loss = tf.nn.softmax_cross_entropy_with_logits(labels=y_true, logits=y_pred)

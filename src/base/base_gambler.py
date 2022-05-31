@@ -63,6 +63,52 @@ class ScaledConfidence(Gambler):
         return bet_amount
 
 
+class ExpScaledConfidence(ScaledConfidence):
+    def __init__(self):
+        super().__init__()
+
+    def get_coff(self, balance):
+        if balance < 1_000:
+            return 1.00, 0.45
+        if balance < 5_000:
+            return 0.89, 0.42
+        if balance < 10_000:
+            return 0.78, 0.38
+        if balance < 50_000:
+            return 0.50, 0.29
+        if balance < 100_000:
+            return 0.28, 0.22
+        if balance < 1_000_000:
+            return 0.01, 0.14
+        else:
+            return -0.1, 0.10
+
+    def calculate_bet(self, confidence: float, driver: SaltyBetDriver) -> int:
+        is_tournament = driver.is_tournament()
+        bailout = driver.get_bailout(is_tournament)
+        balance = driver.get_balance()
+
+        if is_tournament:
+            return super().on_tournament(confidence, driver)
+
+        # scale balance exponentially based on confidence
+        conf_bias, factor = self.get_coff(balance)
+        bet_bias = 0.03  # minimum bet percentage
+        base = 8
+
+        confidence += conf_bias
+        bet_factor = confidence ** base
+        x_crossover = factor ** (1 / base)
+        y_crossover = x_crossover ** base
+        if confidence > x_crossover:
+            bet_factor = -((x_crossover - (confidence - x_crossover)) ** base) + (y_crossover * 2)
+
+        bet_factor += bet_bias
+
+        return bet_factor * balance
+
+
+
 class NumMatchWeighted(Gambler):
     BALANCE_CAP = 100_000
     HIGH_CONFIDENCE = 0.8

@@ -3,6 +3,7 @@ from datetime import datetime
 
 from sklearn.utils.extmath import softmax
 from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping
+from tensorflow.keras.models import load_model
 from tensorflow_addons.optimizers import RectifiedAdam
 
 from dev.model.data_generator import DataGenerator
