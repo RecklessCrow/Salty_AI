@@ -14,7 +14,7 @@ class DatabaseHandler:
         self.connection = mysql.connector.connect(
                               host="localhost",
                               user="saltybet",
-                              password=password,
+                              password="r-)D5!?/9nZmhGfc",
                               database="saltybet"
                             )
         self.cur = self.connection.cursor()
