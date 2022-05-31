@@ -8,7 +8,7 @@ from tensorflow_addons.optimizers import RectifiedAdam
 
 from dev.model.data_generator import DataGenerator
 from dev.model.make_model import make_attention_model, alpha_loss
-from dev.model.utils import *
+from dev.model.utils import ModelConstants
 
 
 class Model:
@@ -38,6 +38,7 @@ class Model:
             "epsilon": 1e-6,
             "learning_rate": 1e-3,
             "smoothing": 0.05,
+            "beta_2": 0.98,
         }
 
         model = make_attention_model(parameters)
@@ -48,33 +49,37 @@ class Model:
         custom_objects = {"alpha_loss": alpha_loss, "RectifiedAdam": RectifiedAdam}
         self.model = load_model(self.model_dir, custom_objects)
 
-    def train(self, x, y, val=None, epochs=EPOCHS, early_stopping=False, checkpointing=False, **kwargs):
-        train = DataGenerator(x, y, train=True, batch_size=BATCH_SIZE)
+    def train(self, x, y, val=None, epochs=ModelConstants.EPOCHS, early_stopping=False, checkpointing=False, **kwargs):
+        # Make the training data generator
+        train = DataGenerator(x, y, train=True, batch_size=ModelConstants.BATCH_SIZE)
 
+        # Make the validation data generator
         callbacks = []
+        if val is not None:
+            val = DataGenerator(val[0], val[1], train=False, batch_size=ModelConstants.BATCH_SIZE)
 
-        if val is not None and early_stopping:
-            callbacks.append(EarlyStopping(
-                monitor=ES_MONITOR,
-                min_delta=ES_MIN_DELTA,
-                patience=ES_PATIENCE,
-                restore_best_weights=True
-            ))
+            # Make the early stopping callback
+            if early_stopping:
+                callbacks.append(EarlyStopping(
+                    monitor=ModelConstants.ES_MONITOR,
+                    min_delta=ModelConstants.ES_MIN_DELTA,
+                    patience=ModelConstants.ES_PATIENCE,
+                    restore_best_weights=True
+                ))
 
-        if val is not None and checkpointing:
-            val = DataGenerator(val[0], val[1], train=False, batch_size=BATCH_SIZE)
+            # Make the model checkpoint callback
+            if checkpointing:
+                callbacks.append(ModelCheckpoint(
+                    filepath=os.path.join(self.model_dir + "_checkpoint_loss"),
+                    monitor="val_loss",
+                    save_best_only=True
+                ))
 
-            callbacks.append(ModelCheckpoint(
-                filepath=os.path.join(self.model_dir + "_checkpoint_loss"),
-                monitor="val_loss",
-                save_best_only=True
-            ))
-
-            callbacks.append(ModelCheckpoint(
-                filepath=os.path.join(self.model_dir + "_checkpoint_acc"),
-                monitor="val_accuracy",
-                save_best_only=True
-            ))
+                callbacks.append(ModelCheckpoint(
+                    filepath=os.path.join(self.model_dir + "_checkpoint_acc"),
+                    monitor="val_accuracy",
+                    save_best_only=True
+                ))
 
         history = self.model.fit(
             train,

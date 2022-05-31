@@ -60,7 +60,7 @@ class SaltyBetDriver(ABC):
         """
         return self.driver.find_element(By.ID, 'betstatus').text.lower()
 
-    def bet(self, amount: int, team: str):
+    def place_bet(self, amount: int, team: str):
         """
         Bet some amount on a team
         :param amount: Amount to bet on the team
