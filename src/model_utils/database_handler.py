@@ -27,7 +27,6 @@ class DatabaseHandler(base_database_handler.DatabaseHandler):
         """
 
         # make tables
-        self.cur.execute("pragma foreign_keys = on;")
         self.cur.execute(
             f"""
             create table {self.model_name}(
