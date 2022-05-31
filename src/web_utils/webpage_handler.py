@@ -38,7 +38,8 @@ class WebPageHandler:
             predicted_correct = team_prediction == winner
             balance_diff = award_amount if predicted_correct else -bet_amount
 
-            box = create_feed_box(team_prediction, predicted_correct, match_confidence, balance_diff, odds, red_name, blue_name)
+            box = create_feed_box(team_prediction, predicted_correct, match_confidence, balance_diff, odds, red_name,
+                                  blue_name)
             self.box_deque.append(box)
             self.num_of_matches += 1
             self.accuracy = ((self.accuracy * (self.num_of_matches - 1)) +
@@ -59,7 +60,7 @@ class WebPageHandler:
                 award_amount = award_amount / odds[1]
 
             self.current_match_info = update_current_match(match_confidence, team_prediction,
-                                                      red_name, blue_name, odds, award_amount, bet_amount)
+                                                           red_name, blue_name, odds, award_amount, bet_amount)
 
         self.generate_html_page()
 
@@ -92,11 +93,14 @@ class WebPageHandler:
             return "", ""
 
         labels = {'x': '# of Matches', 'y': '$$$'}
-        scatter = px.line(x=list(range(len(data))),
-                          y=data,
-                          title="Balance History",
-                          template='plotly_dark',
-                          labels=labels)
+        scatter = px.line(
+            x=list(range(len(data))),
+            y=data,
+            title="Balance History",
+            template='plotly_dark',
+            labels=labels,
+            color_discrete_sequence=["green"]
+        )
 
         labels = ['Incorrect', 'Correct']
         values = [1 - self.accuracy, self.accuracy]
@@ -104,6 +108,10 @@ class WebPageHandler:
         pie = px.pie(labels=labels, values=values, hole=.3, title='model Accuracy', template='plotly_dark')
 
         scatter = pio.to_html(scatter, full_html=False)
-        pie = pio.to_html(pie, full_html=False)
+        pie = pio.to_html(
+            pie,
+            full_html=False,
+            color_discrete_sequence=["red", "green"]
+        )
 
         return scatter, pie
