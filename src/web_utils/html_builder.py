@@ -82,8 +82,10 @@ body {{
 
 <Div class="main" style="background-color: #121212">
     <h2 style="font-size: 4rem; color: #FFFFFF; margin-left: 15px;padding-top: 30px;">{model_name}</h2>
-    <h3 id="balance" style="font-size: 2rem; color: #FFFFFF; margin-left: 30px;margin-top: -40px;">Balance: ${balance:<9,}</h3>
-
+    <Div id="balance">
+    <h3 style="font-size: 2rem; color: #FFFFFF; margin-left: 30px;margin-top: -40px;">Balance: ${balance:<9,}</h3>
+    </Div>
+    
     <Div style="width: 1560px; height: 500px;">
         <Div id="plot1" style="width: 960px; height: 500px;display:inline-block;"></Div>
         <Div id="plot2" style="width: 500px; height: 500px;display:inline-block;"></Div>
