@@ -37,6 +37,6 @@ class Model:
         if red not in self.vocab and blue not in self.vocab:
             return None
 
-        prediction = self.model.predict([[red, blue]])
+        prediction = self.model([[red, blue]])
         prediction = softmax(prediction)
         return prediction[0][0]
