@@ -1,24 +1,19 @@
-import os
-import sqlite3
+import mysql.connector
 
 
 class DatabaseHandler:
-    # join
-
-    DB_FILE = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "..", "database", "salty.db")
-
     def __init__(self):
         """
         Object to interact with the database
         """
 
         self.connection = None
-        # print current working directory
-        print(self.DB_FILE)
-        if not os.path.exists(self.DB_FILE):
-            exit("Database file does not exist!")
-
-        self.connection = sqlite3.connect(self.DB_FILE, check_same_thread=False)
+        self.connection = mysql.connector.connect(
+                              host="localhost",
+                              user="saltybet",
+                              password="Dn9axQ`MCP^De<5x",
+                              database="saltybet"
+                            )
         self.cur = self.connection.cursor()
 
     def __del__(self):
@@ -142,7 +137,7 @@ class DatabaseHandler:
         if return_id:
             self.cur.execute(
                 """
-                select  match_id, red, blue, winner 
+                select  match_number, red, blue, winner 
                 from matches
                 """
             )

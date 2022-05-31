@@ -1,5 +1,3 @@
-import sqlite3
-
 from base import base_database_handler
 
 
@@ -16,11 +14,7 @@ class DatabaseHandler(base_database_handler.DatabaseHandler):
             self.__create_tables()
 
     def check_if_tables_exist(self):
-        try:
-            self.get_balances()
-            return True
-        except sqlite3.OperationalError:
-            return False
+        self.get_balances()
 
     def __create_tables(self):
         """
