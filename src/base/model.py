@@ -3,7 +3,7 @@ import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 
-import tensorflow as tf
+from tensorflow.keras.models import load_model
 from sklearn.utils.extmath import softmax
 
 
@@ -22,7 +22,7 @@ class Model:
             exit("model file not found!")
 
         # load in model from parameter
-        self.model = tf.saved_model.load(self.model_path)
+        self.model = load_model(self.model_path, compile=False)
         self.vocab = self.model.get_layer('string_lookup').get_vocabulary()
 
     def predict_match(self, red, blue):
