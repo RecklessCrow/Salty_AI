@@ -3,3 +3,4 @@
 *.env
 *.log
 /dev/saved_models/
+/database/
