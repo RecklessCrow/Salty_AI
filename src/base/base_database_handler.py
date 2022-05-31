@@ -40,7 +40,7 @@ class DatabaseHandler:
                 num_wins,
                 num_matches
             )
-            values (?, ?, ?)
+            values (%s, %s, %s)
             """,
             (name, 0, 0)
         )
@@ -62,7 +62,7 @@ class DatabaseHandler:
                 blue,
                 winner
             )
-            values (?, ?, ?)
+            values (%s, %s, %s)
             """,
             (red, blue, winner)
         )
@@ -78,7 +78,7 @@ class DatabaseHandler:
                 """
                 update characters
                 set num_wins = num_wins + 1
-                where name = ?
+                where name = %s
                 """,
                 (character,)
             )
@@ -87,7 +87,7 @@ class DatabaseHandler:
             """
             update characters
             set num_matches = num_matches + 1
-            where name = ?
+            where name = %s
             """,
             (character,)
         )
@@ -105,24 +105,12 @@ class DatabaseHandler:
 
         return self.cur.fetchall()
 
-    def get_model_config_by_name(self, model_name):
-        self.cur.execute(
-            """
-            select model_name, gambler_id, user, pass
-            from model_configs
-            where model_name = ?
-            """,
-            (model_name,)
-        )
-
-        return self.cur.fetchone()
-
     def get_matchup_count(self, fighter_1, fighter_2):
         self.cur.execute(
             """
             select count(winner)
             from matches 
-            where (red == ? and blue == ?) or (red == ? and blue == ?)
+            where (red == %s and blue == %s) or (red == %s and blue == %s)
             """,
             (fighter_1, fighter_2, fighter_2, fighter_1)
         )
