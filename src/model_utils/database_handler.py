@@ -14,7 +14,7 @@ class DatabaseHandler(base_database_handler.DatabaseHandler):
             self.__create_tables()
 
     def check_if_tables_exist(self):
-        self.cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name=?;", (self.model_name,))
+        self.cur.execute(f"SELECT name FROM sqlite_master WHERE type='table' AND name={self.model_name};")
         return self.cur.fetchone() is not None
 
     def __create_tables(self):
