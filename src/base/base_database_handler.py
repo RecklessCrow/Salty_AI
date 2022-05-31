@@ -34,7 +34,7 @@ class DatabaseHandler:
     def __get_password(self):
         if not os.path.exists("../database_pass.txt"):
             exit("Database password file not found")
-        with open("../database_pass.txt", "r") as f:
+        with open("/opt/saltybet/database/database_pass.txt", "r") as f:
             return f.read()
 
     def __add_character(self, name: str):
