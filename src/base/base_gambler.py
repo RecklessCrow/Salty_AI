@@ -108,7 +108,6 @@ class ExpScaledConfidence(ScaledConfidence):
         return bet_factor * balance
 
 
-
 class NumMatchWeighted(Gambler):
     BALANCE_CAP = 100_000
     HIGH_CONFIDENCE = 0.8
@@ -160,4 +159,5 @@ GAMBLER_ID_DICT = {
     0: AllIn(),
     1: NumMatchWeighted(),
     2: ScaledConfidence(),
+    3: ExpScaledConfidence(),
 }
