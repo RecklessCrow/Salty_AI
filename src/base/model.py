@@ -39,4 +39,4 @@ class Model:
 
         prediction = self.model.predict([[red, blue]])
         prediction = softmax(prediction)
-        return prediction[0][0]
+        return prediction[0]
