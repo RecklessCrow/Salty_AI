@@ -10,7 +10,7 @@ class Gambler(ABC):
     def calculate_bet(self, confidence: float, driver: SaltyBetDriver) -> int:
         pass
 
-    def bet(self, confidence: float, driver: SaltyBetDriver, team: str) -> int:
+    def bet(self, confidence: float, driver: SaltyBetDriver) -> int:
         """
         Places a bet on the given team.
         :param confidence: Confidence of the model.
@@ -20,7 +20,6 @@ class Gambler(ABC):
         """
         bet_amount = self.calculate_bet(confidence, driver)
         bet_amount = max(int(bet_amount), 1)
-        driver.place_bet(bet_amount, team)
         return bet_amount
 
     @staticmethod
@@ -80,7 +79,8 @@ class ExpScaledConfidence(ScaledConfidence):
     def __init__(self):
         super().__init__()
 
-    def get_coff(self, balance):
+    @staticmethod
+    def __get_coff(balance):
         if balance < 1_000:
             return 1.00, 0.45
         if balance < 5_000:
@@ -105,9 +105,9 @@ class ExpScaledConfidence(ScaledConfidence):
             return super().on_tournament(confidence, driver)
 
         # scale balance exponentially based on confidence
-        conf_bias, factor = self.get_coff(balance)
+        conf_bias, factor = self.__get_coff(balance)
         bet_bias = 0.03  # minimum bet percentage
-        base = 8
+        base = 8  # ramp up bet percentage
 
         confidence += conf_bias
         bet_factor = confidence ** base
