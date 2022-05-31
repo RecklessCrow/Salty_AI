@@ -12,7 +12,7 @@ class DatabaseHandler:
         self.connection = None
         password = self.__get_password()
         self.connection = mysql.connector.connect(
-                              host="localhost",
+                              host="overtimegaming.us.to",
                               user="saltybet",
                               password=password,
                               database="saltybet"
@@ -147,6 +147,8 @@ class DatabaseHandler:
             )
 
         return self.cur.fetchall()
+
+
 
 
 DATABASE = DatabaseHandler()

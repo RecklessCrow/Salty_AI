@@ -1,4 +1,4 @@
-from base import base_database_handler
+import base_database_handler
 import mysql.connector
 
 
