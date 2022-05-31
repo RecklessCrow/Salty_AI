@@ -108,8 +108,14 @@ def main(model_name: str, gambler: Gambler, user, enyc_pass):
 
 
 def start():
+    import logging
+
+    logging.basicConfig(filename='app.log', filemode='w', format='%(name)s - %(levelname)s - %(message)s')
+    logging.warning('This will get logged to a file')
+
     if len(sys.argv) != 4:
         print("Usage: python3 model_driver_main.py <model_name> <gambler_id> <user_id>")
+        logging.warning('Usage: python3 model_driver_main.py <model_name> <gambler_id> <user_id>')
         sys.exit(1)
 
     print(sys.argv)
@@ -134,6 +140,7 @@ def start():
 
     if email is None or password is None:
         print("Could not find user with id " + user_id)
+        logging.warning("Could not find user with id " + user_id)
         sys.exit(1)
 
     main(model_name, gambler, email, password)
