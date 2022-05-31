@@ -3,10 +3,8 @@ import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 
-from tensorflow.keras.models import load_model
+import tensorflow as tf
 from sklearn.utils.extmath import softmax
-# from dev.model.make_model import alpha_loss
-# from tensorflow_addons.optimizers import RectifiedAdam
 
 
 class Model:
@@ -24,9 +22,7 @@ class Model:
             exit("model file not found!")
 
         # load in model from parameter
-        # custom_objects = {"alpha_loss": alpha_loss, "RectifiedAdam": RectifiedAdam}
-        # self.model = load_model(self.model_path, custom_objects=custom_objects)
-        self.model = load_model(self.model_path)
+        self.model = tf.saved_model.load(self.model_path)
         self.vocab = self.model.get_layer('string_lookup').get_vocabulary()
 
     def predict_match(self, red, blue):
