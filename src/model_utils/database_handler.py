@@ -48,6 +48,7 @@ class DatabaseHandler(base_database_handler.DatabaseHandler):
                 end_balance
             ) values (%s, %s, %s)
         """, (predicted_correctly, float(confidence), int(end_balance)))
+        self.commit()
 
     def get_balances(self):
         self.cur.execute(
