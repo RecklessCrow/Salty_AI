@@ -105,13 +105,10 @@ class WebPageHandler:
         labels = ['Incorrect', 'Correct']
         values = [1 - self.accuracy, self.accuracy]
 
-        pie = px.pie(labels=labels, values=values, hole=.3, title='model Accuracy', template='plotly_dark')
+        pie = px.pie(labels=labels, values=values, hole=.3,
+            color_discrete_sequence=["red", "green"], title='model Accuracy', template='plotly_dark')
 
         scatter = pio.to_html(scatter, full_html=False)
-        pie = pio.to_html(
-            pie,
-            full_html=False,
-            color_discrete_sequence=["red", "green"]
-        )
+        pie = pio.to_html(pie, full_html=False)
 
         return scatter, pie
