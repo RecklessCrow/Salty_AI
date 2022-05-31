@@ -18,7 +18,6 @@ def main(model_name: str, gambler: Gambler, user, enyc_pass):
     website_handler = webpage_handler.WebPageHandler(model_name,
                                                      model_database.get_balances(),
                                                      model_database.get_predicted_correctly())
-    web_utils.utils.create_run_config(model_name, gambler, user)
 
     # initialize variables
     state = STATES["START"]
@@ -141,6 +140,7 @@ def start():
         print("Could not find user with id " + user_id)
         sys.exit(1)
 
+    web_utils.utils.create_run_config(model_name, gambler, user_id)
     main(model_name, gambler, email, password)
 
 

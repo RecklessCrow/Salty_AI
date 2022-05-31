@@ -8,7 +8,7 @@ def create_run_config(model_name, gambler, user):
     """
     run_config = {
         "user": user,
-        "gambler": gambler.__name__,
+        "gambler": type(gambler).__name__,
     }
 
     with open(f"/opt/saltybet/saved_models/{model_name}/run_config.json", "w") as f:
