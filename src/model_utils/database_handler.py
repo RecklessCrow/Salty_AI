@@ -1,4 +1,5 @@
 from base import base_database_handler
+import mysql.connector
 
 
 class DatabaseHandler(base_database_handler.DatabaseHandler):
@@ -14,7 +15,11 @@ class DatabaseHandler(base_database_handler.DatabaseHandler):
             self.__create_tables()
 
     def check_if_tables_exist(self):
-        self.get_balances()
+        try:
+            self.get_balances()
+            return True
+        except mysql.connector.errors.ProgrammingError:
+            return False
 
     def __create_tables(self):
         """
