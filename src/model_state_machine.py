@@ -51,7 +51,7 @@ def main(model_name: str, gambler: Gambler, user, enyc_pass):
                 predicted_winner = int_to_team(np.argmax(prediction))
                 confidence = np.max(prediction)
                 confidence = (confidence - 0.5) * 2  # confidence is now scaled between 0 and 1
-                bet_amount = gambler.bet(confidence, driver)  # calculate bet amount
+                bet_amount = gambler.get_bet_amount(confidence, driver)  # calculate bet amount
 
             driver.place_bet(bet_amount, predicted_winner)
             website_handler.update_page(

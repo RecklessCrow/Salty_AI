@@ -1,8 +1,9 @@
 from abc import ABC, abstractmethod
 
 import sigfig
-from utils.base_database_handler import DATABASE
-from utils.base_salty_bet_driver import SaltyBetDriver
+
+from database_handler import MatchDatabaseHandler
+from salty_bet_driver import SaltyBetDriver
 
 
 class Gambler(ABC):
@@ -10,17 +11,26 @@ class Gambler(ABC):
     def calculate_bet(self, confidence: float, driver: SaltyBetDriver) -> int:
         pass
 
-    def bet(self, confidence: float, driver: SaltyBetDriver) -> int:
+    def get_bet_amount(self, confidence: float, driver: SaltyBetDriver) -> int:
         """
-        Places a bet on the given team.
+        Gets the amount to bet based on the confidence and performs necessary checks.
         :param confidence: Confidence of the utils.
         :param driver: Object that interacts with the website.
-        :param team: Team to bet on.
-        :return:
+        :return: Amount to bet.
         """
+        # Calculate the bet amount.
         bet_amount = self.calculate_bet(confidence, driver)
-        bet_amount = max(int(bet_amount), 1)
-        return bet_amount
+
+        # Check that the bet amount is not zero or negative.
+        bet_amount = max(bet_amount, 1)
+
+        # Round the bet to a number of sig figs given by half the number of digits in the bet amount.
+        bet_amount = sigfig.round(bet_amount, sigfigs=len(str(bet_amount)) // 2)
+
+        # Check that the bet amount is not greater than the balance after rounding.
+        bet_amount = min(bet_amount, driver.get_balance())
+
+        return int(bet_amount)
 
     @staticmethod
     def on_tournament(confidence: float, driver: SaltyBetDriver) -> int:
@@ -66,12 +76,6 @@ class ScaledConfidence(Gambler):
         else:
             bet_amount = balance * confidence * self.factor
 
-        bet_amount = int(bet_amount)
-        bet_amount = sigfig.round(bet_amount, sigfigs=len(str(bet_amount)) // 2)
-
-        if bet_amount > balance:
-            bet_amount = balance
-
         return bet_amount
 
 
@@ -80,7 +84,7 @@ class ExpScaledConfidence(ScaledConfidence):
         super().__init__()
 
     @staticmethod
-    def __get_coff(balance):
+    def __get_parameters(balance):
         if balance < 1_000:
             return 1.00, 0.45
         if balance < 5_000:
@@ -96,16 +100,26 @@ class ExpScaledConfidence(ScaledConfidence):
         else:
             return -0.1, 0.10
 
+    @staticmethod
+    def __get_tournament_parameters(balance, bailout):
+        if balance < 2 * bailout:
+            return 1.00, 0.45
+        if balance < 3 * bailout:
+            return 0.89, 0.42
+        if balance < 4 * bailout:
+            return 0.78, 0.38
+        else:
+            return 0.50, 0.29
+
     def calculate_bet(self, confidence: float, driver: SaltyBetDriver) -> int:
-        is_tournament = driver.is_tournament()
-        bailout = driver.get_bailout(is_tournament)
         balance = driver.get_balance()
 
-        if is_tournament:
-            return super().on_tournament(confidence, driver)
+        if driver.is_tournament():
+            conf_bias, factor = self.__get_tournament_parameters(balance, driver.get_bailout(True))
+        else:
+            conf_bias, factor = self.__get_parameters(balance)
 
         # scale balance exponentially based on confidence
-        conf_bias, factor = self.__get_coff(balance)
         bet_bias = 0.03  # minimum bet percentage
         base = 8  # ramp up bet percentage
 
@@ -118,10 +132,7 @@ class ExpScaledConfidence(ScaledConfidence):
 
         bet_factor += bet_bias
 
-        bet_amount = int(bet_factor * balance)
-        bet_amount = sigfig.round(bet_amount, sigfigs=len(str(bet_amount)) // 2)
-
-        return bet_amount
+        return bet_factor * balance
 
 
 class NumMatchWeighted(Gambler):
@@ -130,10 +141,11 @@ class NumMatchWeighted(Gambler):
     ALL_IN_CONFIDENCE = 0.9
     MAX_BET = 1_000_000
     MAX_NORMAL_BET = 5_000
+    DATABASE = MatchDatabaseHandler("matches")
 
     def calculate_bet(self, confidence: float, driver: SaltyBetDriver) -> int:
         r, b = driver.get_fighters()
-        matchup_count = DATABASE.get_matchup_count(r, b)
+        matchup_count = self.DATABASE.get_matchup_count(r, b)
         print("Matchup count:", matchup_count)
         matchup_rate = lambda count_seen: 1 - ((2 - count_seen) * 0.1)
         matchup_weight = min(matchup_rate(matchup_count), 1.0)
