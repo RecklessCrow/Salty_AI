@@ -67,11 +67,6 @@ def main(model_name: str, gambler: Gambler, user, enyc_pass):
             print("Bets closed")
             odds = driver.get_odds()
 
-            # Wait for odds to be readable if we could not grab them in the first pass
-            while odds is None:
-                odds = driver.get_odds()
-                time.sleep(1)
-
             website_handler.update_page(
                 match_confidence=confidence,
                 team_prediction=predicted_winner,
