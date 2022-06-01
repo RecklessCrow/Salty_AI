@@ -9,7 +9,7 @@ class Gambler:
         raise NotImplementedError
 
     @staticmethod
-    def __get_bet_amount(bet_amount, balance) -> int:
+    def get_bet_amount(bet_amount, balance) -> int:
         """
         Gets the amount to bet based on the confidence and performs necessary checks.
         :param bet_amount: The amount to bet.
@@ -34,7 +34,7 @@ class AllIn(Gambler):
         pass
 
     def calculate_bet(self, confidence: float, driver: SaltyBetDriver) -> int:
-        return self.__get_bet_amount(driver.get_balance(), driver.get_balance())
+        return self.get_bet_amount(driver.get_balance(), driver.get_balance())
 
 
 class ScaledConfidence(Gambler):
@@ -65,7 +65,7 @@ class ScaledConfidence(Gambler):
         else:
             bet_amount = balance * confidence * self.factor
 
-        return self.__get_bet_amount(bet_amount, balance)
+        return self.get_bet_amount(bet_amount, balance)
 
 
 class ExpScaledConfidence(ScaledConfidence):
@@ -121,7 +121,7 @@ class ExpScaledConfidence(ScaledConfidence):
 
         bet_factor += bet_bias
         bet_amount = balance * bet_factor
-        return self.__get_bet_amount(bet_amount, balance)
+        return self.get_bet_amount(bet_amount, balance)
 
 
 class NumMatchWeighted(Gambler):
@@ -168,7 +168,7 @@ class NumMatchWeighted(Gambler):
 
             bet_amount = min(self.MAX_NORMAL_BET, bet_amount)
 
-        return self.__get_bet_amount(bet_amount, balance)
+        return self.get_bet_amount(bet_amount, balance)
 
 
 GAMBLER_ID_DICT = {
