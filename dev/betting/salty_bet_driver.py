@@ -1,18 +1,18 @@
+import os
 import re
-import sys
 import time
 
-# from dotenv import load_dotenv
+import dotenv
 from selenium import webdriver
-from selenium.common.exceptions import StaleElementReferenceException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.firefox.options import Options
 
-
-# load_dotenv()
+dotenv.load_dotenv()
 
 
 class SaltyBetDriver:
+    EXE_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "geckodriver.exe")
+
     def __init__(self, headless=False):
         """
         Object to interact with SaltyBet
@@ -24,26 +24,27 @@ class SaltyBetDriver:
             options.add_argument("--headless")
 
         self.driver = webdriver.Firefox(
+            executable_path=self.EXE_PATH,
             options=options
         )
 
         # login
         self.driver.get("https://www.saltybet.com/authenticate?signin=1")
-        try:
-            assert "Salty" in self.driver.title
-        except AssertionError:
-            print('Failed to load into website. Maybe saltybet.com is down?')
-            sys.exit()
+        time.sleep(2)  # wait for page to load
+        assert "Salty" in self.driver.title, 'Failed to load into website. Maybe saltybet.com is down?'
 
         username = self.driver.find_element(By.ID, "email")
         username.clear()
-        username.send_keys('saltybet_username')
+        username.send_keys(os.environ.get("SALTY_USERNAME"))
 
         password = self.driver.find_element(By.NAME, "pword")
         password.clear()
-        password.send_keys('saltybet_password')
+        password.send_keys(os.environ.get("SALTY_PASSWORD"))
 
         self.driver.find_element(By.CLASS_NAME, 'graybutton').click()
+
+        time.sleep(2)  # wait for page to load
+        assert "authenticate" not in self.driver.current_url, "Failed to login"
 
     def __del__(self):
         self.driver.close()
@@ -115,11 +116,8 @@ class SaltyBetDriver:
         Gets the current characters of the red and blue teams
         :return:
         """
-        try:
-            red = self.driver.find_element(By.CLASS_NAME, "redtext").text
-            blue = self.driver.find_element(By.CLASS_NAME, "bluetext").text
-        except StaleElementReferenceException:
-            return
+        red = self.driver.find_element(By.CLASS_NAME, "redtext").text
+        blue = self.driver.find_element(By.CLASS_NAME, "bluetext").text
 
         if "|" in red:
             red = red.split('|')[1]
@@ -128,12 +126,16 @@ class SaltyBetDriver:
         return red.strip(), blue.strip()
 
     def is_tournament(self):
-        element = self.driver.find_element(By.ID, "balancewrapper").text.lower()
+        element = self.driver.find_element(By.ID, "footer-alert").text.lower()
         return "tournament" in element
 
 
 if __name__ == '__main__':
     driver = SaltyBetDriver(headless=True)
     while True:
-        print(driver.is_tournament())
+        print(driver.get_fighters())
+        print(driver.get_odds())
+        print(driver.get_balance())
+        print(driver.get_game_state())
+        print(driver.get_bailout(tournament=driver.is_tournament()))
         time.sleep(1)

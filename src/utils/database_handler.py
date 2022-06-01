@@ -1,6 +1,9 @@
 import os
 
+import dotenv
 import mysql.connector
+
+dotenv.load_dotenv()
 
 
 class DatabaseHandler:
@@ -13,7 +16,7 @@ class DatabaseHandler:
         self.connection = mysql.connector.connect(
             host="10.0.0.2",
             user="saltybet",
-            password=self.__get_password(),
+            password=os.environ["DATABASE_PASSWORD"],
             database="saltybet"
         )
         self.cur = self.connection.cursor(buffered=True)
@@ -27,20 +30,6 @@ class DatabaseHandler:
         if self.connection:
             self.commit()
             self.connection.close()
-
-    @staticmethod
-    def __get_password():
-        """
-        Gets the password from password.txt
-        :return:
-        """
-        path_to_file = os.path.join(os.path.dirname(os.path.realpath(__file__)), "../..", "database",
-                                    "database_pass.txt")
-        if not os.path.exists(path_to_file):
-            exit("Database password file not found")
-
-        with open(path_to_file, "r") as f:
-            return f.read()
 
     def commit(self):
         """
