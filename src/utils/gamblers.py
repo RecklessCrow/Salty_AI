@@ -1,21 +1,21 @@
 import sigfig
+
 from utils.salty_bet_driver import SaltyBetDriver
 
 
 class Gambler:
 
-    def __calculate_bet(self, confidence: float, driver: SaltyBetDriver) -> int:
+    def calculate_bet(self, confidence: float, driver: SaltyBetDriver) -> int:
         raise NotImplementedError
 
-    def get_bet_amount(self, confidence: float, driver: SaltyBetDriver) -> int:
+    @staticmethod
+    def __get_bet_amount(bet_amount, balance) -> int:
         """
         Gets the amount to bet based on the confidence and performs necessary checks.
-        :param confidence: Confidence of the utils.
-        :param driver: Object that interacts with the website.
+        :param bet_amount: The amount to bet.
+        :param balance: The balance of the gambler.
         :return: Amount to bet.
         """
-        # Calculate the bet amount.
-        bet_amount = self.__calculate_bet(confidence, driver)
 
         # Check that the bet amount is not zero or negative.
         bet_amount = max(bet_amount, 1)
@@ -24,7 +24,7 @@ class Gambler:
         bet_amount = sigfig.round(bet_amount, sigfigs=len(str(bet_amount)) // 2)
 
         # Check that the bet amount is not greater than the balance after rounding.
-        bet_amount = min(bet_amount, driver.get_balance())
+        bet_amount = min(bet_amount, balance)
 
         return int(bet_amount)
 
@@ -33,8 +33,8 @@ class AllIn(Gambler):
     def __init__(self):
         pass
 
-    def __calculate_bet(self, confidence: float, driver: SaltyBetDriver) -> int:
-        return driver.get_balance()
+    def calculate_bet(self, confidence: float, driver: SaltyBetDriver) -> int:
+        return self.__get_bet_amount(driver.get_balance(), driver.get_balance())
 
 
 class ScaledConfidence(Gambler):
@@ -43,7 +43,7 @@ class ScaledConfidence(Gambler):
         self.high_confidence = 0.75
         self.factor = 1/3
 
-    def __calculate_bet(self, confidence: float, driver: SaltyBetDriver) -> int:
+    def calculate_bet(self, confidence: float, driver: SaltyBetDriver) -> int:
         is_tournament = driver.is_tournament()
         bailout = driver.get_bailout(is_tournament)
         balance = driver.get_balance()
@@ -65,7 +65,7 @@ class ScaledConfidence(Gambler):
         else:
             bet_amount = balance * confidence * self.factor
 
-        return bet_amount
+        return self.__get_bet_amount(bet_amount, balance)
 
 
 class ExpScaledConfidence(ScaledConfidence):
@@ -120,8 +120,8 @@ class ExpScaledConfidence(ScaledConfidence):
             bet_factor = -((x_crossover - (confidence - x_crossover)) ** base) + (y_crossover * 2)
 
         bet_factor += bet_bias
-
-        return int(bet_factor * balance)
+        bet_amount = balance * bet_factor
+        return self.__get_bet_amount(bet_amount, balance)
 
 
 class NumMatchWeighted(Gambler):
@@ -168,7 +168,7 @@ class NumMatchWeighted(Gambler):
 
             bet_amount = min(self.MAX_NORMAL_BET, bet_amount)
 
-        return bet_amount
+        return self.__get_bet_amount(bet_amount, balance)
 
 
 GAMBLER_ID_DICT = {
