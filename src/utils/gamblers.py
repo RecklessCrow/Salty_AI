@@ -2,7 +2,6 @@ from abc import ABC, abstractmethod
 
 import sigfig
 
-from utils.database_handler import MatchDatabaseHandler
 from utils.salty_bet_driver import SaltyBetDriver
 
 
@@ -131,7 +130,9 @@ class NumMatchWeighted(Gambler):
     ALL_IN_CONFIDENCE = 0.9
     MAX_BET = 1_000_000
     MAX_NORMAL_BET = 5_000
-    DATABASE = MatchDatabaseHandler("matches")
+
+    from utils.database_handler import MatchDatabaseHandler
+    DATABASE = MatchDatabaseHandler()
 
     def __calculate_bet(self, confidence: float, driver: SaltyBetDriver) -> int:
         r, b = driver.get_fighters()
