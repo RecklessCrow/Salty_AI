@@ -160,8 +160,11 @@ class ModelDatabaseHandler(DatabaseHandler):
             self.__create_table()
 
     def __check_if_table_exist(self):
-        self.cur.execute(f"SELECT * FROM {self.model_name}")
-        return self.cur.fetchone() is not None
+        try:
+            self.cur.execute(f"SELECT * FROM {self.model_name}")
+            return True
+        except mysql.connector.errors.ProgrammingError:
+            return False
 
     def __create_table(self):
         """
