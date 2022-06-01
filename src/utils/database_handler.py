@@ -16,7 +16,7 @@ class DatabaseHandler:
             password=self.__get_password(),
             database="saltybet"
         )
-        self.cur = self.connection.cursor()
+        self.cur = self.connection.cursor(buffered=True)
 
     def __del__(self):
         """
