@@ -29,7 +29,6 @@ def main(model_name: str, gambler: Gambler, user, enyc_pass):
         state = await_next_state(driver, state)
 
         if state == STATES["BETS_OPEN"]:
-            print('BETS_OPEN')
 
             red, blue = driver.get_fighters()
 
@@ -37,8 +36,6 @@ def main(model_name: str, gambler: Gambler, user, enyc_pass):
                 time.sleep(1)
                 state = STATES['START']
                 continue
-
-            print(f'{red} vs {blue}')
 
             prediction = model.predict_match(red, blue)
 
@@ -64,7 +61,6 @@ def main(model_name: str, gambler: Gambler, user, enyc_pass):
             continue
 
         if state == STATES['BETS_CLOSED']:
-            print("Bets closed")
             odds = driver.get_odds()
 
             website_handler.update_page(
@@ -79,7 +75,6 @@ def main(model_name: str, gambler: Gambler, user, enyc_pass):
 
         # Match over
         if state == STATES["PAYOUT"]:
-            print('Match over')
 
             payout_message = driver.get_game_state()
             if "red" in payout_message:  # red winner
@@ -114,8 +109,6 @@ def start():
     if len(sys.argv) != 4:
         print("Usage: python3 model_main.py <model_name> <gambler_id> <user_id>")
         sys.exit(1)
-
-    print(sys.argv)
 
     model_name = sys.argv[1]
     gambler_id = sys.argv[2]

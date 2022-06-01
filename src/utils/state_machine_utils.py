@@ -41,16 +41,12 @@ def await_next_state(driver, last_state):
     if last_state == STATES["START"]:
         while True:
             if decode_state(driver.get_game_state()) == STATES["BETS_OPEN"]:
-                print("Bets are open")
                 return STATES["BETS_OPEN"]
             time.sleep(1)
-            print("Bets are NOT open")
-            # exit("Waiting for next match to start")
 
     while state == last_state:
         state = decode_state(driver.get_game_state())
         time.sleep(1)
-        exit("Waiting for next state!!!!!!!!!!!!!!!!!!")
 
         if state is None:
             state = last_state
