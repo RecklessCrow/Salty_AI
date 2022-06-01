@@ -122,7 +122,7 @@ def start():
     user_id = sys.argv[3]
 
     from utils.gamblers import GAMBLER_ID_DICT
-    gambler = GAMBLER_ID_DICT[int(gambler_id)]
+    gambler = GAMBLER_ID_DICT[int(gambler_id)]()
 
     with open('/opt/saltybet/database/user_id.json') as f:
         users = json.load(f)['users']

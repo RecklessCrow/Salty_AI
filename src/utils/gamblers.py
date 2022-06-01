@@ -1,7 +1,5 @@
 from abc import ABC, abstractmethod
-
 import sigfig
-
 from utils.salty_bet_driver import SaltyBetDriver
 
 
@@ -175,8 +173,8 @@ class NumMatchWeighted(Gambler):
 
 
 GAMBLER_ID_DICT = {
-    0: AllIn(),
-    1: NumMatchWeighted(),
-    2: ScaledConfidence(),
-    3: ExpScaledConfidence(),
+    0: AllIn,
+    1: NumMatchWeighted,
+    2: ScaledConfidence,
+    3: ExpScaledConfidence,
 }
