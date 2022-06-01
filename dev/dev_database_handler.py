@@ -134,3 +134,11 @@ class ModelDatabaseHandler(DatabaseHandler):
         """
         self.cur.execute(f"SELECT confidence FROM {self.model_name}")
         return self.cur.fetchall()
+
+    def get_predicted_correctly_and_confidences(self):
+        """
+        Returns the predicted and confidence for each match
+        :return:
+        """
+        self.cur.execute(f"SELECT predicted_correctly, confidence FROM {self.model_name}")
+        return self.cur.fetchall()

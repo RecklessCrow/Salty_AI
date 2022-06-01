@@ -27,6 +27,7 @@ class Model:
 
         else:
             self.model_dir = os.path.join(self.MODEL_DIR, model_name)
+            assert os.path.exists(self.model_dir), f"Model {model_name} does not exist."
             self.__load()
 
     @staticmethod

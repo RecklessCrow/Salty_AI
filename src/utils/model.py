@@ -19,8 +19,7 @@ class Model:
 
         self.model_path = os.path.join(self.MODEL_DIR, model_name)
 
-        if not os.path.exists(self.model_path):
-            exit("Model file not found!")
+        assert os.path.exists(self.model_path), f"Model {model_name} does not exist."
 
         # load in model from parameter
         self.model = load_model(self.model_path, compile=False)
