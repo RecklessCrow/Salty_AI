@@ -110,7 +110,6 @@ class HomepageDriver(SaltyBetDriver):
     def __init__(self):
         """
         Object to interact with SaltyBet
-        :param headless: run web browser in headless mode
         """
         super(SaltyBetDriver, self).__init__(headless=True)
 
@@ -123,7 +122,6 @@ class ModelDriver(SaltyBetDriver):
     def __init__(self, username, password):
         """
         Object to interact with SaltyBet
-        :param headless: run web browser in headless mode
         """
         super(SaltyBetDriver, self).__init__(headless=True)
 
