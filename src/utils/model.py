@@ -1,27 +1,28 @@
 import os
 
+from sklearn.utils.extmath import softmax
+
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 
 from tensorflow.keras.models import load_model
-from sklearn.utils.extmath import softmax
 
 
 class Model:
+    MODEL_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..', 'saved_models')
+
     def __init__(self, model_name=None):
         """
-        Initializes the utils by loading the utils from the disk given the utils name
-        :param model_name: the name of the utils to load
+        Initializes the model by loading the model from the disk given the model name
+        :param model_name: the name of the model to load
         """
 
-        self.model_name = model_name
-        self.model_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..', 'saved_models',
-                                       self.model_name)
+        self.model_path = os.path.join(self.MODEL_DIR, model_name)
 
         if not os.path.exists(self.model_path):
-            exit("utils file not found!")
+            exit("Model file not found!")
 
-        # load in utils from parameter
+        # load in model from parameter
         self.model = load_model(self.model_path, compile=False)
         self.vocab = self.model.get_layer('string_lookup').get_vocabulary()
 
