@@ -4,10 +4,10 @@ import sys
 import numpy as np
 
 import website.website_utils
-from src.utils.database_handler import ModelDatabaseHandler
-from src.utils.gamblers import Gambler
-from src.utils.salty_bet_driver import ModelDriver
-from src.utils.state_machine_utils import *
+from utils.database_handler import ModelDatabaseHandler
+from utils.gamblers import Gambler
+from utils.salty_bet_driver import ModelDriver
+from utils.state_machine_utils import *
 from utils.model import Model
 from website import webpage_handler
 
