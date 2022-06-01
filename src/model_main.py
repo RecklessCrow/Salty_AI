@@ -139,7 +139,7 @@ def start():
         print("Could not find user with id " + user_id)
         sys.exit(1)
 
-    website.utils.create_run_config(model_name, gambler, user_id)
+    website.website_utils.create_run_config(model_name, gambler, user_id)
     main(model_name, gambler, email, password)
 
 
