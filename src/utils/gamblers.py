@@ -1,5 +1,4 @@
 import sigfig
-
 from utils.salty_bet_driver import SaltyBetDriver
 
 
