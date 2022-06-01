@@ -3,8 +3,8 @@ import numpy as np
 
 
 def plot_pred_histogram(y_true, y_pred, n_bins=20):
-    plt.hist(y_pred, bins=10, label='Predicted')
-    plt.hist(y_true, bins=10, label='True')
+    plt.hist(y_pred, bins=n_bins, label='Predicted')
+    plt.hist(y_true, bins=n_bins, label='True')
     plt.legend()
     plt.show()
 
@@ -15,9 +15,9 @@ def plot_reliability_diagram(y_true, y_pred, n_bins=10):
 
     y, x = calibration_curve(y_true, y_pred, n_bins=n_bins)
 
-    plt.plot(x, y, 'o')
-    plt.plot(x, gaussian_filter1d(y, sigma=2), '-')
-    plt.plot([0, 1], [0, 1], 'k--')
+    plt.plot(x, y, 'o')  # Data points
+    plt.plot(x, gaussian_filter1d(y, sigma=2), '-')  # Fitted curve
+    plt.plot([0, 1], [0, 1], 'k--')  # Perfect calibration line
     plt.xlabel('Predicted probability')
     plt.ylabel('Observed probability')
     plt.show()
@@ -41,7 +41,7 @@ def plot_test_data_calibration(model_name="21.18.40_checkpoint_acc"):
     y_true = y_true[:, 1]
     y_pred = y_pred[:, 1]
 
-    plt.title('Reliability diagram for test data')
+    plt.title(f'Reliability diagram for test data: {model_name}')
     plot_reliability_diagram(y_true, y_pred)
 
 
@@ -57,13 +57,14 @@ def plot_recorded_data_calibration(model_name="linear_err"):
         for i in range(len(correctly_predicted))
     ]
 
-    plt.title('Reliability diagram for recorded data')
+    plt.title(f'Reliability diagram for recorded data: {model_name}')
     plot_reliability_diagram(y_true, y_pred)
 
 
 def main():
-    # plot_test_data_calibration()
-    plot_recorded_data_calibration()
+    # for model_name in ["21.18.40_checkpoint_loss", "21.18.40_checkpoint_acc", "21.18.40"]:
+    #     plot_test_data_calibration(model_name)
+    plot_recorded_data_calibration("linear_err")
 
 
 if __name__ == "__main__":
