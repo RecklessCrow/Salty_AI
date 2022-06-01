@@ -1,4 +1,5 @@
 import re
+import time
 from abc import ABC
 
 from selenium import webdriver
@@ -43,19 +44,32 @@ class SaltyBetDriver(ABC):
 
         return base_bailout + modifier
 
-    def get_balance(self):
+    def get_balance(self) -> int:
         """
         Get the current balance of the player
         :return: salt
         """
-        return int(self.driver.find_element(By.ID, "balance").text.replace(",", ""))
+        balance_text = self.driver.find_element(By.ID, "balance").text
+
+        while balance_text is "" or not isinstance(balance_text, str):
+            balance_text = self.driver.find_element(By.ID, "balance").text
+            time.sleep(1)
+
+        balance = int(balance_text.replace(",", ""))
+        return balance
 
     def get_game_state(self):
         """
         Get the current state of the game
         :return: state string
         """
-        return self.driver.find_element(By.ID, 'betstatus').text.lower()
+        state_text = self.driver.find_element(By.ID, "gamestate").text
+
+        while state_text is "" or not isinstance(state_text, str):
+            state_text = self.driver.find_element(By.ID, "gamestate").text
+            time.sleep(1)
+
+        return state_text
 
     def place_bet(self, amount: int, team: str):
         """
@@ -70,17 +84,18 @@ class SaltyBetDriver(ABC):
         self.driver.find_element(By.ID, "wager").send_keys(str(amount))
         self.driver.find_element(By.CLASS_NAME, f"betbutton{team}").click()
 
-    def get_odds(self):
+    def get_odds(self) -> tuple[float, float]:
         """
         Get the odds of the current match
-        :return:
+        :return: Betting odds of the current match
         """
         betting_text = self.driver.find_element(By.ID, "lastbet").text
+
+        while betting_text == "" or not isinstance(betting_text, str):
+            betting_text = self.driver.find_element(By.ID, "lastbet").text
+            time.sleep(1)
+
         odds_text = betting_text.split("|")[-1].strip()
-
-        if odds_text == "":
-            return None
-
         red, blue = tuple(odds_text.split(":"))
         return float(red), float(blue)
 
@@ -102,8 +117,13 @@ class SaltyBetDriver(ABC):
         return red.strip(), blue.strip()
 
     def is_tournament(self):
-        element = self.driver.find_element(By.ID, "balancewrapper").text.lower()
-        return "tournament" in element
+        tournament_text = self.driver.find_element(By.ID, "balancewrapper").text.lower()
+
+        while tournament_text == "":
+            tournament_text = self.driver.find_element(By.ID, "balancewrapper").text.lower()
+            time.sleep(1)
+
+        return "tournament" in tournament_text
 
 
 class HomepageDriver(SaltyBetDriver):
