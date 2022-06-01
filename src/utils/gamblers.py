@@ -68,7 +68,7 @@ class ScaledConfidence(Gambler):
         return self.get_bet_amount(bet_amount, balance)
 
 
-class ExpScaledConfidence(ScaledConfidence):
+class ExpScaledConfidence(Gambler):
     def __init__(self):
         super().__init__()
 
