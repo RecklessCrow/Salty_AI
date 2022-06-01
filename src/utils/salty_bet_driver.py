@@ -84,7 +84,7 @@ class SaltyBetDriver(ABC):
         self.driver.find_element(By.ID, "wager").send_keys(str(amount))
         self.driver.find_element(By.CLASS_NAME, f"betbutton{team}").click()
 
-    def get_odds(self) -> tuple[float, float]:
+    def get_odds(self):
         """
         Get the odds of the current match
         :return: Betting odds of the current match
