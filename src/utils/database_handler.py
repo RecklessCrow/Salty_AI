@@ -50,36 +50,11 @@ class DatabaseHandler:
 
 
 class MatchDatabaseHandler(DatabaseHandler):
-    def __init__(self, remake_tables: bool = False):
+    def __init__(self):
         """
         Database handler for Tables that deal with matches
         """
         super().__init__()
-
-        if remake_tables or not self.__check_if_table_exist():
-            self.__create_table()
-
-    def __check_if_table_exist(self):
-        self.cur.execute(f"SELECT * FROM matches")
-        return self.cur.fetchone() is not None
-
-    def __create_table(self):
-        """
-        Creates the table for a models stats
-        :return:
-        """
-        self.__drop_table()
-        self.cur.execute(
-            f"""
-            CREATE TABLE matches(
-                match_number    INTEGER     AUTO_INCREMENT PRIMARY KEY,
-                red             TEXT        NOT NULL,
-                blue            TEXT        NOT NULL,
-                winner          TEXT        NOT NULL
-            );
-            """
-        )
-        self.commit()
 
     def add_match(self, red: str, blue: str, winner: str):
         """
@@ -152,47 +127,16 @@ class MatchDatabaseHandler(DatabaseHandler):
 
         return self.cur.fetchall()
 
-    def __drop_table(self):
-        self.cur.execute(f"DROP TABLE IF EXISTS matches")
-        self.commit()
-
 
 class HomepageDatabaseHandler(MatchDatabaseHandler):
-    def __init__(self, remake_table: bool = False):
-        super().__init__(remake_table)
-
-        if remake_table or not self.__check_if_table_exist():
-            self.__create_table()
-
-    def __check_if_table_exist(self):
-        self.cur.execute(f"SELECT * FROM homepage")
-        return self.cur.fetchone() is not None
-
-    def __create_table(self):
-        """
-        Creates the table for a models stats
-        :return:
-        """
-        self.__drop_table()
-        self.cur.execute(
-            f"""
-                CREATE TABLE homepage(
-                    match_number    INTEGER     AUTO_INCREMENT PRIMARY KEY,
-                    red             TEXT        NOT NULL,
-                    blue            TEXT        NOT NULL,
-                    winner          TEXT        NOT NULL
-                );
-                """
-        )
-        self.commit()
+    def __init__(self):
+        super().__init__()
 
     def add_match(self, red, blue, winner, red_odds, blue_odds, tier, red_pot, blue_pot, is_tournament, matchup_count):
         match_number = super().add_match(red, blue, winner)
 
         self.cur.execute(
-            "INSERT INTO homepage ("
-            "match_number, red_odds, blue_odds, "
-            "tier, red_pot, blue_pot, is_tournament, "
+            "INSERT INTO homepage (reference_number, red_odds, blue_odds, tier, red_pot, blue_pot, is_tournament, "
             "matchup_count) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
             (match_number, red_odds, blue_odds, tier, red_pot, blue_pot, is_tournament, matchup_count)
         )
