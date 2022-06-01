@@ -3,7 +3,7 @@ import time
 from abc import ABC
 
 from selenium import webdriver
-from selenium.common.exceptions import StaleElementReferenceException
+from selenium.common.exceptions import StaleElementReferenceException, NoSuchElementException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.firefox.options import Options
 
@@ -63,10 +63,16 @@ class SaltyBetDriver(ABC):
         Get the current state of the game
         :return: state string
         """
-        state_text = self.driver.find_element(By.ID, "gamestate").text
+        try:
+            state_text = self.driver.find_element(By.ID, "gamestate").text
+        except NoSuchElementException:
+            state_text = ""
 
         while state_text is "" or not isinstance(state_text, str):
-            state_text = self.driver.find_element(By.ID, "gamestate").text
+            try:
+                state_text = self.driver.find_element(By.ID, "gamestate").text
+            except NoSuchElementException:
+                state_text = ""
             time.sleep(1)
 
         return state_text
