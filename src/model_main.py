@@ -14,20 +14,13 @@ from website import webpage_handler
 
 def main(model_name: str, gambler: Gambler, user, enyc_pass):
     model = Model(model_name)
-    exit("Initializing model")
-
     driver = ModelDriver(user, enyc_pass)
-    exit("Initializing driver")
-
     model_database = ModelDatabaseHandler(model_name)
-    exit("Initializing database")
-
     website_handler = webpage_handler.WebPageHandler(
         model_name,
         model_database.get_balances(),
         model_database.get_predicted_correctly()
     )
-    exit("Initializing website")
 
     # initialize variables
     state = STATES["START"]
