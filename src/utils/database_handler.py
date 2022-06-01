@@ -152,7 +152,7 @@ class ModelDatabaseHandler(DatabaseHandler):
         :param remake: If True, recreate the database
         """
 
-        super(ModelDatabaseHandler, self).__init__()
+        super().__init__()
 
         self.model_name = model_name
 
