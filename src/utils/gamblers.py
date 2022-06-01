@@ -33,6 +33,9 @@ class Gambler(ABC):
 
 
 class AllIn(Gambler):
+    def __init__(self):
+        pass
+
     def __calculate_bet(self, confidence: float, driver: SaltyBetDriver) -> int:
         return driver.get_balance()
 
@@ -121,7 +124,7 @@ class ExpScaledConfidence(ScaledConfidence):
 
         bet_factor += bet_bias
 
-        return bet_factor * balance
+        return int(bet_factor * balance)
 
 
 class NumMatchWeighted(Gambler):
@@ -133,6 +136,9 @@ class NumMatchWeighted(Gambler):
 
     from utils.database_handler import MatchDatabaseHandler
     DATABASE = MatchDatabaseHandler()
+
+    def __init__(self):
+        pass
 
     def __calculate_bet(self, confidence: float, driver: SaltyBetDriver) -> int:
         r, b = driver.get_fighters()
