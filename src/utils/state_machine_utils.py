@@ -47,7 +47,7 @@ def await_next_state(driver, last_state):
     while state == last_state:
         state = decode_state(driver.get_game_state())
         time.sleep(1)
-        exit("Waiting for next state")
+        # exit("Waiting for next state")
 
         if state is None:
             state = last_state
