@@ -69,7 +69,7 @@ class SaltyBetDriver(ABC):
         while state_text == "" or not isinstance(state_text, str):
             state_text = self.driver.find_element(By.ID, "betstatus").text
             time.sleep(1)
-            # exit("Waiting for state")
+        exit("Waiting for state")
 
         return state_text
 
