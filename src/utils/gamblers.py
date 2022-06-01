@@ -100,7 +100,7 @@ class ExpScaledConfidence(ScaledConfidence):
         else:
             return 0.50, 0.29
 
-    def __calculate_bet(self, confidence: float, driver: SaltyBetDriver) -> int:
+    def calculate_bet(self, confidence: float, driver: SaltyBetDriver) -> int:
         balance = driver.get_balance()
 
         if driver.is_tournament():
@@ -137,7 +137,7 @@ class NumMatchWeighted(Gambler):
     def __init__(self):
         pass
 
-    def __calculate_bet(self, confidence: float, driver: SaltyBetDriver) -> int:
+    def calculate_bet(self, confidence: float, driver: SaltyBetDriver) -> int:
         r, b = driver.get_fighters()
         matchup_count = self.DATABASE.get_matchup_count(r, b)
         print("Matchup count:", matchup_count)
