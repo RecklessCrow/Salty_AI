@@ -1,4 +1,5 @@
 import os
+
 import mysql.connector
 
 
@@ -10,7 +11,7 @@ class DatabaseHandler:
 
         self.connection = None
         self.connection = mysql.connector.connect(
-            host="overtimegaming.us.to",
+            host="10.0.0.2",
             user="saltybet",
             password=self.__get_password(),
             database="saltybet"
@@ -49,20 +50,17 @@ class DatabaseHandler:
 
 
 class MatchDatabaseHandler(DatabaseHandler):
-    def __init__(self, table_name: str, remake_tables: bool = False):
+    def __init__(self, remake_tables: bool = False):
         """
         Database handler for Tables that deal with matches
-        :param table_name: The name of the table to use
         """
-
         super().__init__()
-        self.table_name = table_name
 
         if remake_tables or not self.__check_if_table_exist():
             self.__create_table()
 
     def __check_if_table_exist(self):
-        self.cur.execute(f"SELECT * FROM {self.table_name}")
+        self.cur.execute(f"SELECT * FROM matches")
         return self.cur.fetchone() is not None
 
     def __create_table(self):
@@ -73,7 +71,7 @@ class MatchDatabaseHandler(DatabaseHandler):
         self.__drop_table()
         self.cur.execute(
             f"""
-            CREATE TABLE {self.table_name}(
+            CREATE TABLE matches(
                 match_number    INTEGER     AUTO_INCREMENT PRIMARY KEY,
                 red             TEXT        NOT NULL,
                 blue            TEXT        NOT NULL,
@@ -97,6 +95,8 @@ class MatchDatabaseHandler(DatabaseHandler):
         self.__add_character_from_match(blue, winner == "blue")
         self.cur.execute("INSERT INTO matches (red, blue, winner) VALUES (%s, %s, %s)", (red, blue, winner))
         self.commit()
+
+        return self.cur.lastrowid
 
     def __add_character_from_match(self, character: str, is_winner: bool):
         """
@@ -133,7 +133,7 @@ class MatchDatabaseHandler(DatabaseHandler):
         :return: The number of times fighter_1 has faced fighter_2
         """
         self.cur.execute(
-            f"SELECT COUNT(*) FROM {self.table_name} "
+            f"SELECT COUNT(*) FROM matches "
             "WHERE (red = %s AND blue = %s) OR (red = %s AND blue = %s)",
             (fighter_1, fighter_2, fighter_2, fighter_1)
         )
@@ -153,7 +153,50 @@ class MatchDatabaseHandler(DatabaseHandler):
         return self.cur.fetchall()
 
     def __drop_table(self):
-        self.cur.execute(f"DROP TABLE IF EXISTS {self.table_name}")
+        self.cur.execute(f"DROP TABLE IF EXISTS matches")
+        self.commit()
+
+
+class HomepageDatabaseHandler(MatchDatabaseHandler):
+    def __init__(self, remake_table: bool = False):
+        super().__init__(remake_table)
+
+        if remake_table or not self.__check_if_table_exist():
+            self.__create_table()
+
+    def __check_if_table_exist(self):
+        self.cur.execute(f"SELECT * FROM homepage")
+        return self.cur.fetchone() is not None
+
+    def __create_table(self):
+        """
+        Creates the table for a models stats
+        :return:
+        """
+        self.__drop_table()
+        self.cur.execute(
+            f"""
+                CREATE TABLE homepage(
+                    match_number    INTEGER     AUTO_INCREMENT PRIMARY KEY,
+                    red             TEXT        NOT NULL,
+                    blue            TEXT        NOT NULL,
+                    winner          TEXT        NOT NULL
+                );
+                """
+        )
+        self.commit()
+
+    def add_match(self, red, blue, winner, red_odds, blue_odds, tier, red_pot, blue_pot, is_tournament, matchup_count):
+        match_number = super().add_match(red, blue, winner)
+
+        self.cur.execute(
+            "INSERT INTO homepage ("
+            "match_number, red_odds, blue_odds, "
+            "tier, red_pot, blue_pot, is_tournament, "
+            "matchup_count) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
+            (match_number, red_odds, blue_odds, tier, red_pot, blue_pot, is_tournament, matchup_count)
+        )
+
         self.commit()
 
 
