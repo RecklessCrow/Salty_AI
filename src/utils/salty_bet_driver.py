@@ -51,7 +51,7 @@ class SaltyBetDriver(ABC):
         """
         balance_text = self.driver.find_element(By.ID, "balance").text
 
-        while balance_text is "" or not isinstance(balance_text, str):
+        while balance_text == "" or not isinstance(balance_text, str):
             balance_text = self.driver.find_element(By.ID, "balance").text
             time.sleep(1)
 
@@ -63,10 +63,10 @@ class SaltyBetDriver(ABC):
         Get the current state of the game
         :return: state string
         """
-        state_text = self.driver.find_element(By.ID, "gamestate").text
+        state_text = self.driver.find_element(By.ID, "betstatus").text
 
-        while state_text is "" or not isinstance(state_text, str):
-            state_text = self.driver.find_element(By.ID, "gamestate").text
+        while state_text == "" or not isinstance(state_text, str):
+            state_text = self.driver.find_element(By.ID, "betstatus").text
             time.sleep(1)
 
         return state_text
