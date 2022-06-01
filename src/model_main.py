@@ -6,16 +6,23 @@ import numpy as np
 import website.website_utils
 from utils.database_handler import ModelDatabaseHandler
 from utils.gamblers import Gambler
+from utils.model import Model
 from utils.salty_bet_driver import ModelDriver
 from utils.state_machine_utils import *
-from utils.model import Model
 from website import webpage_handler
 
 
 def main(model_name: str, gambler: Gambler, user, enyc_pass):
+    print("Initializing model")
     model = Model(model_name)
+
+    print("Initializing driver")
     driver = ModelDriver(user, enyc_pass)
+
+    print("Initializing database")
     model_database = ModelDatabaseHandler(model_name)
+
+    print("Initializing website")
     website_handler = webpage_handler.WebPageHandler(
         model_name,
         model_database.get_balances(),
