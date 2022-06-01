@@ -123,7 +123,6 @@ def start():
         sys.exit(1)
 
     print(sys.argv)
-    exit(1)
 
     model_name = sys.argv[1]
     gambler_id = sys.argv[2]
