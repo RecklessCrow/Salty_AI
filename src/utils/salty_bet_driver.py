@@ -131,7 +131,7 @@ class HomepageDriver(SaltyBetDriver):
         """
         Object to interact with SaltyBet
         """
-        super(SaltyBetDriver, self).__init__(headless=True)
+        super().__init__(headless=True)
 
         # Load into the website
         self.driver.get("https://www.saltybet.com")
@@ -143,7 +143,7 @@ class ModelDriver(SaltyBetDriver):
         """
         Object to interact with SaltyBet
         """
-        super(SaltyBetDriver, self).__init__(headless=True)
+        super().__init__(headless=True)
 
         # Load into the website
         self.driver.get("https://www.saltybet.com/authenticate?signin=1")
