@@ -54,6 +54,7 @@ class SaltyBetDriver(ABC):
         while balance_text == "" or not isinstance(balance_text, str):
             balance_text = self.driver.find_element(By.ID, "balance").text
             time.sleep(1)
+            print("Waiting for balance")
 
         balance = int(balance_text.replace(",", ""))
         return balance
@@ -68,6 +69,7 @@ class SaltyBetDriver(ABC):
         while state_text == "" or not isinstance(state_text, str):
             state_text = self.driver.find_element(By.ID, "betstatus").text
             time.sleep(1)
+            print("Waiting for state")
 
         return state_text
 
@@ -94,6 +96,7 @@ class SaltyBetDriver(ABC):
         while betting_text == "" or not isinstance(betting_text, str):
             betting_text = self.driver.find_element(By.ID, "lastbet").text
             time.sleep(1)
+            print("Waiting for odds")
 
         odds_text = betting_text.split("|")[-1].strip()
         red, blue = tuple(odds_text.split(":"))
