@@ -18,7 +18,7 @@ class Gambler:
         """
 
         # Check that the bet amount is not zero or negative.
-        bet_amount = max(bet_amount, 1)
+        bet_amount = int(max(bet_amount, 1))
 
         # Round the bet to a number of sig figs given by half the number of digits in the bet amount.
         bet_amount = sigfig.round(bet_amount, sigfigs=len(str(bet_amount)) // 2)
