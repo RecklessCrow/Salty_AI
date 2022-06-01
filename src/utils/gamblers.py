@@ -1,10 +1,10 @@
-from abc import ABC, abstractmethod
 import sigfig
+
 from utils.salty_bet_driver import SaltyBetDriver
 
 
-class Gambler(ABC):
-    @abstractmethod
+class Gambler:
+
     def __calculate_bet(self, confidence: float, driver: SaltyBetDriver) -> int:
         raise NotImplementedError
 
