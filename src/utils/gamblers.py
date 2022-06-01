@@ -9,7 +9,7 @@ from salty_bet_driver import SaltyBetDriver
 class Gambler(ABC):
     @abstractmethod
     def __calculate_bet(self, confidence: float, driver: SaltyBetDriver) -> int:
-        pass
+        raise NotImplementedError
 
     def get_bet_amount(self, confidence: float, driver: SaltyBetDriver) -> int:
         """
@@ -163,12 +163,6 @@ class NumMatchWeighted(Gambler):
                 bet_amount = balance * 0.05
 
             bet_amount = min(self.MAX_NORMAL_BET, bet_amount)
-
-        bet_amount = int(bet_amount)
-        bet_amount = sigfig.round(bet_amount, sigfigs=len(str(bet_amount)) // 2)
-
-        if bet_amount > balance:
-            bet_amount = balance
 
         return bet_amount
 
