@@ -3,7 +3,7 @@ import sys
 
 import numpy as np
 
-import website.utils
+import website.website_utils
 from src.utils.database_handler import ModelDatabaseHandler
 from src.utils.gamblers import Gambler
 from src.utils.salty_bet_driver import ModelDriver
@@ -112,7 +112,7 @@ def main(model_name: str, gambler: Gambler, user, enyc_pass):
 
 def start():
     if len(sys.argv) != 4:
-        print("Usage: python3 model_state_machine.py <model_name> <gambler_id> <user_id>")
+        print("Usage: python3 model_main.py <model_name> <gambler_id> <user_id>")
         sys.exit(1)
 
     print(sys.argv)

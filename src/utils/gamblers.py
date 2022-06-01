@@ -2,8 +2,8 @@ from abc import ABC, abstractmethod
 
 import sigfig
 
-from database_handler import MatchDatabaseHandler
-from salty_bet_driver import SaltyBetDriver
+from utils.database_handler import MatchDatabaseHandler
+from utils.salty_bet_driver import SaltyBetDriver
 
 
 class Gambler(ABC):

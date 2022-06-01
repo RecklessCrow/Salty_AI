@@ -4,7 +4,7 @@ from collections import deque
 import numpy as np
 import plotly.express as px
 import plotly.io as pio
-from web_utils.html_builder import *
+from website.html_builder import *
 
 
 class WebPageHandler:
