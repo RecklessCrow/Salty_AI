@@ -43,7 +43,7 @@ def main(headless: bool):
                 predicted_winner = int_to_team(np.argmax(prediction))
                 confidence = np.max(prediction)
                 confidence = (confidence - 0.5) * 2  # confidence is now scaled between 0 and 1
-                bet_amount = gambler.calculate_bet(confidence, driver)  # calculate bet amount
+                bet_amount = gambler.__calculate_bet(confidence, driver)  # calculate bet amount
 
             print(
                 f"Red  Team: {colored(red, 'red')}\n"

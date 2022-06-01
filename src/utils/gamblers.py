@@ -8,7 +8,7 @@ from salty_bet_driver import SaltyBetDriver
 
 class Gambler(ABC):
     @abstractmethod
-    def calculate_bet(self, confidence: float, driver: SaltyBetDriver) -> int:
+    def __calculate_bet(self, confidence: float, driver: SaltyBetDriver) -> int:
         pass
 
     def get_bet_amount(self, confidence: float, driver: SaltyBetDriver) -> int:
@@ -19,7 +19,7 @@ class Gambler(ABC):
         :return: Amount to bet.
         """
         # Calculate the bet amount.
-        bet_amount = self.calculate_bet(confidence, driver)
+        bet_amount = self.__calculate_bet(confidence, driver)
 
         # Check that the bet amount is not zero or negative.
         bet_amount = max(bet_amount, 1)
@@ -32,19 +32,9 @@ class Gambler(ABC):
 
         return int(bet_amount)
 
-    @staticmethod
-    def on_tournament(confidence: float, driver: SaltyBetDriver) -> int:
-        balance = driver.get_balance()
-        bet_amount = balance * confidence
-
-        if bet_amount < 4 * driver.get_bailout(True):
-            bet_amount = balance
-
-        return bet_amount
-
 
 class AllIn(Gambler):
-    def calculate_bet(self, confidence: float, driver: SaltyBetDriver) -> int:
+    def __calculate_bet(self, confidence: float, driver: SaltyBetDriver) -> int:
         return driver.get_balance()
 
 
@@ -54,14 +44,14 @@ class ScaledConfidence(Gambler):
         self.high_confidence = 0.75
         self.factor = 1/3
 
-    def calculate_bet(self, confidence: float, driver: SaltyBetDriver) -> int:
+    def __calculate_bet(self, confidence: float, driver: SaltyBetDriver) -> int:
         is_tournament = driver.is_tournament()
         bailout = driver.get_bailout(is_tournament)
         balance = driver.get_balance()
 
         # Tournament betting rules
         if is_tournament:
-            return self.on_tournament(confidence, driver)
+            return 1
 
         # Bet all in if we're less than 2x bailout
         # Bet all in if we're above a certain confidence level
@@ -111,7 +101,7 @@ class ExpScaledConfidence(ScaledConfidence):
         else:
             return 0.50, 0.29
 
-    def calculate_bet(self, confidence: float, driver: SaltyBetDriver) -> int:
+    def __calculate_bet(self, confidence: float, driver: SaltyBetDriver) -> int:
         balance = driver.get_balance()
 
         if driver.is_tournament():
@@ -143,7 +133,7 @@ class NumMatchWeighted(Gambler):
     MAX_NORMAL_BET = 5_000
     DATABASE = MatchDatabaseHandler("matches")
 
-    def calculate_bet(self, confidence: float, driver: SaltyBetDriver) -> int:
+    def __calculate_bet(self, confidence: float, driver: SaltyBetDriver) -> int:
         r, b = driver.get_fighters()
         matchup_count = self.DATABASE.get_matchup_count(r, b)
         print("Matchup count:", matchup_count)
