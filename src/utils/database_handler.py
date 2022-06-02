@@ -199,7 +199,7 @@ class ModelDatabaseHandler(DatabaseHandler):
         """
         self.cur.execute(
             f"INSERT INTO {self.model_name} (predicted_correctly, confidence, end_balance) VALUES (%s, %s, %s)",
-            (predicted_correctly, confidence, end_balance)
+            (predicted_correctly, float(confidence), end_balance)
         )
         self.commit()
 
