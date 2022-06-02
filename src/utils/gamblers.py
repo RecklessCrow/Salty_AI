@@ -91,15 +91,11 @@ class ExpScaledConfidence(Gambler):
     @staticmethod
     def __get_parameters(balance):
         if balance < 1_000:
-            return 1.00, 0.45
-        if balance < 5_000:
-            return 0.89, 0.42
+            return 0.725, 0.36
         if balance < 10_000:
-            return 0.78, 0.38
-        if balance < 50_000:
-            return 0.50, 0.29
+            return 0.33, 0.24
         if balance < 100_000:
-            return 0.28, 0.22
+            return 0.175, 0.187
         if balance < 1_000_000:
             return 0.01, 0.14
         else:
