@@ -51,7 +51,7 @@ class SaltyBetDriver(ABC):
         """
         balance_text = self.driver.find_element(By.ID, "balance").text
 
-        while balance_text == "" or not isinstance(balance_text, str):
+        while  not isinstance(balance_text, str) or balance_text == "":
             balance_text = self.driver.find_element(By.ID, "balance").text
             time.sleep(1)
 
@@ -65,11 +65,11 @@ class SaltyBetDriver(ABC):
         """
         state_text = self.driver.find_element(By.ID, "betstatus").text
 
-        while state_text == "" or not isinstance(state_text, str):
+        while not isinstance(state_text, str) or state_text == "":
             state_text = self.driver.find_element(By.ID, "betstatus").text
             time.sleep(1)
 
-        return state_text
+        return state_text.lower()
 
     def place_bet(self, amount: int, team: str):
         """
@@ -91,7 +91,7 @@ class SaltyBetDriver(ABC):
         """
         betting_text = self.driver.find_element(By.ID, "lastbet").text
 
-        while betting_text == "" or not isinstance(betting_text, str):
+        while not isinstance(betting_text, str) or betting_text == "":
             betting_text = self.driver.find_element(By.ID, "lastbet").text
             time.sleep(1)
 

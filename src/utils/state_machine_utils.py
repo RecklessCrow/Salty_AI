@@ -21,7 +21,6 @@ def int_to_team(number):
 
 
 def decode_state(encoded_state):
-    encoded_state = encoded_state.lower()
     if "locked" in encoded_state:
         return STATES["BETS_CLOSED"]
 
