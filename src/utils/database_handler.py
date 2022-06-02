@@ -28,6 +28,12 @@ class DatabaseHandler:
             self.commit()
             self.connection.close()
 
+    def commit(self):
+        """
+        Commit changes to the database
+        """
+        self.connection.commit()
+
     @staticmethod
     def __get_password():
         """
@@ -36,17 +42,16 @@ class DatabaseHandler:
         """
         path_to_file = os.path.join(os.path.dirname(os.path.realpath(__file__)), "../..", "database",
                                     "database_pass.txt")
-        if not os.path.exists(path_to_file):
-            exit("Database password file not found")
+
+        if not os.path.exists(path_to_file):  # support for password being stored in .env file
+            import dotenv
+            dotenv.load_dotenv()
+            password = os.getenv("DATABASE_PASSWORD")
+            assert password is not None, "Password not found"
+            return password
 
         with open(path_to_file, "r") as f:
             return f.read()
-
-    def commit(self):
-        """
-        Commit changes to the database
-        """
-        self.connection.commit()
 
 
 class MatchDatabaseHandler(DatabaseHandler):
@@ -152,7 +157,7 @@ class ModelDatabaseHandler(DatabaseHandler):
         :param remake: If True, recreate the database
         """
 
-        super(ModelDatabaseHandler, self).__init__()
+        super().__init__()
 
         self.model_name = model_name
 

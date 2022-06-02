@@ -147,6 +147,7 @@ class ModelDriver(SaltyBetDriver):
 
         # Load into the website
         self.driver.get("https://www.saltybet.com/authenticate?signin=1")
+        time.sleep(1)
         assert "Salty Bet" == self.driver.title, 'Failed to load into website. Maybe saltybet.com is down?'
 
         # Login
@@ -161,5 +162,5 @@ class ModelDriver(SaltyBetDriver):
         self.driver.find_element(By.CLASS_NAME, 'graybutton').click()
 
         # Check if we are logged in
-        assert "authenticate" not in self.driver.current_url.lower(), \
-            "Could not successfully login using given credentials. "
+        time.sleep(1)
+        assert "authenticate" not in self.driver.current_url.lower(), 'Failed to login. Wrong username or password?'

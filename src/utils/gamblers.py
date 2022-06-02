@@ -1,17 +1,18 @@
+from abc import ABC
+
 import sigfig
 
 from utils.salty_bet_driver import SaltyBetDriver
 
 
-class Gambler:
-
+class Gambler(ABC):
     def calculate_bet(self, confidence: float, driver: SaltyBetDriver) -> int:
         raise NotImplementedError
 
     @staticmethod
-    def get_bet_amount(bet_amount, balance) -> int:
+    def format_bet(bet_amount, balance) -> int:
         """
-        Gets the amount to bet based on the confidence and performs necessary checks.
+        Formats the bet amount to guarantee that the bet is valid and rounds to a number of significant figures.
         :param bet_amount: The amount to bet.
         :param balance: The balance of the gambler.
         :return: Amount to bet.
@@ -30,18 +31,29 @@ class Gambler:
 
 
 class AllIn(Gambler):
+    """
+    Gambler that bets all the balance all the time.
+    """
+
     def __init__(self):
+        """
+        Initializes the gambler.
+        """
         pass
 
     def calculate_bet(self, confidence: float, driver: SaltyBetDriver) -> int:
-        return self.get_bet_amount(driver.get_balance(), driver.get_balance())
+        return self.format_bet(driver.get_balance(), driver.get_balance())
 
 
 class ScaledConfidence(Gambler):
+    """
+    Gambler that bets a scaled amount of the balance based on the confidence.
+    """
+
     def __init__(self):
         self.all_in_confidence = 0.9
         self.high_confidence = 0.75
-        self.factor = 1/3
+        self.factor = 1 / 3
 
     def calculate_bet(self, confidence: float, driver: SaltyBetDriver) -> int:
         is_tournament = driver.is_tournament()
@@ -65,10 +77,14 @@ class ScaledConfidence(Gambler):
         else:
             bet_amount = balance * confidence * self.factor
 
-        return self.get_bet_amount(bet_amount, balance)
+        return self.format_bet(bet_amount, balance)
 
 
 class ExpScaledConfidence(Gambler):
+    """
+    Gambler that bets a scaled amount of the balance based on the confidence.
+    """
+
     def __init__(self):
         super().__init__()
 
@@ -121,10 +137,14 @@ class ExpScaledConfidence(Gambler):
 
         bet_factor += bet_bias
         bet_amount = balance * bet_factor
-        return self.get_bet_amount(bet_amount, balance)
+        return self.format_bet(bet_amount, balance)
 
 
 class NumMatchWeighted(Gambler):
+    """
+    Gambler that bets a scaled amount of the balance based on the confidence and number of seen match ups.
+    """
+
     BALANCE_CAP = 100_000
     HIGH_CONFIDENCE = 0.8
     ALL_IN_CONFIDENCE = 0.9
@@ -168,7 +188,7 @@ class NumMatchWeighted(Gambler):
 
             bet_amount = min(self.MAX_NORMAL_BET, bet_amount)
 
-        return self.get_bet_amount(bet_amount, balance)
+        return self.format_bet(bet_amount, balance)
 
 
 GAMBLER_ID_DICT = {
