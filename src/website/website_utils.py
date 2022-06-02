@@ -20,7 +20,7 @@ def create_run_config(model_name, gambler, user):
 def kill_pid(model_name):
 
     ps = subprocess.Popen(('ps', '-ax'), stdout=subprocess.PIPE)
-    output = subprocess.check_output(('grep', f'model_driver_main.py {model_name}'), stdin=ps.stdout)
+    output = subprocess.check_output(('grep', f'model_main.py {model_name}'), stdin=ps.stdout)
     ps.wait()
 
     print(output)
