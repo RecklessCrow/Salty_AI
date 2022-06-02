@@ -37,7 +37,7 @@ class ModelConstants:
 
     # Training
     BATCH_SIZE = 2 ** 12
-    EPOCHS = 30
+    EPOCHS = 50
     MAX_TRAINING_STEPS = int(np.ceil((len(DATABASE.get_all_matches()) / BATCH_SIZE) * EPOCHS))
 
     # Tuning
@@ -60,7 +60,7 @@ class Dataset:
     Dataset class
     """
 
-    def __init__(self, test_size=0.2, val_size=0.0):
+    def __init__(self, test_size=0.2, val_size=None):
         """
         Initialize dataset with train and test split
         :param test_size: Percentage of the dataset to be used for testing. Default is 20%
@@ -72,23 +72,26 @@ class Dataset:
         self.y = np.array([[i == "red", i == "blue"] for i in self.y]).astype(np.float32)  # one hot encoding
 
         # Split dataset into training and test set
+        assert 0.0 < test_size < 1.0, "Test size must be between 0 and 1."
         self.x_train, self.x_test, self.y_train, self.y_test = train_test_split(
             self.x, self.y, test_size=test_size, random_state=SEED)
 
         # Split training set into training and validation set if requested
         self.x_val, self.y_val = None, None
-        if val_size > 0:
+        if val_size is not None:
+            assert 0.0 < val_size < 1.0, "Validation size must be between 0 and 1."
+            assert test_size + val_size <= 1.0, "Cannot split more than 100% of the dataset."
             self.x_train, self.x_val, self.y_train, self.y_val = train_test_split(
                 self.x_train, self.y_train, test_size=val_size / (1 - test_size), random_state=SEED)
 
-    def get_train_dataset(self):
+    def get_train_data(self):
         return self.x_train, self.y_train
 
-    def get_test_dataset(self):
+    def get_test_data(self):
         return self.x_test, self.y_test
 
-    def get_val_dataset(self):
-        assert self.x_val is not None, "Validation set was not created"
+    def get_val_data(self):
+        assert self.x_val is not None, "Cannot get validation data. Validation set was not created."
         return self.x_val, self.y_val
 
     def get_whole_dataset(self):
@@ -96,7 +99,7 @@ class Dataset:
 
 
 if __name__ == '__main__':
-    dataset = Dataset(make_val=True)
-    # print(dataset.get_train_dataset())
-    # print(dataset.get_test_dataset())
-    print(dataset.get_val_dataset())
+    dataset = Dataset()
+    print(dataset.get_train_data())
+    print(dataset.get_test_data())
+    print(dataset.get_val_data())

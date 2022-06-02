@@ -2,6 +2,7 @@ import numpy as np
 from sklearn.metrics import classification_report, accuracy_score
 from sklearn.model_selection import StratifiedKFold
 
+from model.make_model import optimize_temperature
 from model.model import Model
 from model.tuning_model import TuningModel
 from model.utils import Dataset, ModelConstants, SEED
@@ -10,12 +11,17 @@ from model.utils import Dataset, ModelConstants, SEED
 def train_and_evaluate():
     # Load the data
     dataset = Dataset(val_size=0.1)
-    x_train, y_train, = dataset.get_train_dataset()
-    x_val, y_val, = dataset.get_val_dataset()
-    x_test, y_test, = dataset.get_test_dataset()
+    x_train, y_train, = dataset.get_train_data()
+    x_val, y_val, = dataset.get_val_data()
+    x_test, y_test, = dataset.get_test_data()
 
     # Initialize and train the utils
     model = Model()
+
+    # Fit the temperature
+    temperature = optimize_temperature(y_val)
+    model.set_temperature(temperature)
+
     model.train(
         x_train, y_train,
         val=(x_val, y_val),
@@ -23,7 +29,11 @@ def train_and_evaluate():
         checkpointing=True,
         early_stopping=False
     )
-    model.save()
+
+    # Fit the temperature
+    # temperature = optimize_temperature(y_val)
+    # model.set_temperature(temperature)
+    # model.save()
 
     # Test the utils
     y_pred = model.predict(x_test, batch_size=ModelConstants.BATCH_SIZE)
@@ -34,7 +44,7 @@ def train_and_evaluate():
 
 def cross_validation():
     dataset = Dataset()
-    x, y, = dataset.get_train_dataset()
+    x, y, = dataset.get_train_data()
 
     accuracies = []
     iterator = StratifiedKFold(
@@ -71,8 +81,8 @@ def cross_validation():
 def hyper_parameter_tuning():
     # Load the data
     dataset = Dataset(val_size=0.1)
-    x_train, y_train, = dataset.get_train_dataset()
-    x_val, y_val, = dataset.get_val_dataset()
+    x_train, y_train, = dataset.get_train_data()
+    x_val, y_val, = dataset.get_val_data()
 
     # Initialize and train the utils
     model = TuningModel()

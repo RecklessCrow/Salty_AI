@@ -55,7 +55,8 @@ class Model:
 
         return model
 
-    def train(self, x, y, val=None, epochs=ModelConstants.EPOCHS, early_stopping=False, checkpointing=False, **kwargs):
+    def train(self, x, y, val=None, epochs=ModelConstants.EPOCHS, batch_size=ModelConstants.BATCH_SIZE,
+              early_stopping=False, checkpointing=False, **kwargs):
         """
         Train the model.
         :param x: The training data.
@@ -68,12 +69,12 @@ class Model:
         :return:
         """
         # Make the training data generator
-        train = DataGenerator(x, y, train=True, batch_size=ModelConstants.BATCH_SIZE)
+        train = DataGenerator(x, y, train=True, batch_size=batch_size)
 
         # Make the validation data generator
         callbacks = []
         if val is not None:
-            val = DataGenerator(val[0], val[1], train=False, batch_size=ModelConstants.BATCH_SIZE)
+            val = DataGenerator(val[0], val[1], train=False, batch_size=batch_size)
 
             # Make the early stopping callback
             if early_stopping:
@@ -92,11 +93,11 @@ class Model:
                     save_best_only=True
                 ))
 
-                callbacks.append(ModelCheckpoint(
-                    filepath=os.path.join(self.model_dir + "_checkpoint_acc"),
-                    monitor="val_accuracy",
-                    save_best_only=True
-                ))
+                # callbacks.append(ModelCheckpoint(
+                #     filepath=os.path.join(self.model_dir + "_checkpoint_acc"),
+                #     monitor="val_accuracy",
+                #     save_best_only=True
+                # ))
 
         history = self.model.fit(
             train,
@@ -108,15 +109,20 @@ class Model:
 
         return history
 
-    def predict(self, x, **kwargs):
+    def predict(self, x, logits=False, batch_size=ModelConstants.BATCH_SIZE, **kwargs):
         """
         Predict the labels for the given data.
         :param x: The data to predict labels for.
+        :param logits: True if the logits should be returned.
+        :param batch_size: The batch size to use.
         :param kwargs: Additional arguments to pass to the model for prediction.
         :return:
         """
-        predictions = self.model.predict(x, **kwargs)
-        predictions = softmax(predictions)
+        predictions = self.model.predict(x, batch_size=batch_size, **kwargs)
+
+        if not logits:
+            predictions = softmax(predictions)
+
         return predictions
 
     def save(self):

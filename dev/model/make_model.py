@@ -1,4 +1,6 @@
+import numpy as np
 import tensorflow.keras.backend as K
+from scipy.optimize import minimize
 from tensorflow import string
 from tensorflow.keras.layers import Input, Dense, Embedding, Flatten, MultiHeadAttention, Dropout, LayerNormalization, \
     StringLookup
@@ -8,11 +10,10 @@ from tensorflow_addons.optimizers import RectifiedAdam
 from dev.model.utils import ModelConstants, set_random_state
 
 
-# todo make a metric for the model's calibration
 def alpha_loss(y_true, y_pred):
     """
     TF implementation of the alpha loss function
-    Supposedly creates a well calibrated utils
+    Supposedly creates a well calibrated model
     from https://arxiv.org/pdf/1906.02314.pdf
     :param y_true:
     :param y_pred:
@@ -33,7 +34,7 @@ def alpha_loss(y_true, y_pred):
 
 def make_attention_model(parameters):
     """
-    utils with the transformer architecture
+    model with the transformer architecture
     :param parameters:
     :return:
     """
@@ -82,7 +83,7 @@ def make_attention_model(parameters):
         )(x)
         x = Dropout(parameters["dropout"])(x)
 
-    outputs = Dense(units=2)(x)
+    outputs = Dense(units=2, name="logits")(x)
 
     model = FunctionalModel(inputs=inputs, outputs=outputs, name="salty_model")
 
@@ -100,3 +101,15 @@ def make_attention_model(parameters):
     )
 
     return model
+
+
+def calculate_temperature(x, y):
+    # Optimize T (temperature) using the lbfgs method
+    # https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html
+
+    def loss(T):
+        # Categorical cross entropy loss
+        return np.mean(K.categorical_crossentropy(y, x / T, from_logits=True).numpy())
+
+    res = minimize(loss, x0=np.array(1.0), method='L-BFGS-B', bounds=[(0.0, None)])
+    return res.x[0]
