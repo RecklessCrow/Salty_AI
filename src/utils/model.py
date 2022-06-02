@@ -18,6 +18,7 @@ class Model:
         """
 
         self.model_path = os.path.join(self.MODEL_DIR, model_name)
+        self.model_name = model_name
 
         assert os.path.exists(self.model_path), f"Model {model_name} does not exist."
 
@@ -38,5 +39,8 @@ class Model:
             return None
 
         prediction = self.model.predict([[red, blue]])
+        if self.model_name == 'slope_fit':
+            return prediction[0]
+
         prediction = softmax(prediction)
         return prediction[0]
