@@ -26,13 +26,16 @@ def main(model_name: str, gambler: Gambler, user, enyc_pass):
     state = STATES["START"]
 
     while True:
+        print("State over: " + str(state))
         state = await_next_state(driver, state)
+        print("New State: " + str(state))
 
         if state == STATES["BETS_OPEN"]:
+            print(state)
 
             red, blue = driver.get_fighters()
 
-            if (red, blue) is None:  # names are not available yet...
+            if None in (red, blue):  # names are not available yet...
                 time.sleep(1)
                 state = STATES['START']
                 continue
@@ -62,7 +65,7 @@ def main(model_name: str, gambler: Gambler, user, enyc_pass):
 
         if state == STATES['BETS_CLOSED']:
             odds = driver.get_odds()
-
+            print("Betting closed, odds: " + str(odds))
             website_handler.update_page(
                 match_confidence=confidence,
                 team_prediction=predicted_winner,
@@ -75,6 +78,7 @@ def main(model_name: str, gambler: Gambler, user, enyc_pass):
 
         # Match over
         if state == STATES["PAYOUT"]:
+            print("Match over")
 
             payout_message = driver.get_game_state()
             if "red" in payout_message:  # red winner

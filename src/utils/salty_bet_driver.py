@@ -108,7 +108,7 @@ class SaltyBetDriver(ABC):
             red = self.driver.find_element(By.CLASS_NAME, "redtext").text
             blue = self.driver.find_element(By.CLASS_NAME, "bluetext").text
         except StaleElementReferenceException:
-            return
+            return None, None
 
         if "|" in red:
             red = red.split('|')[1]
