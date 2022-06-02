@@ -22,7 +22,7 @@ class Gambler(ABC):
         bet_amount = int(max(bet_amount, 1))
 
         # Round the bet to a number of sig figs given by half the number of digits in the bet amount.
-        bet_amount = sigfig.round(bet_amount, sigfigs=len(str(bet_amount)) // 2)
+        # bet_amount = sigfig.round(bet_amount, sigfigs=len(str(bet_amount)) // 2)
 
         # Check that the bet amount is not greater than the balance after rounding.
         bet_amount = min(bet_amount, balance)
