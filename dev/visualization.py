@@ -21,6 +21,7 @@ def plot_reliability_diagram(model_name, predicted_correctly, argmax, n_bins=10)
 
     binned_correct, bin_edges = np.histogram(correct_predictions, bins=n_bins)
     binned_incorrect, _ = np.histogram(incorrect_predictions, bins=n_bins)
+    all_bins, _ = np.histogram(argmax, bins=n_bins)
 
     bin_centers = (bin_edges[1:] + bin_edges[:-1]) / 2
     binned_accuracy = binned_correct / (binned_correct + binned_incorrect)
@@ -44,6 +45,9 @@ def plot_reliability_diagram(model_name, predicted_correctly, argmax, n_bins=10)
     # plt.plot(bin_centers, gaussian_filter1d(binned_correct + binned_incorrect, sigma=2), '-')  # Fitted curve
     ax2.set_xlabel('Predicted Confidence')
     ax2.set_ylabel('Count')
+
+    weighted_accuracy = np.sum((all_bins * slope) + intep) / len(argmax)
+    ax2.title.set_text(f'Weighted Accuracy: {weighted_accuracy:5.2%}')
 
     plt.suptitle(f'Reliability diagram for {model_name}')
     plt.show()
