@@ -3,7 +3,7 @@ import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 
-from tensorflow.keras.models import load_model
+import tensorflow as tf
 
 
 class Model:
@@ -22,7 +22,7 @@ class Model:
         assert os.path.exists(self.model_path), f"Model {model_name} does not exist."
 
         # load in model from parameter
-        self.model = load_model(self.model_path, compile=False)
+        self.model = tf.keras.models.load_model(self.model_path, compile=False)
         self.vocab = self.model.get_layer('string_lookup').get_vocabulary()
 
     def predict_match(self, red, blue):
