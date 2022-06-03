@@ -7,29 +7,8 @@ from tensorflow.keras.layers import Input, Dense, Embedding, Flatten, MultiHeadA
 from tensorflow.keras.models import Model as FunctionalModel
 from tensorflow_addons.optimizers import RectifiedAdam
 
+from dev.model.losses import alpha_loss
 from dev.model.utils import ModelConstants, set_random_state
-
-
-def alpha_loss(y_true, y_pred):
-    """
-    TF implementation of the alpha loss function
-    Supposedly creates a well calibrated model
-    from https://arxiv.org/pdf/1906.02314.pdf
-    :param y_true:
-    :param y_pred:
-    :return:
-    """
-
-    if ModelConstants.ALPHA == 1.0:  # Use regular cross entropy loss
-        loss = K.categorical_crossentropy(y_true, y_pred, from_logits=True)
-
-    else:  # Use the alpha loss function
-        y_pred = K.softmax(y_pred)
-        alpha = K.constant([ModelConstants.ALPHA])
-        one = K.constant([1.0])
-        loss = (alpha / (alpha - one)) * K.mean(K.sum(y_true * (one - K.pow(y_pred, one - (one / alpha))), axis=-1))
-
-    return loss
 
 
 def make_attention_model(parameters):

@@ -51,7 +51,7 @@ class SaltyBetDriver(ABC):
         """
         balance_text = self.driver.find_element(By.ID, "balance").text
 
-        while  not isinstance(balance_text, str) or balance_text == "":
+        while not isinstance(balance_text, str) or balance_text == "":
             balance_text = self.driver.find_element(By.ID, "balance").text
             time.sleep(1)
 
@@ -136,6 +136,31 @@ class HomepageDriver(SaltyBetDriver):
         # Load into the website
         self.driver.get("https://www.saltybet.com")
         assert "Salty Bet" == self.driver.title, 'Failed to load into website. Maybe saltybet.com is down?'
+
+    def get_pot(self):
+        """
+        Get the current pot of the game
+        :return:
+        """
+        pot_text = self.driver.find_element(By.ID, "odds").text
+
+        while not isinstance(pot_text, str) or pot_text == "":
+            pot_text = self.driver.find_element(By.ID, "odds").text
+            time.sleep(1)
+
+        # Remove the commas
+        pot_text = pot_text.replace(",", "")
+
+        # Search for numbers in the string
+        numbers = re.findall(r'\d+', pot_text)
+
+        # Return the first two numbers in the list
+        return int(numbers[0]), int(numbers[1])
+
+    def get_tier(self):
+        return None
+
+    def
 
 
 class ModelDriver(SaltyBetDriver):

@@ -33,11 +33,11 @@ class ModelConstants:
     EMBEDDING_INPUT_DIM = len(VOCAB) + 2  # +2 for oov and unknown tokens
 
     # Loss function parameters
-    ALPHA = 1.0
+    ALPHA = 2.0
 
     # Training
     BATCH_SIZE = 2 ** 12
-    EPOCHS = 50
+    EPOCHS = 30
     MAX_TRAINING_STEPS = int(np.ceil((len(DATABASE.get_all_matches()) / BATCH_SIZE) * EPOCHS))
 
     # Tuning

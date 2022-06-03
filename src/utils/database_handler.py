@@ -137,7 +137,7 @@ class HomepageDatabaseHandler(MatchDatabaseHandler):
     def __init__(self):
         super().__init__()
 
-    def add_match(self, red, blue, winner, red_odds, blue_odds, tier, red_pot, blue_pot, is_tournament, matchup_count):
+    def add_match(self, red, blue, winner, red_odds, blue_odds, red_pot, blue_pot, tier, is_tournament, matchup_count):
         match_number = super().add_match(red, blue, winner)
 
         self.cur.execute(

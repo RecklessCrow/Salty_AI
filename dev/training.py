@@ -2,7 +2,6 @@ import numpy as np
 from sklearn.metrics import classification_report, accuracy_score
 from sklearn.model_selection import StratifiedKFold
 
-from model.make_model import optimize_temperature
 from model.model import Model
 from model.tuning_model import TuningModel
 from model.utils import Dataset, ModelConstants, SEED
@@ -18,10 +17,6 @@ def train_and_evaluate():
     # Initialize and train the utils
     model = Model()
 
-    # Fit the temperature
-    temperature = optimize_temperature(y_val)
-    model.set_temperature(temperature)
-
     model.train(
         x_train, y_train,
         val=(x_val, y_val),
@@ -31,15 +26,17 @@ def train_and_evaluate():
     )
 
     # Fit the temperature
-    # temperature = optimize_temperature(y_val)
+    # logits = model.predict(x_test, logits=True)
+    # temperature = calculate_temperature(logits, y_test)
     # model.set_temperature(temperature)
-    # model.save()
 
     # Test the utils
     y_pred = model.predict(x_test, batch_size=ModelConstants.BATCH_SIZE)
     y_pred = np.argmax(y_pred, axis=-1).reshape(-1, 1)
     report = classification_report(np.argmax(y_test, axis=-1).reshape(-1, 1), y_pred)
     print(report)
+
+    model.save()
 
 
 def cross_validation():

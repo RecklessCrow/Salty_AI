@@ -1,6 +1,5 @@
 import numpy as np
 from termcolor import colored
-from utils import *
 
 from dev.betting.salty_bet_driver import SaltyBetDriver
 from dev.dev_database_handler import DatabaseHandler
