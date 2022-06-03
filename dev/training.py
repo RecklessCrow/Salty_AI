@@ -97,7 +97,17 @@ def train_for_production():
     model.save()
 
 
+def test_changing_output():
+    model = Model()
+    model.remove_softmax()
+    model.model.summary()
+    model.add_temp_layer_and_softmax(10)
+    model.model.summary()
+
+
 def main():
+    test_changing_output()
+
     # Get user input for run mode
     while True:
         mode = input("Enter 'train' to train the utils, 'cv' to cross validate the utils, 'tuning' to tune the utils, "

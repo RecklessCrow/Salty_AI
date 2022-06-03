@@ -1,9 +1,10 @@
 import numpy as np
 import tensorflow.keras.backend as K
+from keras.layers import Softmax
 from scipy.optimize import minimize
 from tensorflow import string
 from tensorflow.keras.layers import Input, Dense, Embedding, Flatten, MultiHeadAttention, Dropout, LayerNormalization, \
-    StringLookup
+    StringLookup, Layer
 from tensorflow.keras.models import Model as FunctionalModel
 from tensorflow_addons.optimizers import RectifiedAdam
 
@@ -62,7 +63,8 @@ def make_attention_model(parameters):
         )(x)
         x = Dropout(parameters["dropout"])(x)
 
-    outputs = Dense(units=2, name="logits")(x)
+    logits = Dense(units=2, name="logits")(x)
+    outputs = Softmax(name="softmax")(logits)
 
     model = FunctionalModel(inputs=inputs, outputs=outputs, name="salty_model")
 
@@ -92,3 +94,15 @@ def calculate_temperature(x, y):
 
     res = minimize(loss, x0=np.array(1.0), method='L-BFGS-B', bounds=[(0.0, None)])
     return res.x[0]
+
+
+class TempScaling(Layer):
+    def __init__(self, T, **kwargs):
+        super(TempScaling, self).__init__(**kwargs)
+        self.T = T
+
+    def call(self, x):
+        return x / self.T
+
+    def compute_output_shape(self, input_shape):
+        return input_shape

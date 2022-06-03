@@ -2,12 +2,11 @@ import os
 from datetime import datetime
 
 from sklearn.utils.extmath import softmax
-from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping
-from tensorflow.keras.models import load_model
+from tensorflow import keras
 from tensorflow_addons.optimizers import RectifiedAdam
 
 from dev.model.data_generator import DataGenerator
-from dev.model.make_model import make_attention_model, alpha_loss
+from dev.model.make_model import make_attention_model, alpha_loss, TempScaling
 from dev.model.utils import ModelConstants
 
 
@@ -55,6 +54,33 @@ class Model:
 
         return model
 
+    def remove_softmax(self):
+        """
+        Remove the softmax layer from the model.
+        :return:
+        """
+
+        if self.model.layers[-1].name == "softmax":
+            self.model = keras.models.Model(inputs=self.model.inputs, outputs=self.model.get_layer("logits").output)
+        else:
+            raise ValueError("Model does not have a softmax layer.")
+
+    def add_temp_layer_and_softmax(self, T):
+        """
+        Add a temperature scaling layer and softmax layer to the model.
+        :param T:
+        :return:
+        """
+
+        if self.model.layers[-1].name != "softmax":
+            new_model = keras.models.Sequential()
+            new_model.add(self.model)
+            new_model.add(TempScaling(T))
+            new_model.add(keras.layers.Softmax(name="softmax"))
+            self.model = new_model
+        else:
+            raise ValueError("Model already has a softmax layer.")
+
     def train(self, x, y, val=None, epochs=ModelConstants.EPOCHS, batch_size=ModelConstants.BATCH_SIZE,
               early_stopping=False, checkpointing=False, **kwargs):
         """
@@ -78,7 +104,7 @@ class Model:
 
             # Make the early stopping callback
             if early_stopping:
-                callbacks.append(EarlyStopping(
+                callbacks.append(keras.callbacks.EarlyStopping(
                     monitor=ModelConstants.ES_MONITOR,
                     min_delta=ModelConstants.ES_MIN_DELTA,
                     patience=ModelConstants.ES_PATIENCE,
@@ -87,13 +113,13 @@ class Model:
 
             # Make the utils checkpoint callback
             if checkpointing:
-                callbacks.append(ModelCheckpoint(
+                callbacks.append(keras.callbacks.ModelCheckpoint(
                     filepath=os.path.join(self.model_dir + "_checkpoint_loss"),
                     monitor="val_loss",
                     save_best_only=True
                 ))
 
-                # callbacks.append(ModelCheckpoint(
+                # callbacks.append(keras.callbacks.ModelCheckpoint(
                 #     filepath=os.path.join(self.model_dir + "_checkpoint_acc"),
                 #     monitor="val_accuracy",
                 #     save_best_only=True
@@ -138,4 +164,4 @@ class Model:
         :return:
         """
         custom_objects = {"alpha_loss": alpha_loss, "RectifiedAdam": RectifiedAdam}
-        self.model = load_model(self.model_dir, custom_objects)
+        self.model = keras.load_model(self.model_dir, custom_objects)
