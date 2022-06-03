@@ -29,7 +29,7 @@ def train_and_evaluate():
     y_pred = np.argmax(y_pred, axis=-1).reshape(-1, 1)
     y_true = np.argmax(y_test, axis=-1).reshape(-1, 1)
     print(classification_report(y_true, y_pred))
-    model.save('model_before_temp_scaling')
+    model.save('_model_before_temp_scaling')
 
     # Apply temperature scaling
     model.rebuild_with_temp(x_val, y_val)
@@ -37,7 +37,7 @@ def train_and_evaluate():
     y_pred = model.predict(x_test)
     y_pred = np.argmax(y_pred, axis=-1).reshape(-1, 1)
     print(classification_report(y_true, y_pred))
-    model.save('model_with_temp_scaling')
+    model.save('_model_after_temp_scaling')
 
 
 def cross_validation():

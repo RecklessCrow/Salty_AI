@@ -1,11 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
-import tensorflow_probability as tfp
 from sklearn.linear_model import LinearRegression
-from sklearn.metrics import accuracy_score
-from sklearn.utils.extmath import softmax
 
-from dev.model.make_model import calculate_temperature
 from model.model import Model
 from model.utils import Dataset
 
@@ -67,46 +63,18 @@ def plot_reliability_diagram(model_name, predicted_correctly, argmax, n_bins=20)
     plt.show()
 
 
-def plot_test_data_calibration(model_name, temp=0.0):
-
+def plot_test_data_calibration(model_name):
     # Load the model
     model = Model(model_name)
 
     # Load test data
     data = Dataset(val_size=0.1)
     x, y_true = data.get_test_data()
-
-    # Predict
-    logits = model.predict(x, logits=True)
-
-    # Scale the predictions
-    if temp:
-        x_val, y_val = data.get_val_data()
-        temp = calculate_temperature(model.predict(x_val, logits=True), y_val)
-        logits /= temp
-
-    n_bins = 10
-    ece = tfp.stats.expected_calibration_error(
-        num_bins=n_bins,
-        logits=logits,
-        labels_true=np.argmax(y_true.astype(np.int32)),
-    )
-
-    y_pred = softmax(logits)
-    acc = accuracy_score(np.argmax(y_true, axis=-1), np.argmax(y_pred, axis=-1))
-
-    # Get some statistics
-    print(
-        f"Stats for {model_name}:\n"
-        f"Temperature: {temp:.2f}\n"
-        f"Accuracy: {acc:.2%}\n"
-        f"Calibration error: {ece:.2%}\n"
-    )
+    y_pred = model.predict(x)
 
     # Bin predictions at 0.05 intervals
     predicted_correctly = np.argmax(y_pred, axis=-1) == np.argmax(y_true, axis=-1)
-
-    plot_reliability_diagram(model_name, predicted_correctly, np.max(y_pred, axis=-1), n_bins=n_bins)
+    plot_reliability_diagram(model_name, predicted_correctly, np.max(y_pred, axis=-1))
 
 
 def plot_recorded_data_calibration(model_name="linear_err"):
@@ -122,9 +90,8 @@ def plot_recorded_data_calibration(model_name="linear_err"):
 
 
 def main():
-    model_name = "17.32.41_checkpoint_loss"
-    plot_test_data_calibration(model_name=model_name, temp=False)
-    plot_test_data_calibration(model_name=model_name, temp=True)
+    plot_test_data_calibration(model_name="16.33.43model_before_temp_scaling")
+    plot_test_data_calibration(model_name="16.33.43model_after_temp_scaling")
 
 
 if __name__ == "__main__":
