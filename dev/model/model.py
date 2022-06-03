@@ -148,4 +148,4 @@ class Model:
         :return:
         """
         custom_objects = {"alpha_loss": alpha_loss, "RectifiedAdam": RectifiedAdam}
-        self.model = keras.load_model(self.model_dir, custom_objects)
+        self.model = keras.models.load_model(self.model_dir, custom_objects)
