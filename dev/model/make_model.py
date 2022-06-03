@@ -105,11 +105,16 @@ class TempScaling(tf.keras.layers.Layer):
         :param temperature: Temperature value
         :param kwargs:
         """
-        super(TempScaling, self).__init__(**kwargs)
         self.temperature = temperature
+        super(TempScaling, self).__init__(**kwargs)
 
     def __call__(self, x):
         return tf.math.divide(x, self.temperature)
+
+    def get_config(self):
+        config = super(TempScaling, self).get_config()
+        config.update({"temperature": self.temperature})
+        return config
 
     def compute_output_shape(self, input_shape):
         return None, input_shape

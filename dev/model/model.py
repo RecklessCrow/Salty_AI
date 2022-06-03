@@ -25,6 +25,10 @@ class Model:
         :param model_name: The name of the model to load. If None, a new model is created.
         """
 
+        # Make the saved model directory if it doesn't exist
+        if not os.path.exists(self.MODEL_DIR):
+            os.makedirs(self.MODEL_DIR)
+
         if model_name is None:
             model_name = f"{datetime.now().strftime('%H.%M.%S')}"
             self.model_dir = os.path.join(self.MODEL_DIR, model_name)
@@ -153,4 +157,4 @@ class Model:
         Load a model from disk.
         :return:
         """
-        self.model = keras.models.load_model(self.model_dir, self.CUSTOM_OBJECTS)
+        self.model = keras.models.load_model(self.model_dir, custom_objects=self.CUSTOM_OBJECTS)
