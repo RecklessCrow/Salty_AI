@@ -1,7 +1,6 @@
 import os
 from datetime import datetime
 
-from sklearn.utils.extmath import softmax
 from tensorflow import keras
 from tensorflow_addons.optimizers import RectifiedAdam
 
@@ -109,16 +108,10 @@ class Model:
             # Make the utils checkpoint callback
             if checkpointing:
                 callbacks.append(keras.callbacks.ModelCheckpoint(
-                    filepath=os.path.join(self.model_dir + "_checkpoint_loss"),
+                    filepath=os.path.join(self.model_dir + "_checkpoint"),
                     monitor="val_loss",
                     save_best_only=True
                 ))
-
-                # callbacks.append(keras.callbacks.ModelCheckpoint(
-                #     filepath=os.path.join(self.model_dir + "_checkpoint_acc"),
-                #     monitor="val_accuracy",
-                #     save_best_only=True
-                # ))
 
         history = self.model.fit(
             train,
@@ -130,21 +123,15 @@ class Model:
 
         return history
 
-    def predict(self, x, logits=False, batch_size=ModelConstants.BATCH_SIZE, **kwargs):
+    def predict(self, x, batch_size=ModelConstants.BATCH_SIZE, **kwargs):
         """
         Predict the labels for the given data.
         :param x: The data to predict labels for.
-        :param logits: True if the logits should be returned.
         :param batch_size: The batch size to use.
         :param kwargs: Additional arguments to pass to the model for prediction.
         :return:
         """
-        predictions = self.model.predict(x, batch_size=batch_size, **kwargs)
-
-        if not logits:
-            predictions = softmax(predictions)
-
-        return predictions
+        return self.model.predict(x, batch_size=batch_size, **kwargs)
 
     def save(self):
         """

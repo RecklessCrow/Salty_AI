@@ -38,7 +38,7 @@ class ModelConstants:
 
     # Training
     BATCH_SIZE = 2 ** 12
-    EPOCHS = 30
+    EPOCHS = 40
     MAX_TRAINING_STEPS = int(np.ceil((len(DATABASE.get_all_matches()) / BATCH_SIZE) * EPOCHS))
 
     # Tuning
