@@ -1,7 +1,5 @@
 import os
 
-from sklearn.utils.extmath import softmax
-
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 
@@ -10,6 +8,7 @@ from tensorflow.keras.models import load_model
 
 class Model:
     MODEL_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..', 'saved_models')
+    UNKNOWN_FIGHTER = '<unknown>'
 
     def __init__(self, model_name=None):
         """
@@ -34,13 +33,15 @@ class Model:
         :return: The predicted outcome of the match. None if both characters are not in the vocabulary
         """
 
-        # check if the characters are in the vocabulary
-        if red not in self.vocab and blue not in self.vocab:
+        # Check if the characters are in the vocabulary
+        if red not in self.vocab:
+            red = self.UNKNOWN_FIGHTER
+        if blue not in self.vocab:
+            blue = self.UNKNOWN_FIGHTER
+
+        # If both characters are not in the vocabulary, cannot make a prediction
+        if red == self.UNKNOWN_FIGHTER and blue == self.UNKNOWN_FIGHTER:
             return None
 
         prediction = self.model.predict([[red, blue]])
-        if self.model_name == 'slope_fit':
-            return prediction[0]
-
-        prediction = softmax(prediction)
         return prediction[0]

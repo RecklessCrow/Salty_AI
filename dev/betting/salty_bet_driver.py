@@ -23,6 +23,8 @@ class SaltyBetDriver:
         if headless:
             options.add_argument("--headless")
 
+        self.driver = None
+
         self.driver = webdriver.Firefox(
             executable_path=self.EXE_PATH,
             options=options
@@ -47,7 +49,8 @@ class SaltyBetDriver:
         assert "authenticate" not in self.driver.current_url, "Failed to login"
 
     def __del__(self):
-        self.driver.close()
+        if self.driver:
+            self.driver.close()
 
     def get_bailout(self, tournament):
         """
@@ -111,6 +114,31 @@ class SaltyBetDriver:
         red, blue = tuple(odds_text.split(":"))
         return float(red), float(blue)
 
+    def get_pot(self):
+        """
+        Get the current pot of the game
+        :return:
+        """
+
+        time.sleep(1)
+        pot_text = self.driver.find_element(By.ID, "odds").text
+
+        while not isinstance(pot_text, str) or pot_text == "":
+            pot_text = self.driver.find_element(By.ID, "odds").text
+            time.sleep(1)
+
+        # Remove the commas
+        pot_text = pot_text.replace(",", "")
+
+        # Search for numbers in the string that start with a $
+        numbers = re.findall(r'\$\d+', pot_text)
+
+        # Remove the $
+        numbers = [int(number[1:]) for number in numbers]
+
+        # Return the two pots
+        return numbers[0], numbers[1]
+
     def get_fighters(self):
         """
         Gets the current characters of the red and blue teams
@@ -133,9 +161,6 @@ class SaltyBetDriver:
 if __name__ == '__main__':
     driver = SaltyBetDriver(headless=True)
     while True:
-        print(driver.get_fighters())
-        print(driver.get_odds())
-        print(driver.get_balance())
-        print(driver.get_game_state())
-        print(driver.get_bailout(tournament=driver.is_tournament()))
-        time.sleep(1)
+        print(driver.get_pot())
+        print("-" * 20)
+        time.sleep(25)

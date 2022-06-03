@@ -73,5 +73,5 @@ def joint_loss(y_true, y_pred):
     # weighted_acc_loss = (1 - weighted_acc_loss) * 3
     slope_loss = get_slope(y_true, y_pred)
     slope_loss = abs(1 - slope_loss) * 3
-    loss = tf.losses.categorical_crossentropy(y_true, y_pred, from_logits=False)
+    loss = alpha_loss(y_true, y_pred)
     return loss + slope_loss
