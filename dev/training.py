@@ -16,13 +16,13 @@ def train_and_evaluate():
     # Initialize and train the utils
     model = Model()
 
-    # model.train(
-    #     x_train, y_train,
-    #     val=(x_val, y_val),
-    #     epochs=ModelConstants.EPOCHS,
-    #     checkpointing=False,
-    #     early_stopping=False
-    # )
+    model.train(
+        x_train, y_train,
+        val=(x_val, y_val),
+        epochs=ModelConstants.EPOCHS,
+        checkpointing=False,
+        early_stopping=False
+    )
 
     print("Results before temp scaling")
     y_pred = model.predict(x_test)
