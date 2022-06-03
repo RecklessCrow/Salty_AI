@@ -87,6 +87,8 @@ class SaltyBetDriver(ABC):
         time.sleep(1)
         self.driver.find_element(By.CLASS_NAME, f"betbutton{team}").click()
 
+        print(f"Placed bet of {amount} on {team}")
+
     def get_odds(self):
         """
         Get the odds of the current match
@@ -145,6 +147,8 @@ class HomepageDriver(SaltyBetDriver):
         Get the current pot of the game
         :return:
         """
+
+        time.sleep(1)
         pot_text = self.driver.find_element(By.ID, "odds").text
 
         while not isinstance(pot_text, str) or pot_text == "":
