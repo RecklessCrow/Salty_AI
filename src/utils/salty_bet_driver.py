@@ -149,7 +149,7 @@ class HomepageDriver(SaltyBetDriver):
     def get_pot(self):
         """
         Get the current pot of the game
-        :return:
+        :return: red and blue pots
         """
 
         time.sleep(1)
@@ -160,8 +160,7 @@ class HomepageDriver(SaltyBetDriver):
             time.sleep(1)
 
         pot_text = pot_text.replace(",", "")  # Remove commas
-        numbers = re.findall(r'\$\d+', pot_text)  # Search for numbers in the string that start with a $
-        numbers = [int(number[1:]) for number in numbers]  # Remove the $
+        numbers = re.findall(r'(?<=\$)\d+', pot_text)  # Search for numbers in the string that start with a $
         return tuple(numbers)
 
     def get_tier(self):

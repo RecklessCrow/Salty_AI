@@ -64,7 +64,7 @@ class SaltyBetDriver:
         try:
             level_url = self.driver.find_element(By.ID, "rank")
             level_url = level_url.find_element(By.CLASS_NAME, "levelimage").get_attribute("src")
-            level = int(re.search("[0-9]+", level_url.split("/")[-1])[0])
+            level = int(re.search(r"\d+", level_url.split("/")[-1])[0])
             modifier = level * 25
         except:
             modifier = 0
@@ -128,8 +128,7 @@ class SaltyBetDriver:
             time.sleep(1)
 
         pot_text = pot_text.replace(",", "")  # Remove commas
-        numbers = re.findall(r'\$\d+', pot_text)  # Search for numbers in the string that start with a $
-        numbers = [int(number[1:]) for number in numbers]  # Remove the $
+        numbers = re.findall(r'(?<=\$)\d+', pot_text)  # Search for numbers in the string that start with a $
         return tuple(numbers)
 
     def get_fighters(self):
