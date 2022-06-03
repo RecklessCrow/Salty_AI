@@ -127,17 +127,10 @@ class SaltyBetDriver:
             pot_text = self.driver.find_element(By.ID, "odds").text
             time.sleep(1)
 
-        # Remove the commas
-        pot_text = pot_text.replace(",", "")
-
-        # Search for numbers in the string that start with a $
-        numbers = re.findall(r'\$\d+', pot_text)
-
-        # Remove the $
-        numbers = [int(number[1:]) for number in numbers]
-
-        # Return the two pots
-        return numbers[0], numbers[1]
+        pot_text = pot_text.replace(",", "")  # Remove commas
+        numbers = re.findall(r'\$\d+', pot_text)  # Search for numbers in the string that start with a $
+        numbers = [int(number[1:]) for number in numbers]  # Remove the $
+        return tuple(numbers)
 
     def get_fighters(self):
         """
