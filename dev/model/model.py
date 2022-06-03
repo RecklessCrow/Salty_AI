@@ -134,12 +134,13 @@ class Model:
         """
         return self.model.predict(x, batch_size=batch_size, **kwargs)
 
-    def save(self):
+    def save(self, model_name=""):
         """
         Save the model to disk.
+        :param model_name: The name of the model to save.
         :return:
         """
-        self.model.save(self.model_dir)
+        self.model.save(self.model_dir + model_name)
 
     def __load(self):
         """
