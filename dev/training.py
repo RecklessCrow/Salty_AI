@@ -1,6 +1,6 @@
 import numpy as np
 from sklearn.metrics import classification_report, accuracy_score
-from sklearn.model_selection import StratifiedKFold
+from sklearn.model_selection import StratifiedKFold, train_test_split
 
 from model.model import Model
 from model.tuning_model import TuningModel
@@ -21,14 +21,12 @@ def train_and_evaluate():
         x_train, y_train,
         val=(x_val, y_val),
         epochs=ModelConstants.EPOCHS,
-        checkpointing=True,
+        checkpointing=False,
         early_stopping=False
     )
 
-    # Fit the temperature
-    # logits = model.predict(x_test, logits=True)
-    # temperature = calculate_temperature(logits, y_test)
-    # model.set_temperature(temperature)
+    # Apply temperature scaling
+    model.rebuild_with_temp(x_val, y_val)
 
     # Test the utils
     y_pred = model.predict(x_test, batch_size=ModelConstants.BATCH_SIZE)
@@ -86,28 +84,21 @@ def hyper_parameter_tuning():
     model.search(x_train, y_train, val=(x_val, y_val), epochs=ModelConstants.EPOCHS)
 
 
-def train_for_production():
+def train_for_production(use_temp_scaling=False):
     # Load the data
     dataset = Dataset()
-    x, y, = dataset.get_whole_dataset()
-
-    # Initialize and train the utils
     model = Model()
-    model.train(x, y, val=None, epochs=ModelConstants.EPOCHS, checkpointing=False, early_stopping=False)
+    x, y, = dataset.get_whole_dataset()
+    x_train, x_calib, y_train, y_calib = train_test_split(x, y, test_size=0.1, random_state=SEED)
+    model.train(x_train, y_train, epochs=ModelConstants.EPOCHS, checkpointing=False, early_stopping=False)
+
+    if use_temp_scaling:
+        model.rebuild_with_temp(x_calib, y_calib)
+
     model.save()
 
 
-def test_changing_output():
-    model = Model()
-    model.remove_softmax()
-    model.model.summary()
-    model.add_temp_layer_and_softmax(10)
-    model.model.summary()
-
-
 def main():
-    test_changing_output()
-
     # Get user input for run mode
     while True:
         mode = input("Enter 'train' to train the utils, 'cv' to cross validate the utils, 'tuning' to tune the utils, "

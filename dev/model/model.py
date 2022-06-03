@@ -6,7 +6,8 @@ from tensorflow import keras
 from tensorflow_addons.optimizers import RectifiedAdam
 
 from dev.model.data_generator import DataGenerator
-from dev.model.make_model import make_attention_model, alpha_loss, TempScaling
+from dev.model.losses import alpha_loss, joint_loss
+from dev.model.make_model import make_attention_model, TempScaling, calculate_temperature
 from dev.model.utils import ModelConstants
 
 
@@ -48,38 +49,32 @@ class Model:
             "learning_rate": 1e-3,
             "smoothing": 0.05,
             "beta_2": 0.98,
+            "loss": joint_loss,  # alpha_loss, joint_loss
         }
 
         model = make_attention_model(parameters)
 
         return model
 
-    def remove_softmax(self):
+    def rebuild_with_temp(self, x_cal, y_cal):
         """
-        Remove the softmax layer from the model.
+        Rebuild the model with a temperature scaling layer.
+        :param x_cal: The data to calculate the temperature for.
+        :param y_cal: The labels to calculate the temperature for.
         :return:
         """
+        # Remove the softmax layer to get the logits.
+        self.model = keras.models.Model(inputs=self.model.inputs, outputs=self.model.get_layer("logits").output)
 
-        if self.model.layers[-1].name == "softmax":
-            self.model = keras.models.Model(inputs=self.model.inputs, outputs=self.model.get_layer("logits").output)
-        else:
-            raise ValueError("Model does not have a softmax layer.")
+        # Calculate the temperature from the calibration data
+        logits = self.predict(x_cal)
+        temperature = calculate_temperature(logits, y_cal)
 
-    def add_temp_layer_and_softmax(self, T):
-        """
-        Add a temperature scaling layer and softmax layer to the model.
-        :param T:
-        :return:
-        """
-
-        if self.model.layers[-1].name != "softmax":
-            new_model = keras.models.Sequential()
-            new_model.add(self.model)
-            new_model.add(TempScaling(T))
-            new_model.add(keras.layers.Softmax(name="softmax"))
-            self.model = new_model
-        else:
-            raise ValueError("Model already has a softmax layer.")
+        # rebuild model with temperature scaling layer
+        x = self.model.outputs
+        x = TempScaling(temperature)(x)
+        x = keras.layers.Softmax(name="softmax")(x)
+        self.model = keras.models.Model(inputs=self.model.inputs, outputs=x)
 
     def train(self, x, y, val=None, epochs=ModelConstants.EPOCHS, batch_size=ModelConstants.BATCH_SIZE,
               early_stopping=False, checkpointing=False, **kwargs):

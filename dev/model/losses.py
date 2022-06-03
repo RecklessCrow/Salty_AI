@@ -8,9 +8,9 @@ def alpha_loss(y_true, y_pred):
     TF implementation of the alpha loss function
     Supposedly creates a well calibrated model
     from https://arxiv.org/pdf/1906.02314.pdf
-    :param y_true:
-    :param y_pred:
-    :return:
+    :param y_true: ground truth
+    :param y_pred: predictions
+    :return: loss
     """
 
     if ModelConstants.ALPHA == 1.0:  # Use regular cross entropy loss
@@ -26,6 +26,13 @@ def alpha_loss(y_true, y_pred):
 
 
 def get_slope(y_true, y_pred):
+    """
+    Calculates the slope of the expected calibration curve
+    :param y_true: ground truth
+    :param y_pred: predictions
+    :return: loss
+    """
+
     n_bins = 10
 
     # y_pred = K.softmax(y_pred)
@@ -36,7 +43,8 @@ def get_slope(y_true, y_pred):
     all_idx = tf.histogram_fixed_width_bins(
         y_pred_max,
         [0.55, 0.95],
-        nbins=n_bins)
+        nbins=n_bins
+    )
 
     correct_idx = all_idx[argmaxes == winner_label]
     incorrect_idx = all_idx[argmaxes != winner_label]
@@ -54,9 +62,16 @@ def get_slope(y_true, y_pred):
 
 
 def joint_loss(y_true, y_pred):
+    """
+    Combines (alpha loss / categorical cross entropy loss) with the slope loss
+    :param y_true: ground truth
+    :param y_pred: predictions
+    :return: loss
+    """
+
     # weighted_acc_loss = get_weighted_acc(y_true, y_pred)
     # weighted_acc_loss = (1 - weighted_acc_loss) * 3
     slope_loss = get_slope(y_true, y_pred)
     slope_loss = abs(1 - slope_loss) * 3
-    loss = tf.losses.categorical_crossentropy(y_true, y_pred)
+    loss = tf.losses.categorical_crossentropy(y_true, y_pred, from_logits=False)
     return loss + slope_loss

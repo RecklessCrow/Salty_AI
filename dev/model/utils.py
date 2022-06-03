@@ -27,6 +27,7 @@ class ModelConstants:
     """
     Constants class
     """
+
     # Embedding parameters
     UNKNOWN_FIGHTER = '<unknown>'
     VOCAB = np.array(DATABASE.get_all_characters()).flatten()
