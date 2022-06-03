@@ -1,3 +1,4 @@
+import random
 import re
 import time
 from abc import ABC
@@ -82,9 +83,9 @@ class SaltyBetDriver(ABC):
         assert team in ["red", "blue"], "Team must be either 'red' or 'blue'"
         assert amount > 0, "Amount must be greater than 0"
 
-        time.sleep(1)
+        time.sleep(random.uniform(1.0, 3.5))
         self.driver.find_element(By.ID, "wager").send_keys(str(amount))
-        time.sleep(1)
+        time.sleep(0.5)
         self.driver.find_element(By.CLASS_NAME, f"betbutton{team}").click()
 
         print(f"Placed bet of {amount} on {team}")
