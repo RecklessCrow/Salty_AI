@@ -79,9 +79,12 @@ class SaltyBetDriver(ABC):
         :return:
         """
 
-        assert team in ["red", "blue"]
+        assert team in ["red", "blue"], "Team must be either 'red' or 'blue'"
+        assert amount > 0, "Amount must be greater than 0"
 
+        time.sleep(1)
         self.driver.find_element(By.ID, "wager").send_keys(str(amount))
+        time.sleep(1)
         self.driver.find_element(By.CLASS_NAME, f"betbutton{team}").click()
 
     def get_odds(self):
@@ -158,6 +161,7 @@ class HomepageDriver(SaltyBetDriver):
         return int(numbers[0]), int(numbers[1])
 
     def get_tier(self):
+        # todo: Implement this
         return None
 
 
