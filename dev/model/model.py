@@ -12,6 +12,12 @@ from dev.model.utils import ModelConstants
 
 class Model:
     MODEL_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..', 'saved_models')
+    CUSTOM_OBJECTS = {
+        'TempScaling': TempScaling,
+        "joint_loss": joint_loss,
+        "alpha_loss": alpha_loss,
+        "RectifiedAdam": RectifiedAdam
+    }
 
     def __init__(self, model_name=None):
         """
@@ -147,5 +153,4 @@ class Model:
         Load a model from disk.
         :return:
         """
-        custom_objects = {"alpha_loss": alpha_loss, "RectifiedAdam": RectifiedAdam}
-        self.model = keras.models.load_model(self.model_dir, custom_objects)
+        self.model = keras.models.load_model(self.model_dir, self.CUSTOM_OBJECTS)
