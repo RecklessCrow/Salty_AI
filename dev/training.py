@@ -105,9 +105,6 @@ def train_for_production(use_temp_scaling=False):
 
 
 def main():
-    train_and_evaluate()
-    return
-
     # Get user input for run mode
     while True:
         mode = input("Enter 'train' to train the utils, 'cv' to cross validate the utils, 'tuning' to tune the utils, "
