@@ -3,7 +3,6 @@ from sklearn.metrics import classification_report, accuracy_score
 from sklearn.model_selection import StratifiedKFold, train_test_split
 
 from model.model import Model
-from model.tuning_model import TuningModel
 from model.utils import Dataset, ModelConstants, SEED
 
 
@@ -17,22 +16,27 @@ def train_and_evaluate():
     # Initialize and train the utils
     model = Model()
 
-    model.train(
-        x_train, y_train,
-        val=(x_val, y_val),
-        epochs=ModelConstants.EPOCHS,
-        checkpointing=False,
-        early_stopping=False
-    )
+    # model.train(
+    #     x_train, y_train,
+    #     val=(x_val, y_val),
+    #     epochs=ModelConstants.EPOCHS,
+    #     checkpointing=False,
+    #     early_stopping=False
+    # )
+
+    print("Results before temp scaling")
+    y_pred = model.predict(x_test)
+    y_pred = np.argmax(y_pred, axis=-1).reshape(-1, 1)
+    y_true = np.argmax(y_test, axis=-1).reshape(-1, 1)
+    print(classification_report(y_true, y_pred))
 
     # Apply temperature scaling
     model.rebuild_with_temp(x_val, y_val)
 
-    # Test the utils
-    y_pred = model.predict(x_test, batch_size=ModelConstants.BATCH_SIZE)
+    print("Results with temp scaling")
+    y_pred = model.predict(x_test)
     y_pred = np.argmax(y_pred, axis=-1).reshape(-1, 1)
-    report = classification_report(np.argmax(y_test, axis=-1).reshape(-1, 1), y_pred)
-    print(report)
+    print(classification_report(y_true, y_pred))
 
     model.save()
 
@@ -74,6 +78,8 @@ def cross_validation():
 
 
 def hyper_parameter_tuning():
+    from model.tuning_model import TuningModel
+
     # Load the data
     dataset = Dataset(val_size=0.1)
     x_train, y_train, = dataset.get_train_data()
@@ -99,6 +105,9 @@ def train_for_production(use_temp_scaling=False):
 
 
 def main():
+    train_and_evaluate()
+    return
+
     # Get user input for run mode
     while True:
         mode = input("Enter 'train' to train the utils, 'cv' to cross validate the utils, 'tuning' to tune the utils, "

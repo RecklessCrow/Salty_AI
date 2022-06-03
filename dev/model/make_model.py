@@ -109,7 +109,7 @@ class TempScaling(tf.keras.layers.Layer):
         self.temperature = temperature
 
     def __call__(self, x):
-        return x / self.temperature
+        return tf.math.divide(x, self.temperature)
 
     def compute_output_shape(self, input_shape):
-        return input_shape
+        return None, input_shape

@@ -70,10 +70,11 @@ class Model:
         temperature = calculate_temperature(logits, y_cal)
 
         # rebuild model with temperature scaling layer
-        x = self.model.outputs
-        x = TempScaling(temperature)(x)
-        x = keras.layers.Softmax(name="softmax")(x)
-        self.model = keras.models.Model(inputs=self.model.inputs, outputs=x)
+        new_model = keras.models.Sequential()
+        new_model.add(self.model)
+        new_model.add(TempScaling(temperature))
+        new_model.add(keras.layers.Softmax())
+        self.model = new_model
 
     def train(self, x, y, val=None, epochs=ModelConstants.EPOCHS, batch_size=ModelConstants.BATCH_SIZE,
               early_stopping=False, checkpointing=False, **kwargs):
