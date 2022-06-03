@@ -2,22 +2,15 @@ import os
 from datetime import datetime
 
 from tensorflow import keras
-from tensorflow_addons.optimizers import RectifiedAdam
 
 from dev.model.data_generator import DataGenerator
-from dev.model.losses import alpha_loss, joint_loss
+from dev.model.losses import joint_loss
 from dev.model.make_model import make_attention_model, TempScaling, calculate_temperature
 from dev.model.utils import ModelConstants
 
 
 class Model:
     MODEL_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..', 'saved_models')
-    CUSTOM_OBJECTS = {
-        'TempScaling': TempScaling,
-        "joint_loss": joint_loss,
-        "alpha_loss": alpha_loss,
-        "RectifiedAdam": RectifiedAdam
-    }
 
     def __init__(self, model_name=None):
         """
@@ -154,7 +147,7 @@ class Model:
 
     def __load(self):
         """
-        Load a model from disk.
+        Load a model from disk to use only for predicting.
         :return:
         """
-        self.model = keras.models.load_model(self.model_dir, custom_objects=self.CUSTOM_OBJECTS)
+        self.model = keras.models.load_model(self.model_dir, compile=False)

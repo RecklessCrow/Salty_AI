@@ -90,8 +90,8 @@ def plot_recorded_data_calibration(model_name="linear_err"):
 
 
 def main():
-    plot_test_data_calibration(model_name="16.33.43model_before_temp_scaling")
-    plot_test_data_calibration(model_name="16.33.43model_after_temp_scaling")
+    for model_type in ["before", "after"]:
+        plot_test_data_calibration(f"18.01.48_model_{model_type}_temp_scaling")
 
 
 if __name__ == "__main__":

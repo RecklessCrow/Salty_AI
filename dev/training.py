@@ -24,19 +24,13 @@ def train_and_evaluate():
         early_stopping=False
     )
 
-    print("Results before temp scaling")
-    y_pred = model.predict(x_test)
-    y_pred = np.argmax(y_pred, axis=-1).reshape(-1, 1)
-    y_true = np.argmax(y_test, axis=-1).reshape(-1, 1)
-    print(classification_report(y_true, y_pred))
+    print("Evaluating the model before temp scaling...")
+    print(classification_report(np.argmax(y_test, axis=-1), np.argmax(model.predict(x_test), axis=-1)))
     model.save('_model_before_temp_scaling')
 
-    # Apply temperature scaling
+    print("Evaluating the model after temp scaling...")
+    print(classification_report(np.argmax(y_test, axis=-1), np.argmax(model.predict(x_test), axis=-1)))
     model.rebuild_with_temp(x_val, y_val)
-    print("Results with temp scaling")
-    y_pred = model.predict(x_test)
-    y_pred = np.argmax(y_pred, axis=-1).reshape(-1, 1)
-    print(classification_report(y_true, y_pred))
     model.save('_model_after_temp_scaling')
 
 

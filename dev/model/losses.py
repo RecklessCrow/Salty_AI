@@ -3,6 +3,7 @@ import tensorflow as tf
 from model.utils import ModelConstants
 
 
+@tf.keras.utils.register_keras_serializable()
 def alpha_loss(y_true, y_pred):
     """
     TF implementation of the alpha loss function
@@ -61,6 +62,7 @@ def get_slope(y_true, y_pred):
     return slope
 
 
+@tf.keras.utils.register_keras_serializable()
 def joint_loss(y_true, y_pred):
     """
     Combines (alpha loss / categorical cross entropy loss) with the slope loss

@@ -98,6 +98,7 @@ def calculate_temperature(logits, y_true):
     return res.x[0]
 
 
+@tf.keras.utils.register_keras_serializable()
 class TempScaling(tf.keras.layers.Layer):
     def __init__(self, temperature, **kwargs):
         """
@@ -105,15 +106,16 @@ class TempScaling(tf.keras.layers.Layer):
         :param temperature: Temperature value
         :param kwargs:
         """
+        assert temperature != 0.0, "Temperature cannot be zero"
         self.temperature = temperature
         super(TempScaling, self).__init__(**kwargs)
 
-    def __call__(self, x):
-        return tf.math.divide(x, self.temperature)
+    def call(self, x):
+        return tf.math.divide_no_nan(x, self.temperature)
 
     def get_config(self):
-        config = super(TempScaling, self).get_config()
-        config.update({"temperature": self.temperature})
+        config = super().get_config()
+        config["temperature"] = self.temperature
         return config
 
     def compute_output_shape(self, input_shape):
