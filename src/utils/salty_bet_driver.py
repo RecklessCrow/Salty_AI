@@ -160,8 +160,6 @@ class HomepageDriver(SaltyBetDriver):
     def get_tier(self):
         return None
 
-    def
-
 
 class ModelDriver(SaltyBetDriver):
     def __init__(self, username, password):
