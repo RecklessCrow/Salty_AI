@@ -41,7 +41,7 @@ class Model:
 
         # If both characters are not in the vocabulary, cannot make a prediction
         if red == self.UNKNOWN_FIGHTER and blue == self.UNKNOWN_FIGHTER:
-            return None
+            return None, None
 
         prediction = self.model.predict([[red, blue]])
         return prediction[0]

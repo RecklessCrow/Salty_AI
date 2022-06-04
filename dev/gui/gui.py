@@ -36,7 +36,7 @@ class MainScreen(MDBoxLayout):
 
         # todo: Change these to be user selectable from the toolbar
         self.model = Model("02.32.56_model_before_temp_scaling")
-        self.gambler = GAMBLER_ID_DICT[3]
+        self.gambler = GAMBLER_ID_DICT[2]
 
         # Set up the state machine
         self.last_state = self.driver.STATE_DICT["START"]
@@ -53,7 +53,7 @@ class MainScreen(MDBoxLayout):
         self.graph_screen = MDFloatLayout()
         self.add_widget(self.graph_screen)
 
-    def state_machine_manager(self):
+    def state_machine_manager(self, dt):
         current_state = self.driver.get_current_state()
 
         # Don't do anything if the state hasn't changed
@@ -102,14 +102,19 @@ class MainScreen(MDBoxLayout):
 
         # Update Confidence
         red_conf, blue_conf = self.model.predict_match(red, blue)
+
+        if red_conf is None and blue_conf is None:  # Cannot predict
+            red_conf = 0
+            blue_conf = 0
+
         self.left_panel.ids.red_conf_bar.value = red_conf
         self.left_panel.ids.blue_conf_bar.value = blue_conf
         self.left_panel.ids.red_conf_label.text = f"{red_conf:.2%}"
         self.left_panel.ids.blue_conf_label.text = f"{blue_conf:.2%}"
 
         # Place bet and display bet amount
-        bet_amount = self.gambler.get_bet_amount(balance, max(red_conf, blue_conf))
-        self.left_panel.ids.bet_amount_label.text = f"Bet Amount: ${bet_amount:,}"
+        # bet_amount = self.gambler.get_bet_amount(balance, max(red_conf, blue_conf))
+        # self.left_panel.ids.bet_amount_label.text = f"Bet Amount: ${bet_amount:,}"
 
         # Update match count
         self.left_panel.ids.matchup_count_label.text = f"Matchup Count: {self.database.get_matchup_count(red, blue)}"
