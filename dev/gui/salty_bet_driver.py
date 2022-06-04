@@ -163,11 +163,13 @@ class SaltyBetGuiDriver:
             betting_text = self.driver.find_element(By.ID, "lastbet").text
 
         # Get the odds
-        odds_text = betting_text.split("|")[-1].strip()
-        red_odds, blue_odds = tuple(odds_text.split(":"))
-        return float(red_odds), float(blue_odds)
+        odds = betting_text.split("|")[-1].strip().split(":")
+        if len(odds) == 2:
+            return float(odds[0]), float(odds[1])
 
-    def get_current_pots(self) -> Tuple[float, float]:
+        return self.get_current_odds()
+
+    def get_current_pots(self) -> Tuple[int, int]:
         """
         Gets the current pots
         :return: The current pots
@@ -183,7 +185,7 @@ class SaltyBetGuiDriver:
         pots_text = pots_text.replace(",", "")
         red_pot, blue_pot = tuple(re.findall(r'(?<=\$)\d+', pots_text))
 
-        return float(red_pot), float(blue_pot)
+        return int(red_pot), int(blue_pot)
 
     def is_tournament(self) -> bool:
         """

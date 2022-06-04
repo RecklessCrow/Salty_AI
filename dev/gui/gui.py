@@ -35,7 +35,7 @@ class MainScreen(MDBoxLayout):
         # model =
 
         # todo: Change these to be user selectable from the toolbar
-        self.model = Model("02.32.56_model_before_temp_scaling")
+        self.model = Model("02.32.56_model_after_temp_scaling")
         self.gambler = GAMBLER_ID_DICT[2]
 
         # Set up the state machine
