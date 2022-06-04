@@ -40,7 +40,7 @@ class MainScreen(MDBoxLayout):
 
         # Set up the state machine
         self.last_state = self.driver.STATE_DICT["START"]
-        self.state_machine_event = Clock.schedule_interval(self.state_machine_manager, 5)
+        self.state_machine_event = Clock.schedule_interval(self.state_machine_manager, 1)
 
     def __draw_shadow__(self, origin, end, context=None):
         pass
@@ -56,8 +56,8 @@ class MainScreen(MDBoxLayout):
     def state_machine_manager(self, dt):
         current_state = self.driver.get_current_state()
 
-        # Don't do anything if the state hasn't changed
-        if self.last_state == current_state:
+        # Don't do anything if the state hasn't changed, or we got a bad state
+        if self.last_state == current_state or current_state == self.driver.STATE_DICT["INVALID"]:
             return
 
         # Wait for a new match to start

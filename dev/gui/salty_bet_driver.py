@@ -16,6 +16,7 @@ class SaltyBetGuiDriver:
         "BETS_OPEN": 1,
         "BETS_CLOSED": 2,
         "PAYOUT": 3,
+        "INVALID": 4
     }
     BASE_BAILOUT = 100
     TOURNAMENT_BASE_BAILOUT = 1000
@@ -68,13 +69,13 @@ class SaltyBetGuiDriver:
         if "open" in state_text:
             return self.STATE_DICT["BETS_OPEN"]
 
-        elif "closed" in state_text:
+        elif "locked" in state_text:
             return self.STATE_DICT["BETS_CLOSED"]
 
         elif "payout" in state_text:
             return self.STATE_DICT["PAYOUT"]
 
-        return self.STATE_DICT["START"]
+        return self.STATE_DICT["INVALID"]
 
     def get_winner(self) -> str:
         """
