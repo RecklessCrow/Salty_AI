@@ -134,60 +134,8 @@ class ExpScaledConfidence(Gambler):
         return self.format_bet(bet_amount, balance)
 
 
-class NumMatchWeighted(Gambler):
-    """
-    Gambler that bets a scaled amount of the balance based on the confidence and number of seen match ups.
-    """
-
-    BALANCE_CAP = 100_000
-    HIGH_CONFIDENCE = 0.8
-    ALL_IN_CONFIDENCE = 0.9
-    MAX_BET = 1_000_000
-    MAX_NORMAL_BET = 5_000
-
-    from utils.database_handler import MatchDatabaseHandler
-    DATABASE = MatchDatabaseHandler()
-
-    def __init__(self):
-        pass
-
-    def calculate_bet(self, confidence: float, driver: SaltyBetDriver) -> int:
-        r, b = driver.get_fighters()
-        matchup_count = self.DATABASE.get_matchup_count(r, b)
-        print("Matchup count:", matchup_count)
-        matchup_rate = lambda count_seen: 1 - ((2 - count_seen) * 0.1)
-        matchup_weight = min(matchup_rate(matchup_count), 1.0)
-        confidence = confidence * matchup_weight
-
-        is_tournament = driver.is_tournament()
-        bailout = driver.get_bailout(is_tournament)
-        balance = driver.get_balance()
-
-        # Bet all in if we're less than 2x bailout
-        if balance < 2 * bailout:
-            bet_amount = balance
-
-        # Bet all in if we're above a certain confidence level
-        elif confidence > self.ALL_IN_CONFIDENCE:
-            bet_amount = balance if balance < 1e6 else (balance * confidence) / 2
-
-        elif confidence > self.HIGH_CONFIDENCE:
-            bet_amount = (balance * confidence) / 4
-
-        else:  # normal betting rules
-            if balance < self.BALANCE_CAP:
-                bet_amount = balance * (confidence / 2)
-            else:
-                bet_amount = balance * 0.05
-
-            bet_amount = min(self.MAX_NORMAL_BET, bet_amount)
-
-        return self.format_bet(bet_amount, balance)
-
-
 GAMBLER_ID_DICT = {
     0: AllIn,
-    1: NumMatchWeighted,
-    2: ScaledConfidence,
-    3: ExpScaledConfidence,
+    1: ScaledConfidence,
+    2: ExpScaledConfidence,
 }
