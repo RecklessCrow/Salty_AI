@@ -36,7 +36,7 @@ class SaltyBetDriver(ABC):
 
         level_url = self.driver.find_element(By.ID, "rank")
         level_url = level_url.find_element(By.CLASS_NAME, "levelimage").get_attribute("src")
-        level = int(re.search("[0-9]+", level_url.split("/")[-1])[0])
+        level = int(re.search(r"\d+", level_url.split("/")[-1])[0])
 
         modifier = level * 25
 

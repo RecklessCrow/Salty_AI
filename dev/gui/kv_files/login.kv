@@ -1,0 +1,50 @@
+Screen:
+
+    MDCard:
+        size_hint: None, None
+        size: 350, 400
+        pos_hint: {'center_x': 0.5, 'center_y': 0.5}
+        elevation: 10
+        padding: 50, 50
+        spacing: 25
+        orientation: 'vertical'
+
+        MDLabel:
+            id: welcome_label
+            text: 'SaltyBet AI Auto-Gambler'
+            font_size: 32
+            halign: 'center'
+            size_hint_y: None
+            height: self.texture_size[1]
+
+        MDTextFieldRound:
+            id: username_field
+            hint_text: 'Username'
+            icon_right: 'account-circle'
+            size_hint_x: None
+            width: 200
+            font_size: 20
+            pos_hint: {'center_x': 0.5}
+
+        MDTextFieldRound:
+            id: password_field
+            hint_text: 'Password'
+            icon_right: 'lock'
+            password: True
+            size_hint_x: None
+            width: 200
+            font_size: 20
+            pos_hint: {'center_x': 0.5}
+            password: True
+
+        MDRoundFlatButton:
+            id: login_button
+            text: 'Login'
+            size_hint_y: None
+            height: dp(40)
+            pos_hint: {'center_x': 0.5}
+            on_release: app.login(username_field.text, password_field.text)
+
+        Widget:
+            size_hint_y: None
+            height: 10

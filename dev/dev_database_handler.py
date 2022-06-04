@@ -91,19 +91,52 @@ class DatabaseHandler:
 
 
 class MatchDatabaseHandler(DatabaseHandler):
-    def get_all_matches(self):
+
+    def __len__(self):
         """
-        Returns all matches from the database.
+        :return: The number of matches in the database
         """
-        self.cur.execute("SELECT red, blue, winner FROM matches")
+        self.cur.execute("SELECT COUNT(*) FROM matches")
+        return self.cur.fetchone()[0]
+
+    def get_training_len(self, use_all_matches: bool = False):
+        """
+        :return: The number of matches to display on the homepage
+        """
+        self.cur.execute("SELECT COUNT(*) FROM matches")
+        test_len = self.cur.fetchone()[0]
+
+        return len(self) - test_len if not use_all_matches else len(self)
+
+    def get_dataset_matches(self):
+        """
+        Gets all matches from from the matches table that do not appear in the homepage table
+        :return: List of matches
+        """
+        self.cur.execute(
+            "SELECT red, blue, winner FROM matches "
+            "WHERE match_number NOT IN (SELECT reference_number FROM homepage)"
+        )
+        return self.cur.fetchall()
+
+    def get_simulation_matches(self):
+        """
+        Gets all matches from the matches table that appear in the homepage table
+        :return: List of matches
+        """
+        self.cur.execute(
+            "SELECT red, blue, winner FROM matches "
+            "WHERE match_number IN (SELECT reference_number FROM homepage)"
+        )
         return self.cur.fetchall()
 
     def get_all_characters(self):
         """
-        Returns all characters from the database.
+        Gets all characters from the database
+        :return: List of characters
         """
         self.cur.execute("SELECT name FROM characters")
-        return self.cur.fetchall()
+        return [character[0] for character in self.cur.fetchall()]
 
 
 class ModelDatabaseHandler(DatabaseHandler):
@@ -147,3 +180,16 @@ class ModelDatabaseHandler(DatabaseHandler):
         """
         self.cur.execute(f"SELECT predicted_correctly, confidence FROM {self.model_name}")
         return self.cur.fetchall()
+
+
+class GUIDatabase(DatabaseHandler):
+    def __init__(self):
+        super().__init__()
+
+    def get_matchup_count(self, red, blue):
+        self.cur.execute("SELECT COUNT(*) FROM matches "
+                         "WHERE (red = %s AND blue = %s) OR (red = %s AND blue = %s)", (red, blue, blue, red))
+        return self.cur.fetchone()[0]
+
+    def record_match(self, balance):
+        pass

@@ -30,7 +30,7 @@ class ModelConstants:
 
     # Embedding parameters
     UNKNOWN_FIGHTER = '<unknown>'
-    VOCAB = np.array(DATABASE.get_all_characters()).flatten()
+    VOCAB = np.array(DATABASE.get_all_characters())
     EMBEDDING_INPUT_DIM = len(VOCAB) + 2  # +2 for oov and unknown tokens
 
     # Loss function parameters
@@ -39,7 +39,7 @@ class ModelConstants:
     # Training
     BATCH_SIZE = 2 ** 12
     EPOCHS = 40
-    MAX_TRAINING_STEPS = int(np.ceil((len(DATABASE.get_all_matches()) / BATCH_SIZE) * EPOCHS))
+    MAX_TRAINING_STEPS = int(np.ceil(DATABASE.get_training_len() / BATCH_SIZE) * EPOCHS)
 
     # Tuning
     TUNER_OBJECTIVE = 'val_accuracy'
@@ -68,7 +68,7 @@ class Dataset:
         :param val_size: Percentage of the dataset to be used for validation. Default is 0%
         """
 
-        dataset = np.array(DATABASE.get_all_matches())
+        dataset = np.array(DATABASE.get_dataset_matches())
         self.x, self.y = dataset[:, :-1], dataset[:, -1]
         self.y = np.array([[i == "red", i == "blue"] for i in self.y]).astype(np.float32)  # one hot encoding
 
@@ -81,7 +81,7 @@ class Dataset:
         self.x_val, self.y_val = None, None
         if val_size is not None:
             assert 0.0 < val_size < 1.0, "Validation size must be between 0 and 1."
-            assert test_size + val_size <= 1.0, "Cannot split more than 100% of the dataset."
+            assert test_size + val_size < 1.0, "Cannot split more than 100% of the dataset."
             self.x_train, self.x_val, self.y_train, self.y_val = train_test_split(
                 self.x_train, self.y_train, test_size=val_size / (1 - test_size), random_state=SEED)
 

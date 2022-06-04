@@ -1,6 +1,5 @@
 import numpy as np
 from sklearn.metrics import classification_report, accuracy_score
-from sklearn.model_selection import StratifiedKFold, train_test_split
 
 from model.model import Model
 from model.utils import Dataset, ModelConstants, SEED
@@ -35,6 +34,8 @@ def train_and_evaluate():
 
 
 def cross_validation():
+    from sklearn.model_selection import StratifiedKFold
+
     dataset = Dataset()
     x, y, = dataset.get_train_data()
 
@@ -85,14 +86,15 @@ def hyper_parameter_tuning():
 
 def train_for_production(use_temp_scaling=False):
     # Load the data
-    dataset = Dataset()
+    dataset = Dataset(test_size=0.1)
+    x_train, y_train, = dataset.get_train_data()
+    x_cal, y_cal = dataset.get_test_data()
+
     model = Model()
-    x, y, = dataset.get_whole_dataset()
-    x_train, x_calib, y_train, y_calib = train_test_split(x, y, test_size=0.1, random_state=SEED)
     model.train(x_train, y_train, epochs=ModelConstants.EPOCHS, checkpointing=False, early_stopping=False)
 
     if use_temp_scaling:
-        model.rebuild_with_temp(x_calib, y_calib)
+        model.rebuild_with_temp(x_cal, y_cal)
 
     model.save()
 
