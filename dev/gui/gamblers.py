@@ -1,10 +1,10 @@
 from abc import ABC
 
-from utils.salty_bet_driver import SaltyBetDriver
+from salty_bet_driver import SaltyBetGuiDriver
 
 
 class Gambler(ABC):
-    def calculate_bet(self, confidence: float, driver: SaltyBetDriver) -> int:
+    def calculate_bet(self, confidence: float, driver: SaltyBetGuiDriver) -> int:
         raise NotImplementedError
 
     @staticmethod
@@ -39,8 +39,8 @@ class AllIn(Gambler):
         """
         pass
 
-    def calculate_bet(self, confidence: float, driver: SaltyBetDriver) -> int:
-        return self.format_bet(driver.get_balance(), driver.get_balance())
+    def calculate_bet(self, confidence: float, driver: SaltyBetGuiDriver) -> int:
+        return self.format_bet(driver.get_current_balance(), driver.get_current_balance())
 
 
 class ScaledConfidence(Gambler):
@@ -53,10 +53,10 @@ class ScaledConfidence(Gambler):
         self.high_confidence = 0.75
         self.factor = 1 / 3
 
-    def calculate_bet(self, confidence: float, driver: SaltyBetDriver) -> int:
+    def calculate_bet(self, confidence: float, driver: SaltyBetGuiDriver) -> int:
         is_tournament = driver.is_tournament()
         bailout = driver.get_bailout(is_tournament)
-        balance = driver.get_balance()
+        balance = driver.get_current_balance()
 
         # Tournament betting rules
         if is_tournament:
@@ -110,8 +110,8 @@ class ExpScaledConfidence(Gambler):
         else:
             return 0.50, 0.29
 
-    def calculate_bet(self, confidence: float, driver: SaltyBetDriver) -> int:
-        balance = driver.get_balance()
+    def calculate_bet(self, confidence: float, driver: SaltyBetGuiDriver) -> int:
+        balance = driver.get_current_balance()
 
         if driver.is_tournament():
             conf_bias, factor = self.__get_tournament_parameters(balance, driver.get_bailout(True))

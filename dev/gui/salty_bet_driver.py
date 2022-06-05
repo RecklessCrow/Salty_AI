@@ -46,7 +46,9 @@ class SaltyBetGuiDriver:
         :return: True if successful, False otherwise
         """
         self.driver.get("https://www.saltybet.com/authenticate?signin=1")
-        assert "Salty" in self.driver.title, 'Failed to load into website. Maybe saltybet.com is down?'
+
+        time.sleep(1)
+        assert "authenticate" in self.driver.current_url
 
         user = self.driver.find_element(By.ID, "email")
         user.clear()
@@ -57,6 +59,8 @@ class SaltyBetGuiDriver:
         pwrd.send_keys(password)
 
         self.driver.find_element(By.CLASS_NAME, 'graybutton').click()
+
+        time.sleep(1)
         return "authenticate" not in self.driver.current_url
 
     def get_current_state(self) -> int:

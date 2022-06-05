@@ -1,6 +1,5 @@
 import os
 
-import numpy as np
 from kivy.clock import Clock
 from kivy.core.window import Window
 from kivy.lang import Builder
@@ -36,8 +35,8 @@ class MainScreen(MDBoxLayout):
         # model =
 
         # todo: Change these to be user selectable from the toolbar
-        self.model = Model("20.13.42_model_after_temp_scaling")
-        self.gambler = GAMBLER_ID_DICT[2]
+        self.model = Model("21.16.57_model_after_temp_scaling")
+        self.gambler = GAMBLER_ID_DICT[2]()
 
         # Set up the state machine
         self.last_state = self.driver.STATE_DICT["START"]
@@ -107,6 +106,9 @@ class MainScreen(MDBoxLayout):
         if red_conf is None and blue_conf is None:  # Cannot predict
             red_conf = 0
             blue_conf = 0
+            bet_amount = 1
+        else:
+            bet_amount = self.gambler.calculate_bet(confidence=max(red_conf, blue_conf), driver=self.driver)
 
         self.left_panel.ids.red_conf_bar.value = red_conf
         self.left_panel.ids.blue_conf_bar.value = blue_conf
@@ -114,8 +116,8 @@ class MainScreen(MDBoxLayout):
         self.left_panel.ids.blue_conf_label.text = f"{blue_conf:.2%}"
 
         # Place bet and display bet amount
-        bet_amount = self.gambler.calculate_bet(max(red_conf, blue_conf), self.driver)
-        self.driver.place_bet(bet_amount, np.argmax([red_conf, blue_conf])[0])
+        pred_str = "red" if red_conf > blue_conf else "blue"
+        self.driver.place_bet(pred_str, bet_amount)
         self.left_panel.ids.bet_amount_label.text = f"Bet Amount: ${bet_amount:,}"
 
         # Update match count
@@ -141,10 +143,10 @@ class MainScreen(MDBoxLayout):
         red_pot, blue_pot = self.driver.get_current_pots()
 
         # Translate odds to percentages
-        percent_min = min(red_odds, blue_odds) / max(red_odds, blue_odds)
-        percent_max = 1 - percent_min
-        red_odds = percent_max if red_pot > blue_pot else percent_min
-        blue_odds = percent_max if blue_pot > red_pot else percent_min
+        min_odds = min(red_odds, blue_odds)
+        max_odds = max(red_odds, blue_odds)
+        red_odds = max_odds if red_pot > blue_pot else min_odds
+        blue_odds = max_odds if blue_pot > red_pot else min_odds
 
         # Update odds and pots
         self.left_panel.ids.red_odds_bar.value = red_odds
