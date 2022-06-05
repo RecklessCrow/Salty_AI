@@ -147,7 +147,13 @@ class SaltyBetGuiDriver:
         Gets the current balance
         :return: The current balance
         """
-        balance = int(self.driver.find_element(By.ID, "balance").text.replace(",", ""))
+        betting_text = self.driver.find_element(By.ID, "balance")
+
+        while not isinstance(betting_text, str) and betting_text == "":
+            time.sleep(1)
+            betting_text = self.driver.find_element(By.ID, "balance")
+
+        balance = int(betting_text.text.replace(",", ""))
 
         if self.last_balance == 0:
             self.last_balance = balance
