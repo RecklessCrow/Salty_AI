@@ -148,7 +148,6 @@ class SaltyBetGuiDriver:
         :return: The current balance
         """
         betting_text = self.driver.find_element(By.ID, "balance")
-
         while not isinstance(betting_text, str) and betting_text == "":
             time.sleep(1)
             betting_text = self.driver.find_element(By.ID, "balance")

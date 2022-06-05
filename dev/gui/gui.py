@@ -1,4 +1,5 @@
 import os
+import time
 
 from kivy.clock import Clock
 from kivy.core.window import Window
@@ -117,8 +118,16 @@ class MainScreen(MDBoxLayout):
 
         # Place bet and display bet amount
         pred_str = "red" if red_conf > blue_conf else "blue"
-        self.driver.place_bet(pred_str, bet_amount)
         self.left_panel.ids.bet_amount_label.text = f"Bet Amount: ${bet_amount:,}"
+
+        # Try to place bet 10 times before giving up
+        for i in range(10):
+            if self.driver.place_bet(pred_str, bet_amount):
+                break
+            elif i == 9:
+                self.left_panel.ids.bet_amount_label.text = "Bet Amount: Could not place bet"
+            else:
+                time.sleep(1)
 
         # Update match count
         self.left_panel.ids.matchup_count_label.text = f"Matchup Count: {self.database.get_matchup_count(red, blue)}"
