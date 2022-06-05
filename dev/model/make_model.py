@@ -113,6 +113,9 @@ class TempScaling(tf.keras.layers.Layer):
     def call(self, x):
         return tf.math.divide_no_nan(x, self.temperature)
 
+    def __call__(self, *args, **kwargs):
+        return super().__call__(*args, **kwargs)
+
     def get_config(self):
         config = super().get_config()
         config["temperature"] = self.temperature

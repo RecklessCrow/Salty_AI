@@ -1,5 +1,6 @@
 import os
 
+import numpy as np
 from kivy.clock import Clock
 from kivy.core.window import Window
 from kivy.lang import Builder
@@ -35,7 +36,7 @@ class MainScreen(MDBoxLayout):
         # model =
 
         # todo: Change these to be user selectable from the toolbar
-        self.model = Model("02.32.56_model_after_temp_scaling")
+        self.model = Model("20.13.42_model_after_temp_scaling")
         self.gambler = GAMBLER_ID_DICT[2]
 
         # Set up the state machine
@@ -113,8 +114,9 @@ class MainScreen(MDBoxLayout):
         self.left_panel.ids.blue_conf_label.text = f"{blue_conf:.2%}"
 
         # Place bet and display bet amount
-        # bet_amount = self.gambler.get_bet_amount(balance, max(red_conf, blue_conf))
-        # self.left_panel.ids.bet_amount_label.text = f"Bet Amount: ${bet_amount:,}"
+        bet_amount = self.gambler.calculate_bet(max(red_conf, blue_conf), self.driver)
+        self.driver.place_bet(bet_amount, np.argmax([red_conf, blue_conf])[0])
+        self.left_panel.ids.bet_amount_label.text = f"Bet Amount: ${bet_amount:,}"
 
         # Update match count
         self.left_panel.ids.matchup_count_label.text = f"Matchup Count: {self.database.get_matchup_count(red, blue)}"

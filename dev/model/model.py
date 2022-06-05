@@ -73,7 +73,7 @@ class Model:
         temperature = calculate_temperature(logits, y_cal)
 
         # rebuild model with temperature scaling layer
-        inputs = self.model.outputs
+        inputs = self.model.outputs[0]
         x = TempScaling(temperature)(inputs)
         outputs = keras.layers.Softmax()(x)
         self.model = keras.models.Model(self.model.inputs, outputs)
