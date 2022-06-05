@@ -152,8 +152,8 @@ class MainScreen(MDBoxLayout):
         red_pot, blue_pot = self.driver.get_current_pots()
 
         # Translate odds to percentages
-        min_odds = min(red_odds, blue_odds)
-        max_odds = max(red_odds, blue_odds)
+        min_odds = min(red_odds, blue_odds) / sum([red_odds, blue_odds])
+        max_odds = max(red_odds, blue_odds) / sum([red_odds, blue_odds])
         red_odds = max_odds if red_pot > blue_pot else min_odds
         blue_odds = max_odds if blue_pot > red_pot else min_odds
 
