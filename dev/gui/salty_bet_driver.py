@@ -4,7 +4,8 @@ import time
 from typing import Tuple
 
 from selenium import webdriver
-from selenium.common.exceptions import ElementNotInteractableException, NoSuchElementException
+from selenium.common.exceptions import ElementNotInteractableException, NoSuchElementException, \
+    StaleElementReferenceException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.firefox.options import Options
 
@@ -113,8 +114,12 @@ class SaltyBetGuiDriver:
         if self.last_balance == 0:
             self.last_balance = self.get_current_balance()
 
-        red = self.driver.find_element(By.CLASS_NAME, "redtext").text
-        blue = self.driver.find_element(By.CLASS_NAME, "bluetext").text
+        try:
+            red = self.driver.find_element(By.CLASS_NAME, "redtext").text
+            blue = self.driver.find_element(By.CLASS_NAME, "bluetext").text
+        except StaleElementReferenceException:
+            time.sleep(1)
+            return self.get_current_matchup()
 
         if "|" in red:
             red = red.split('|')[1]
