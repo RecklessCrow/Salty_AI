@@ -3,14 +3,14 @@ from datetime import datetime
 
 from tensorflow import keras
 
-from dev.model.data_generator import DataGenerator
-from dev.model.losses import joint_loss
-from dev.model.make_model import make_attention_model, TempScaling, calculate_temperature
-from dev.model.utils import ModelConstants
+from model.data_generator import DataGenerator
+from model.losses import alpha_loss
+from model.make_model import make_attention_model, calculate_temperature, TempScaling
+from model.utils import ModelConstants
 
 
 class Model:
-    MODEL_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..', 'saved_models')
+    MODEL_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), '', '../..', 'saved_models')
 
     def __init__(self, model_name=None):
         """
@@ -48,10 +48,10 @@ class Model:
             "ff_units": 32,
             "ff_activation": "relu",
             "epsilon": 1e-6,
-            "learning_rate": 1e-3,
+            "learning_rate": 1e-4,
             "smoothing": 0.05,
             "beta_2": 0.98,
-            "loss": joint_loss,  # alpha_loss, joint_loss
+            "loss": alpha_loss,  # alpha_loss, joint_loss
         }
 
         model = make_attention_model(parameters)
@@ -65,18 +65,18 @@ class Model:
         :param y_cal: The labels to calculate the temperature for.
         :return:
         """
-        # Remove the softmax layer to get the logits.
-        self.model = keras.models.Model(inputs=self.model.inputs, outputs=self.model.get_layer("logits").output)
+        # Remove the softmax layer
+        self.model = keras.models.Model(self.model.inputs, self.model.get_layer("logits").output)
 
         # Calculate the temperature from the calibration data
         logits = self.predict(x_cal)
         temperature = calculate_temperature(logits, y_cal)
 
         # rebuild model with temperature scaling layer
-        x = self.model(self.model.inputs)
-        x = TempScaling(temperature)(x)
+        inputs = self.model.outputs
+        x = TempScaling(temperature)(inputs)
         outputs = keras.layers.Softmax()(x)
-        self.model = keras.models.Model(inputs=self.model.inputs, outputs=outputs)
+        self.model = keras.models.Model(self.model.inputs, outputs)
 
     def train(self, x, y, val=None, epochs=ModelConstants.EPOCHS, batch_size=ModelConstants.BATCH_SIZE,
               early_stopping=False, checkpointing=False, **kwargs):
@@ -150,3 +150,12 @@ class Model:
         :return:
         """
         self.model = keras.models.load_model(self.model_dir, compile=False)
+
+
+if __name__ == '__main__':
+    # Test the model
+    model = Model()
+    model.rebuild_with_temp([["1", "2"]], [[0, 1]])
+    model.save("_test")
+    model = Model("19.53.31_test")
+    print(model.model.summary())

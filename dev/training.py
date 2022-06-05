@@ -1,5 +1,5 @@
 import numpy as np
-from sklearn.metrics import classification_report, accuracy_score
+from sklearn.metrics import accuracy_score
 
 from model.model import Model
 from model.utils import Dataset, ModelConstants, SEED
@@ -23,12 +23,8 @@ def train_and_evaluate():
         early_stopping=False
     )
 
-    print("Evaluating the model before temp scaling...")
-    print(classification_report(np.argmax(y_test, axis=-1), np.argmax(model.predict(x_test), axis=-1)))
     model.save('_model_before_temp_scaling')
 
-    print("Evaluating the model after temp scaling...")
-    print(classification_report(np.argmax(y_test, axis=-1), np.argmax(model.predict(x_test), axis=-1)))
     model.rebuild_with_temp(x_val, y_val)
     model.save('_model_after_temp_scaling')
 

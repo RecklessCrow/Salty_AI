@@ -3,7 +3,7 @@ import tensorflow as tf
 from scipy.optimize import minimize
 from tensorflow_addons.optimizers import RectifiedAdam
 
-from dev.model.utils import ModelConstants, set_random_state
+from model.utils import set_random_state, ModelConstants
 
 
 def make_attention_model(parameters):

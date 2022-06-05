@@ -5,7 +5,7 @@ import numpy as np
 import tensorflow as tf
 from sklearn.model_selection import train_test_split
 
-from dev.dev_database_handler import MatchDatabaseHandler
+from dev_database_handler import MatchDatabaseHandler
 
 DATABASE = MatchDatabaseHandler()
 SEED = 123

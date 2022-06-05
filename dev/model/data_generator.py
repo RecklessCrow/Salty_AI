@@ -1,7 +1,7 @@
 import numpy as np
 from tensorflow.keras.utils import Sequence
 
-from dev.model.utils import ModelConstants
+from model.utils import ModelConstants
 
 
 class DataGenerator(Sequence):

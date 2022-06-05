@@ -1,9 +1,9 @@
 from keras_tuner import HyperModel, HyperParameters, Hyperband
 from tensorflow.python.keras.callbacks import EarlyStopping
 
-from dev.model.data_generator import DataGenerator
-from dev.model.make_model import make_attention_model
-from dev.model.utils import ModelConstants
+from data_generator import DataGenerator
+from make_model import make_attention_model
+from utils import ModelConstants
 
 
 class TuningModel(HyperModel):
