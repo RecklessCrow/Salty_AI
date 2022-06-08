@@ -48,5 +48,5 @@ for gambler_idx in range(len(GAMBLER_ID_DICT)):
         else:
             driver.lose(bet_amount)
 
-    driver.reset()
     print(f'Gambler {gambler_idx} won ${driver.get_balance():,}')
+    driver.reset()
