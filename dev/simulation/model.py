@@ -45,3 +45,11 @@ class Model:
 
         prediction = self.model.predict([[red, blue]], verbose=0)
         return prediction[0]
+
+    def predict_batch(self, batch):
+        """
+        Returns the predicted outcomes of a batch of salty bet matches
+        :param batch: A list of tuples containing the characters of the red and blue fighters
+        :return: A list of the predicted outcomes of the matches
+        """
+        return self.model.predict(batch, verbose=0)
