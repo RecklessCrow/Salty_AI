@@ -1,3 +1,5 @@
+import time
+
 import numpy as np
 from tqdm import tqdm
 
@@ -50,3 +52,4 @@ for gambler_idx in range(len(GAMBLER_ID_DICT)):
 
     print(f'Gambler {gambler_idx} won ${driver.get_balance():,}')
     driver.reset()
+    time.sleep(1)
