@@ -10,39 +10,43 @@ db = SimulationDatabase()
 match_info = db.get_all_match_stats()
 
 model = Model('21.16.57_model_after_temp_scaling')
-gambler = GAMBLER_ID_DICT[1]()
 driver = SaltyBetSim(match_info)
 
 # todo: make this a function
 # todo: make the model predict all matches in a single batch to decrease execution time
 
-for idx in tqdm(range(len(match_info)), desc='Simulating Saltybet Matches', unit='matches', ):
-    red, blue = driver.get_match()
+for gambler_idx in range(len(GAMBLER_ID_DICT)):
 
-    if red is None:
-        break
+    gambler = GAMBLER_ID_DICT[gambler_idx]()
 
-    odds = driver.get_odds()
-    predicted_odds = model.predict_match(red, blue)
-    confidence = np.max(predicted_odds)
-    bet_amount = gambler.calculate_bet(confidence, driver)
+    for idx in tqdm(range(len(match_info)), desc='Simulating Saltybet Matches', unit='matches', ):
+        red, blue = driver.get_match()
 
-    pred_idx = np.argmax(predicted_odds)
-    predicted_winner = 'red' if pred_idx == 0 else 'blue'
-    winner = driver.get_winner()
-    predicted_correctly = predicted_winner == winner
+        if red is None:
+            break
 
-    if predicted_correctly:
-        large_odds = np.argmax(odds)
-        small_odds = np.argmin(odds)
+        odds = driver.get_odds()
+        predicted_odds = model.predict_match(red, blue)
+        confidence = np.max(predicted_odds)
+        bet_amount = gambler.calculate_bet(confidence, driver)
 
-        if pred_idx == large_odds:
-            win_amount = bet_amount * (1 / np.max(odds))
+        pred_idx = np.argmax(predicted_odds)
+        predicted_winner = 'red' if pred_idx == 0 else 'blue'
+        winner = driver.get_winner()
+        predicted_correctly = predicted_winner == winner
+
+        if predicted_correctly:
+            large_odds = np.argmax(odds)
+            small_odds = np.argmin(odds)
+
+            if pred_idx == large_odds:
+                win_amount = bet_amount * (1 / np.max(odds))
+            else:
+                win_amount = bet_amount * np.max(odds)
+
+            driver.win(win_amount)
         else:
-            win_amount = bet_amount * np.max(odds)
+            driver.lose(bet_amount)
 
-        driver.win(win_amount)
-    else:
-        driver.lose(bet_amount)
-
-print(f'Gambler won ${driver.get_balance():,}')
+    driver.reset()
+    print(f'Gambler {gambler_idx} won ${driver.get_balance():,}')

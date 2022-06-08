@@ -56,3 +56,7 @@ class SaltyBetSim:
 
         if self.balance < self.BAILOUT:
             self.balance = self.BAILOUT
+
+    def reset(self):
+        self.balance = self.BAILOUT
+        self.match_index = 0
