@@ -38,10 +38,7 @@ for gambler_idx in range(len(GAMBLER_ID_DICT)):
         predicted_correctly = predicted_winner == winner
 
         if predicted_correctly:
-            large_odds = np.argmax(odds)
-            small_odds = np.argmin(odds)
-
-            if pred_idx == large_odds:
+            if pred_idx == np.argmax(odds):
                 win_amount = bet_amount * (1 / np.max(odds))
             else:
                 win_amount = bet_amount * np.max(odds)
