@@ -17,6 +17,7 @@ class DatabaseHandler:
             database="saltybet"
         )
         self.cur = self.connection.cursor()
+        # self.cur.execute('set global max_allowed_packet=67108864')
 
     def __del__(self):
         """
@@ -183,13 +184,38 @@ class ModelDatabaseHandler(DatabaseHandler):
 
 
 class GUIDatabase(DatabaseHandler):
-    def __init__(self):
+    def __init__(self, username):
         super().__init__()
+        self.username = username
 
     def get_matchup_count(self, red, blue):
-        self.cur.execute("SELECT COUNT(*) FROM matches "
-                         "WHERE (red = %s AND blue = %s) OR (red = %s AND blue = %s)", (red, blue, blue, red))
+        self.cur.execute(
+            "SELECT COUNT(*) FROM matches "
+            "WHERE (red = %s AND blue = %s) OR (red = %s AND blue = %s)",
+            (red, blue, blue, red)
+        )
         return self.cur.fetchone()[0]
+
+    def get_balance_history(self):
+        self.cur.execute(f"SELECT balance FROM {self.username}")
+        return self.cur.fetchall()
+
+    def add_balance(self, balance):
+        self.cur.execute(f"INSERT INTO {self.username} (balance) VALUES (%s)", (balance,))
+        self.commit()
 
     def record_match(self, balance):
         pass
+
+
+class SimulationDatabase(DatabaseHandler):
+    def __init__(self):
+        super().__init__()
+
+    def get_all_match_stats(self):
+        self.cur.execute(
+            "SELECT red, blue, winner, red_odds, blue_odds, red_pot, blue_pot, is_tournament, matchup_count "
+            "FROM matches "
+            "JOIN homepage ON matches.match_number = homepage.reference_number"
+        )
+        return self.cur.fetchall()

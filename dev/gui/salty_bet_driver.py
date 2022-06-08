@@ -152,12 +152,13 @@ class SaltyBetGuiDriver:
         Gets the current balance
         :return: The current balance
         """
-        betting_text = self.driver.find_element(By.ID, "balance")
-        while not isinstance(betting_text, str) and betting_text == "":
-            time.sleep(1)
-            betting_text = self.driver.find_element(By.ID, "balance")
 
-        balance = int(betting_text.text.replace(",", ""))
+        betting_text = self.driver.find_element(By.ID, "balance").text
+        while not isinstance(betting_text, str) or betting_text == "":
+            time.sleep(1)
+            betting_text = self.driver.find_element(By.ID, "balance").text
+
+        balance = int(betting_text.replace(",", ""))
 
         if self.last_balance == 0:
             self.last_balance = balance
@@ -172,7 +173,7 @@ class SaltyBetGuiDriver:
 
         # Wait for betting text to load
         betting_text = self.driver.find_element(By.ID, "lastbet").text
-        while not isinstance(betting_text, str) and betting_text == "":
+        while not isinstance(betting_text, str) or betting_text == "":
             time.sleep(1)
             betting_text = self.driver.find_element(By.ID, "lastbet").text
 
@@ -191,15 +192,18 @@ class SaltyBetGuiDriver:
 
         # Wait for pots text to load
         pots_text = self.driver.find_element(By.ID, "odds").text
-        while not isinstance(pots_text, str) and pots_text == "":
+        while not isinstance(pots_text, str) or pots_text == "":
             time.sleep(1)
             pots_text = self.driver.find_element(By.ID, "odds").text
 
         # Get the pots
         pots_text = pots_text.replace(",", "")
-        red_pot, blue_pot = tuple(re.findall(r'(?<=\$)\d+', pots_text))
+        money_strings = tuple(re.findall(r'(?<=\$)\d+', pots_text))
 
-        return int(red_pot), int(blue_pot)
+        if len(money_strings) == 2:
+            return int(money_strings[0]), int(money_strings[1])
+
+        return self.get_current_pots()
 
     def is_tournament(self) -> bool:
         """

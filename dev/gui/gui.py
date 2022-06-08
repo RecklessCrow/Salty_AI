@@ -3,6 +3,7 @@ import time
 
 from kivy.clock import Clock
 from kivy.core.window import Window
+from kivy.garden.matplotlib.backend_kivyagg import FigureCanvasKivyAgg
 from kivy.lang import Builder
 from kivy.uix.filechooser import FileChooser
 from kivymd.app import MDApp
@@ -14,23 +15,43 @@ from kivymd.uix.floatlayout import MDFloatLayout
 from dev_database_handler import GUIDatabase
 from gamblers import GAMBLER_ID_DICT
 from model import Model
+from plotting import make_balance_history_plot
 from salty_bet_driver import SaltyBetGuiDriver
 
 KIVY_FILE_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), "kv_files")
 
 
-class MainScreen(MDBoxLayout):
-    def __init__(self, driver: SaltyBetGuiDriver, **kwargs):
+class BalancePlot(MDFloatLayout):
+
+    def __init__(self, **kwargs):
         super().__init__(**kwargs)
+
+    def __draw_shadow__(self, origin, end, context=None):
+        pass
+
+    def plot_balance_history(self, plt):
+        self.ids.plot_box.clear_widgets()
+        self.ids.plot_box.add_widget(FigureCanvasKivyAgg(plt.gcf()))
+
+
+class MainScreen(MDBoxLayout):
+    def __init__(self, driver: SaltyBetGuiDriver, username: str, **kwargs):
+        super().__init__(orientation="horizontal", **kwargs)
         self.driver = driver
-        self.database = GUIDatabase()
+        self.database = GUIDatabase(username)
 
         # Set up the GUI
-        self.orientation = "horizontal"
         self.left_panel = Builder.load_file(os.path.join(KIVY_FILE_PATH, "main_left.kv"))
         self.left_panel.ids.balance_label.text = f"Balance: ${driver.get_current_balance():,}"
+
+        Builder.load_file(os.path.join(KIVY_FILE_PATH, "main_right.kv"))
+        self.right_panel = BalancePlot()
+        history = self.database.get_balance_history()
+        plt = make_balance_history_plot(history)
+        self.right_panel.plot_balance_history(plt)
+
+        self.add_widget(self.right_panel)
         self.add_widget(self.left_panel)
-        self.__init_right_panel()
 
         # todo Prompt the user to select a model to load
         # model =
@@ -46,14 +67,6 @@ class MainScreen(MDBoxLayout):
     def __draw_shadow__(self, origin, end, context=None):
         pass
 
-    def __init_right_panel(self):
-        """
-        Initializes the right panel with a graph of the players balance over time
-        :return:
-        """
-        self.graph_screen = MDFloatLayout()
-        self.add_widget(self.graph_screen)
-
     def state_machine_manager(self, dt):
         current_state = self.driver.get_current_state()
 
@@ -68,8 +81,10 @@ class MainScreen(MDBoxLayout):
         # Update the GUI
         if current_state == self.driver.STATE_DICT["BETS_OPEN"]:
             self.update_match_info()
+
         elif current_state == self.driver.STATE_DICT["BETS_CLOSED"]:
             self.update_odds()
+
         elif current_state == self.driver.STATE_DICT["PAYOUT"]:
             self.update_payout()
 
@@ -80,7 +95,7 @@ class MainScreen(MDBoxLayout):
         Sets the current fighters and their predicted odds
         :return:
         """
-
+        # todo add win streak
         # Update with the current balance
         if self.driver.is_tournament():
             # Update balance display, change color to purple
@@ -91,10 +106,13 @@ class MainScreen(MDBoxLayout):
             # todo: Reset graph to display only results from this tournament
         else:
             balance = self.driver.get_current_balance()
+            self.database.add_balance(balance)
             self.left_panel.ids.balance_label.text = f"Balance: ${balance:,}"
             self.left_panel.ids.balance_label.color = [0, 1, 0, 1]
 
-            # todo: Update the graph
+            history = self.database.get_balance_history()
+            plt = make_balance_history_plot(history)
+            self.right_panel.plot_balance_history(plt)
 
         # Update Fighters
         red, blue = self.driver.get_current_matchup()
@@ -173,7 +191,7 @@ class MainScreen(MDBoxLayout):
 
         # Display the payout
         payout = self.driver.get_payout()
-        self.left_panel.ids.payout_label.text = f"Winnings: {'+' if payout > 0 else '-'}${payout:,}"
+        self.left_panel.ids.payout_label.text = f"Winnings: {'+' if payout > 0 else '-'}${abs(payout):,}"
         self.left_panel.ids.payout_label.color = [0, 1, 0, 1] if payout > 0 else [1, 0, 0, 1]
 
         # todo: update graph, model accuracy, balance, profit, ect.
@@ -245,7 +263,7 @@ class SaltyBetAIApp(MDApp):
             Window.top = Window.center[1] - initial_center[1] / 2
 
             # switch to the main screen
-            self.root.add_widget(MainScreen(self.driver))
+            self.root.add_widget(MainScreen(self.driver, 'CJ'))
 
         else:  # Login failed, display error message and clear login fields
             spawn_login_error_popup()
@@ -253,7 +271,14 @@ class SaltyBetAIApp(MDApp):
             self.root.ids.password_field.text = ""
 
     def build(self):
-        return Builder.load_file(os.path.join(KIVY_FILE_PATH, "login.kv"))
+        # return Builder.load_file(os.path.join(KIVY_FILE_PATH, "login.kv"))
+        from dotenv import load_dotenv
+        env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".env")
+        load_dotenv(env_path)
+        username = os.environ.get("SALTYBET_USERNAME")
+        password = os.environ.get("SALTYBET_PASSWORD")
+        self.driver.login(username, password)
+        return MainScreen(self.driver, 'CJ')
 
 
 if __name__ == '__main__':
