@@ -38,12 +38,13 @@ for gambler_idx in range(len(GAMBLER_ID_DICT)):
         predicted_correctly = predicted_winner == winner
 
         if predicted_correctly:
-            if pred_idx == np.argmax(odds):
+            if pred_idx == np.argmax(odds):  # Bet on the favored team
                 win_amount = bet_amount * (1 / np.max(odds))
-            else:
+            else:  # Bet on the underdog (Upset)
                 win_amount = bet_amount * np.max(odds)
 
             driver.win(win_amount)
+
         else:
             driver.lose(bet_amount)
 
