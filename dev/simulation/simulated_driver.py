@@ -1,3 +1,8 @@
+import random
+
+import numpy as np
+
+
 class SaltyBetSim:
     BAILOUT = 100
 
@@ -15,14 +20,32 @@ class SaltyBetSim:
             for match in match_list
         ]
         self.match_index = 0
-
+        self.random_seed = 42
+        random.seed(self.random_seed)
+        self.shuffle_match_list()
         self.balance = self.BAILOUT
+
+    def shuffle_match_list(self):
+        random.shuffle(self.matches)
+
+    def predict_on_all_matches(self, model):
+        matchups = np.array([(match['red'], match['blue']) for match in self.matches])
+        return model.predict_batch(matchups)
+
+    def get_all_odds(self):
+        return np.array([(match['red_odds'], match['blue_odds']) for match in self.matches])
+
+    def get_all_winners(self):
+        return np.array([match['winner'] for match in self.matches])
 
     def get_match(self):
         if self.match_index >= len(self.matches):
             return None, None
 
         return self.matches[self.match_index]["red"], self.matches[self.match_index]["blue"]
+
+    def set_balance(self, balance):
+        self.balance = balance
 
     def get_odds(self):
         return self.matches[self.match_index]["red_odds"], self.matches[self.match_index]["blue_odds"]
@@ -60,3 +83,4 @@ class SaltyBetSim:
     def reset(self):
         self.balance = self.BAILOUT
         self.match_index = 0
+        self.shuffle_match_list()

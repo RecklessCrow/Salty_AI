@@ -1,5 +1,6 @@
 from abc import ABC
 
+import numpy as np
 import sigfig
 
 from utils.salty_bet_driver import SaltyBetDriver
@@ -80,6 +81,7 @@ class ScaledConfidence(Gambler):
         return self.format_bet(bet_amount, balance)
 
 
+
 class ExpScaledConfidence(Gambler):
     """
     Gambler that bets a scaled amount of the balance based on the confidence.
@@ -135,6 +137,39 @@ class ExpScaledConfidence(Gambler):
         bet_amount = balance * bet_factor
         return self.format_bet(bet_amount, balance)
 
+
+class ExpScaledConfidence2(Gambler):
+
+    def __init__(self,
+                 confidence_bias_coff=None,
+                 ceiling_factor_coff=None,
+                 bet_bias_coff=None,
+                 aggressive_factor=None):
+
+        super().__init__()
+        self.confidence_bias_coff = confidence_bias_coff
+        self.ceiling_factor_coff = ceiling_factor_coff
+        self.bet_bias_coff = bet_bias_coff
+        self.aggressive_factor = aggressive_factor
+
+    def calculate_bet(self, confidence: float, driver: SaltyBetDriver) -> int:
+        balance = driver.get_balance()
+
+        confidence_bias = balance * self.confidence_bias_coff[0] + self.confidence_bias_coff[1]
+        ceiling_factor = balance * self.ceiling_factor_coff[0] + self.ceiling_factor_coff[1]
+        bet_bias = balance * self.bet_bias_coff[0] + self.bet_bias_coff[1]
+        aggressive_factor = self.aggressive_factor
+
+        confidence += confidence_bias
+        bet_factor = confidence ** aggressive_factor
+        x_crossover = ceiling_factor ** (1 / aggressive_factor)
+        y_crossover = x_crossover ** aggressive_factor
+        if confidence > x_crossover:
+            bet_factor = -((x_crossover - (confidence - x_crossover)) ** aggressive_factor) + (y_crossover * 2)
+
+        bet_factor += bet_bias
+        bet_amount = balance * bet_factor
+        return self.format_bet(bet_amount, balance)
 
 GAMBLER_ID_DICT = {
     0: AllIn,
