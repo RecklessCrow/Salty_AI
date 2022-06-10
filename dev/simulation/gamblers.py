@@ -124,6 +124,7 @@ class ExpScaledConfidence(Gambler):
         if confidence > x_crossover:
             bet_factor = -((x_crossover - (confidence - x_crossover)) ** aggressive_factor) + (y_crossover * 2)
 
+        bet_factor = max(min(bet_factor, 1), 0)
         bet_amount = balance * bet_factor
         return self.format_bet(bet_amount, balance)
 

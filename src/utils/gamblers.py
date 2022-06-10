@@ -1,5 +1,6 @@
 from abc import ABC
 
+import numpy as np
 import sigfig
 
 from utils.salty_bet_driver import SaltyBetDriver
@@ -89,19 +90,6 @@ class ExpScaledConfidence(Gambler):
         super().__init__()
 
     @staticmethod
-    def __get_parameters(balance):
-        if balance < 1_000:
-            return 0.725, 0.36
-        if balance < 10_000:
-            return 0.33, 0.24
-        if balance < 100_000:
-            return 0.175, 0.187
-        if balance < 1_000_000:
-            return 0.01, 0.14
-        else:
-            return -0.1, 0.10
-
-    @staticmethod
     def __get_tournament_parameters(balance, bailout):
         if balance < 2 * bailout:
             return 1.00, 0.45
@@ -115,23 +103,28 @@ class ExpScaledConfidence(Gambler):
     def calculate_bet(self, confidence: float, driver: SaltyBetDriver) -> int:
         balance = driver.get_balance()
 
+        confidence_slope = -0.12
+        start_incline = 0.25
+        ceiling_slope = -0.05
+        ceiling = 1.0
+        aggressive_factor = 3
+
+        log_balance = min(np.log(balance), 13)
+        confidence_bias = (log_balance - 5) * confidence_slope + (1.0 - start_incline)
+        ceiling_factor = (log_balance - 5) * ceiling_slope + (ceiling / 2)
+        ceiling_factor = max(0, ceiling_factor)
+
         if driver.is_tournament():
-            conf_bias, factor = self.__get_tournament_parameters(balance, driver.get_bailout(True))
-        else:
-            conf_bias, factor = self.__get_parameters(balance)
+            confidence_bias, ceiling_factor = self.__get_tournament_parameters(balance, driver.get_bailout(True))
 
-        # scale balance exponentially based on confidence
-        bet_bias = 0.03  # minimum bet percentage
-        base = 8  # ramp up bet percentage
-
-        confidence += conf_bias
-        bet_factor = confidence ** base
-        x_crossover = factor ** (1 / base)
-        y_crossover = x_crossover ** base
+        confidence += confidence_bias
+        bet_factor = confidence ** aggressive_factor
+        x_crossover = ceiling_factor ** (1 / aggressive_factor)
+        y_crossover = x_crossover ** aggressive_factor
         if confidence > x_crossover:
-            bet_factor = -((x_crossover - (confidence - x_crossover)) ** base) + (y_crossover * 2)
+            bet_factor = -((x_crossover - (confidence - x_crossover)) ** aggressive_factor) + (y_crossover * 2)
 
-        bet_factor += bet_bias
+        bet_factor = max(min(bet_factor, 1), 0)
         bet_amount = balance * bet_factor
         return self.format_bet(bet_amount, balance)
 
