@@ -81,7 +81,6 @@ class ScaledConfidence(Gambler):
         return self.format_bet(bet_amount, balance)
 
 
-
 class ExpScaledConfidence(Gambler):
     """
     Gambler that bets a scaled amount of the balance based on the confidence.
@@ -89,19 +88,6 @@ class ExpScaledConfidence(Gambler):
 
     def __init__(self):
         super().__init__()
-
-    @staticmethod
-    def __get_parameters(balance):
-        if balance < 1_000:
-            return 0.725, 0.36
-        if balance < 10_000:
-            return 0.33, 0.24
-        if balance < 100_000:
-            return 0.175, 0.187
-        if balance < 1_000_000:
-            return 0.01, 0.14
-        else:
-            return -0.1, 0.10
 
     @staticmethod
     def __get_tournament_parameters(balance, bailout):
@@ -117,48 +103,19 @@ class ExpScaledConfidence(Gambler):
     def calculate_bet(self, confidence: float, driver: SaltyBetDriver) -> int:
         balance = driver.get_balance()
 
+        confidence_slope = -0.12
+        start_incline = 0.25
+        ceiling_slope = -0.05
+        ceiling = 1.0
+        aggressive_factor = 3
+
+        log_balance = min(np.log(balance), 13)
+        confidence_bias = (log_balance - 5) * confidence_slope + (1.0 - start_incline)
+        ceiling_factor = (log_balance - 5) * ceiling_slope + (ceiling / 2)
+        ceiling_factor = max(0, ceiling_factor)
+
         if driver.is_tournament():
-            conf_bias, factor = self.__get_tournament_parameters(balance, driver.get_bailout(True))
-        else:
-            conf_bias, factor = self.__get_parameters(balance)
-
-        # scale balance exponentially based on confidence
-        bet_bias = 0.03  # minimum bet percentage
-        base = 8  # ramp up bet percentage
-
-        confidence += conf_bias
-        bet_factor = confidence ** base
-        x_crossover = factor ** (1 / base)
-        y_crossover = x_crossover ** base
-        if confidence > x_crossover:
-            bet_factor = -((x_crossover - (confidence - x_crossover)) ** base) + (y_crossover * 2)
-
-        bet_factor += bet_bias
-        bet_amount = balance * bet_factor
-        return self.format_bet(bet_amount, balance)
-
-
-class ExpScaledConfidence2(Gambler):
-
-    def __init__(self,
-                 confidence_bias_coff=None,
-                 ceiling_factor_coff=None,
-                 bet_bias_coff=None,
-                 aggressive_factor=None):
-
-        super().__init__()
-        self.confidence_bias_coff = confidence_bias_coff
-        self.ceiling_factor_coff = ceiling_factor_coff
-        self.bet_bias_coff = bet_bias_coff
-        self.aggressive_factor = aggressive_factor
-
-    def calculate_bet(self, confidence: float, driver: SaltyBetDriver) -> int:
-        balance = driver.get_balance()
-
-        confidence_bias = balance * self.confidence_bias_coff[0] + self.confidence_bias_coff[1]
-        ceiling_factor = balance * self.ceiling_factor_coff[0] + self.ceiling_factor_coff[1]
-        bet_bias = balance * self.bet_bias_coff[0] + self.bet_bias_coff[1]
-        aggressive_factor = self.aggressive_factor
+            confidence_bias, ceiling_factor = self.__get_tournament_parameters(balance, driver.get_bailout(True))
 
         confidence += confidence_bias
         bet_factor = confidence ** aggressive_factor
@@ -167,9 +124,79 @@ class ExpScaledConfidence2(Gambler):
         if confidence > x_crossover:
             bet_factor = -((x_crossover - (confidence - x_crossover)) ** aggressive_factor) + (y_crossover * 2)
 
-        bet_factor += bet_bias
         bet_amount = balance * bet_factor
         return self.format_bet(bet_amount, balance)
+
+
+class ExpScaledConfidence2(Gambler):
+
+    def __init__(self,
+                 confidence_slope=None,
+                 start_incline=None,
+                 ceiling_slope=None,
+                 ceiling=None,
+                 bet_bias=0,
+                 aggressive_factor=6):
+
+        super().__init__()
+        self.confidence_slope = confidence_slope
+        self.start_incline = start_incline
+        self.ceiling_slope = ceiling_slope
+        self.ceiling = ceiling
+        self.bet_bias = bet_bias
+        self.aggressive_factor = aggressive_factor
+
+    def calculate_bet(self, confidence: float, driver: SaltyBetDriver) -> int:
+        balance = driver.get_balance()
+
+        log_balance = min(np.log(balance), 13)  #
+        confidence_bias = (log_balance - 5) * self.confidence_slope + (1.0 - self.start_incline)
+        ceiling_factor = (log_balance - 5) * self.ceiling_slope + (self.ceiling / 2)
+        ceiling_factor = max(0, ceiling_factor)
+        bet_bias = self.bet_bias
+        aggressive_factor = self.aggressive_factor
+
+        confidence = (confidence - 0.5) * 2
+
+        confidence += confidence_bias
+        bet_factor = confidence ** aggressive_factor
+        x_crossover = ceiling_factor ** (1 / aggressive_factor)
+        y_crossover = x_crossover ** aggressive_factor
+        if confidence > x_crossover:
+            bet_factor = -((x_crossover - (confidence - x_crossover)) ** aggressive_factor) + (y_crossover * 2)
+
+        # bet_factor += bet_bias
+        bet_factor += bet_bias
+        bet_factor = max(min(bet_factor, 1), 0)
+        bet_amount = balance * bet_factor
+        bet_amount = min(bet_amount, balance)
+
+        return bet_amount
+
+
+class LinearScaledConfidence(Gambler):
+
+    def __init__(self,
+                 confidence_slope=None,
+                 bet_bias=None,
+                 balance_slope=None,
+                 balance_bias=None):
+
+        super().__init__()
+        self.confidence_slope = confidence_slope
+        self.bet_bias = bet_bias
+        self.balance_slope = balance_slope
+        self.balance_bias = balance_bias
+
+    def calculate_bet(self, confidence: float, driver: SaltyBetDriver) -> int:
+        balance = driver.get_balance()
+        confidence = (confidence - 0.5) * 2
+
+        bet_factor = (confidence * self.confidence_slope) + self.bet_bias
+
+        bet_factor = max(min(bet_factor, 1), 0)
+        bet_amount = balance * bet_factor
+        return bet_amount
 
 GAMBLER_ID_DICT = {
     0: AllIn,
