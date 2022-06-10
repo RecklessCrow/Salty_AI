@@ -107,6 +107,7 @@ class ExpScaledConfidence(Gambler):
         start_incline = 0.25
         ceiling_slope = -0.05
         ceiling = 1.0
+        bet_bias = 0.03
         aggressive_factor = 3
 
         log_balance = min(np.log(balance), 13)
@@ -124,6 +125,7 @@ class ExpScaledConfidence(Gambler):
         if confidence > x_crossover:
             bet_factor = -((x_crossover - (confidence - x_crossover)) ** aggressive_factor) + (y_crossover * 2)
 
+        bet_factor = bet_factor + bet_bias
         bet_factor = max(min(bet_factor, 1), 0)
         bet_amount = balance * bet_factor
         return self.format_bet(bet_amount, balance)
