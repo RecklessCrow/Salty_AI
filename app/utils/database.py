@@ -76,7 +76,7 @@ class ModelMetadata(Base):
     payout: Mapped[int] = mapped_column(nullable=False)
 
 
-def add_match(match_info, session, match_metadata=None, model_metadata=None, commit=True):
+def add_match(match_info: tuple[str, str, str], session, match_metadata=None, model_metadata=None, commit=True):
     """
     Add a match to the database.
 
