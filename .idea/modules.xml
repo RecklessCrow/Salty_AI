@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/Salty_AI_Containerized.iml" filepath="$PROJECT_DIR$/.idea/Salty_AI_Containerized.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/Salty_AI.iml" filepath="$PROJECT_DIR$/.idea/Salty_AI.iml" />
     </modules>
   </component>
 </project>
