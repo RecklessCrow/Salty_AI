@@ -21,4 +21,4 @@ jobs:
         uses: docker/build-push-action@v4.0.0
         with:
           push: True
-          tags: salty-ai:latest
+          tags: recklesscrow/salty-ai:latest
