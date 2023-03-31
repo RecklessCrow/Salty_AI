@@ -1,7 +1,2 @@
-*.csv
-*.db
-*.env
-*.log
-/dev/saved_models/
-/database/
-/dev/website/
+/.env
+geckodriver.log
