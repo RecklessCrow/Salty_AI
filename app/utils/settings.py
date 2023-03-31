@@ -26,6 +26,18 @@ class Settings(BaseSettings):
     # Model
     MODEL_PATH: FilePath
 
+    # Constants
+    SLEEP_TIME: int = 2
+
+    STATES = {
+        "START": 0,
+        "BETS_OPEN": 1,
+        "BETS_CLOSED": 2,
+        "PAYOUT": 3,
+    }
+
+    LINE_SEPERATOR = "-" * 100
+
     @validator('MODEL_PATH')
     def model_validator(cls, v):
         """

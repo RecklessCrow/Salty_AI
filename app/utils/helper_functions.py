@@ -1,14 +1,7 @@
 import time
 import numpy as np
 
-STATES = {
-    "START": 0,
-    "BETS_OPEN": 1,
-    "BETS_CLOSED": 2,
-    "PAYOUT": 3,
-}
-
-LINE_SEPERATOR = "-" * 100
+from app.utils.settings import settings
 
 
 def await_next_state(driver, last_state):
@@ -30,16 +23,16 @@ def await_next_state(driver, last_state):
 
     state = last_state
 
-    # Base case where we wait for a new match to start
-    if last_state == STATES["START"]:
+    # Base case where the app was just started. Wait for a new match to start.
+    if last_state == settings.STATES["START"]:
         while True:
-            if driver.get_game_state() == STATES["BETS_OPEN"]:
-                return STATES["BETS_OPEN"]
-            time.sleep(1)
+            if driver.get_game_state() == settings.STATES["BETS_OPEN"]:
+                return settings.STATES["BETS_OPEN"]
+            time.sleep(settings.SLEEP_TIME)
 
     while state == last_state:
         state = driver.get_game_state()
-        time.sleep(1)
+        time.sleep(settings.SLEEP_TIME)
 
         if state is None:
             state = last_state
@@ -66,7 +59,7 @@ def softmax(x: np.array) -> np.array:
     return e_x / e_x.sum(axis=0)  # only difference
 
 
-def int_to_money_str(amount: (int, float)) -> str:
+def int_to_money_str(amount) -> str:
     """
     Transforms an integer into a money string. Will maintain equal spacing for values less than or equal to
     999,999,999,999. This function follows the formatting found on excell for accounting. As in, negative values are
@@ -82,13 +75,13 @@ def int_to_money_str(amount: (int, float)) -> str:
 
     # Floating values are rounded
 
-    >>> int_to_money_str(100.0)
+    >>> int_to_money_str(100.4)
     ' $          100'
 
     Parameters
     ----------
-    amount : int
-        Integer to transform into a money string.
+    amount : int or float
+        Number to transform into a money string.
 
     Returns
     -------

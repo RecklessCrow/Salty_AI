@@ -76,20 +76,23 @@ class ModelMetadata(Base):
     payout: Mapped[int] = mapped_column(nullable=False)
 
 
-def add_match(match_info: tuple, session: Session, match_metadata=None, model_metadata=None, commit=True):
+def add_match(match_info, session, match_metadata=None, model_metadata=None, commit=True):
     """
+    Add a match to the database.
 
     Parameters
     ----------
-    match_info
-    session
-    match_metadata
-    model_metadata
-    commit
-
-    Returns
-    -------
-
+    match_info : tuple[str, str, str]
+        Tuple of (red, blue, winner) for a given match.
+    session : Session
+        Session object to interface with the database.
+    match_metadata : (str, str)
+        Tuple of (red_pot, blue_pot).
+    model_metadata : tuple
+        Tuple of metadata on the model.
+    commit : bool, default=True
+        Whether to commit to the database or not. Should be set to False if using this function in a loop for drastic
+        improvement to speed. Simply call ``session.commit()`` at the end of the loop.
     """
     red, blue, winner = match_info
 
@@ -137,7 +140,25 @@ def add_match(match_info: tuple, session: Session, match_metadata=None, model_me
         session.commit()
 
 
-def get_idxs(red_name: str, blue_name: str, session: Session):
+def get_idxs(red_name, blue_name, session):
+    """
+    Get the character IDs of the Red anf Blue fighters from their names.
+
+    Parameters
+    ----------
+    red_name : str
+        Name of the Red team.
+    blue_name : str
+        Name of the blue team.
+    session : Session
+        Session object to the database.
+
+    Returns
+    -------
+    red, blue : tuple[int, int]
+        The red and blue IDs.
+
+    """
     red = session.scalar(select(Character.id).where(Character.name == red_name))
     blue = session.scalar(select(Character.id).where(Character.name == blue_name))
     return red, blue

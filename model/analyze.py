@@ -8,7 +8,7 @@ import onnxruntime as ort
 import app.utils.database as db
 import os
 
-from app.utils.utils import softmax
+from app.utils.helper_functions import softmax
 
 
 # Get matches with pots

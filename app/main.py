@@ -3,9 +3,8 @@ from onnxruntime.capi.onnxruntime_pybind11_state import InvalidArgument
 from sqlalchemy.orm import Session
 
 import utils.database as db
-from app.utils.settings import settings
 from utils.driver import SaltyBetDriver
-from utils.utils import *
+from utils.helper_functions import *
 
 
 def main():
@@ -16,9 +15,9 @@ def main():
     print("Loading driver... ", end="")
     driver = SaltyBetDriver()
     print("Done!")
-    print(LINE_SEPERATOR)
+    print(settings.LINE_SEPERATOR)
 
-    state = STATES["START"]
+    state = settings.STATES["START"]
     winnings = 0
     t_winnings = 0
     match_count = 0
@@ -32,8 +31,8 @@ def main():
                 red, blue = driver.get_fighters()
 
                 if None in (red, blue):  # Names are not available yet...
-                    time.sleep(1)
-                    state = STATES["START"]
+                    time.sleep(settings.SLEEP_TIME)
+                    state = settings.STATES["START"]
                     continue
 
                 # Predict winner
@@ -65,6 +64,7 @@ def main():
                     random_choice = True
 
                 driver.place_bet(bet_amount, team)
+                print(f"Game Mode: {'Tournament' if driver.is_tournament() else 'Normals'}")
                 print(f"{red} vs. {blue}")
                 print(f"Current Balance: {int_to_money_str(driver.get_current_balance())}")
                 print(f"Placed {int_to_money_str(bet_amount)} on {team.capitalize()} ({conf:.0%} confident)")
@@ -74,15 +74,7 @@ def main():
                 print(f"Odds - {red_odds} : {blue_odds}")
 
             case 3:  # Payout
-                payout_message = driver.get_game_state()
-
-                if "red" in payout_message:
-                    winner = "red"
-
-                elif "blue" in payout_message:
-                    winner = "blue"
-
-                else:  # Tie, do not record
+                if (winner := driver.get_winner()) is None:
                     continue
 
                 if not random_choice:
@@ -106,7 +98,7 @@ def main():
                     print(f"Tournament Winnings:    {int_to_money_str(t_winnings)}")
                 print(f"Session Winnings:       {int_to_money_str(winnings)}")
                 print(f"Session Accuracy: {match_correct / match_count:.2%} | {match_count} matches")
-                print(LINE_SEPERATOR)
+                print(settings.LINE_SEPERATOR)
 
                 if "team" == red.lower()[:4] or "team" == blue.lower()[:4]:  # Teams are not counted
                     continue
