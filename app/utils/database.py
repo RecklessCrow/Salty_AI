@@ -1,12 +1,8 @@
-import os
-
 import sqlalchemy
 from sqlalchemy import ForeignKey, select, Identity
 from sqlalchemy.orm import Mapped, DeclarativeBase, mapped_column, Session
 
 from app.utils.settings import settings
-
-engine = sqlalchemy.create_engine(settings.PG_DSN, echo=False)
 
 
 class Base(DeclarativeBase):
@@ -164,4 +160,7 @@ def get_idxs(red_name, blue_name, session):
     return red, blue
 
 
+print("Loading database... ", end="")
+engine = sqlalchemy.create_engine(settings.PG_DSN, echo=False)
 Base.metadata.create_all(engine)
+print("Done!")

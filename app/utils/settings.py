@@ -1,5 +1,5 @@
-from pydantic import BaseSettings, PostgresDsn, FilePath, validator
 import onnx
+from pydantic import BaseSettings, PostgresDsn, FilePath, validator
 
 
 class Settings(BaseSettings):
