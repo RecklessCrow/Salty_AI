@@ -1,6 +1,9 @@
 FROM python:3.10
 
-ENV MODEL_PATH="./app/models/model.onnx"
+ARG SALTYBET_USERNAME
+ARG SALTYBET_PASSWORD
+ARG PG_DSN
+ARG MODEL_PATH="./app/models/model.onnx"
 
 WORKDIR ./workspace
 
