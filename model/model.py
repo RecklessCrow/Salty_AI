@@ -8,7 +8,8 @@ from torch.nn import (
     Module,
     Embedding,
     Sequential,
-    Linear, Flatten
+    Linear,
+    Flatten
 )
 
 time_stamp = datetime.now().strftime('%m-%d_%H-%M-%S')

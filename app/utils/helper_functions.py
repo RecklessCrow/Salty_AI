@@ -2,7 +2,7 @@ import time
 
 import numpy as np
 
-from app.utils.settings import settings
+from utils.settings import settings
 
 
 def await_next_state(driver, last_state):
