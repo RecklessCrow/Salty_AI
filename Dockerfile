@@ -12,9 +12,9 @@ RUN apt-get update                             \
  && apt-get purge -y ca-certificates curl
 
 # Install python requirements
-COPY requirements.txt .
+COPY requirements/deploy.txt .
 RUN pip install --upgrade pip \
- && pip install -r ./requirements.txt
+ && pip install -r ./deploy.txt
 
 COPY ./app ./app
 

@@ -6,7 +6,7 @@ from selenium.common.exceptions import StaleElementReferenceException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.firefox.options import Options
 
-from app.utils.settings import settings
+from utils.settings import settings
 
 
 class SaltyBetDriver:
