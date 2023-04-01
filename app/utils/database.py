@@ -2,7 +2,7 @@ import sqlalchemy
 from sqlalchemy import ForeignKey, select, Identity
 from sqlalchemy.orm import Mapped, DeclarativeBase, mapped_column, Session
 
-from app.utils.settings import settings
+from utils.settings import settings
 
 
 class Base(DeclarativeBase):
