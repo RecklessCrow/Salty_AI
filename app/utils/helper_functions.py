@@ -68,16 +68,16 @@ def int_to_money_str(amount) -> str:
 
     Examples
     --------
-    >>> int_to_money_str(100)
-    ' $          100'
+    >>> int_to_money_str(1000)
+    ' $        1,000'
 
-    >>> int_to_money_str(-100)
-    '($          100)'
+    >>> int_to_money_str(-1000)
+    '($        1,000)'
 
     # Floating values are rounded
 
-    >>> int_to_money_str(100.4)
-    ' $          100'
+    >>> int_to_money_str(1000.4)
+    ' $        1,000'
 
     Parameters
     ----------
@@ -89,7 +89,7 @@ def int_to_money_str(amount) -> str:
     money_str : str
         Money string with accounting formatting.
     """
-    char_width = 13  # 100 billion spacing
+    char_width = 15  # 100 billion spacing
 
     amount = round(amount)
 
