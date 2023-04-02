@@ -24,7 +24,7 @@ class Settings(BaseSettings):
     PG_DSN: PostgresDsn
 
     # Model
-    MODEL_PATH: FilePath
+    MODEL_PATH: FilePath = None
 
     # Constants
     SLEEP_TIME: int = 2
@@ -41,18 +41,21 @@ class Settings(BaseSettings):
     @validator('MODEL_PATH')
     def model_validator(cls, v):
         """
-        Validate the onnx model using ``onnx.checker.check_model``.
+        Validate the onnx development using ``onnx.checker.check_model``.
 
         Parameters
         ----------
         v : FilePath
-            File path to the onnx model.
+            File path to the onnx development.
 
         Returns
         -------
         str
-            File path to the onnx model.
+            File path to the onnx development.
         """
+        if v is None:
+            return None
+
         model = onnx.load(v)
         onnx.checker.check_model(model)
 

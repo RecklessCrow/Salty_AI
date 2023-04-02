@@ -85,7 +85,7 @@ def add_match(match_info: tuple[str, str, str], session, match_metadata=None, mo
     match_metadata : (str, str)
         Tuple of (red_pot, blue_pot).
     model_metadata : tuple
-        Tuple of metadata on the model.
+        Tuple of metadata on the development.
     commit : bool, default=True
         Whether to commit to the database or not. Should be set to False if using this function in a loop for drastic
         improvement to speed. Simply call ``session.commit()`` at the end of the loop.

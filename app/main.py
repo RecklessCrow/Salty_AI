@@ -8,7 +8,7 @@ from utils.helper_functions import *
 
 
 def main():
-    print("Loading model... ", end="")
+    print("Loading development... ", end="")
     model = ort.InferenceSession(settings.MODEL_PATH)
     print("Done!")
 

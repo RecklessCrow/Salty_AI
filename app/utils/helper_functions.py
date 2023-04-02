@@ -101,14 +101,14 @@ def int_to_money_str(amount) -> str:
 
 def calc_bet(balance: int, conf: float) -> int:
     """
-    Calculates the amount to bet based on the current balance and the model's confidence.
+    Calculates the amount to bet based on the current balance and the development's confidence.
 
     Parameters
     ----------
     balance : int
         Current amount of money in our balance.
     conf : float
-        Confidence of our model for the likelihood of a positive outcome.
+        Confidence of our development for the likelihood of a positive outcome.
 
     Returns
     -------

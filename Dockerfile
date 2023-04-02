@@ -1,9 +1,8 @@
 FROM python:3.10
 
-ARG SALTYBET_USERNAME
-ARG SALTYBET_PASSWORD
-ARG PG_DSN
-ARG MODEL_PATH="./app/models/model.onnx"
+ENV SALTYBET_USERNAME=None
+ENV SALTYBET_PASSWORD=None
+ENV PG_DSN=None
 
 WORKDIR ./workspace
 
@@ -19,6 +18,10 @@ COPY requirements/deploy.txt .
 RUN pip install --upgrade pip \
  && pip install -r ./deploy.txt
 
+# Move over files
 COPY ./app ./app
+COPY ./models ./models
+ENV MODEL_PATH="./models/2023.04.02-07.20.onnx"
+
 
 CMD python ./app/main.py
