@@ -100,7 +100,7 @@ def run_sim(idx, betting_calculator):
     num_matches = 1
     for red, blue, winner, red_pot, blue_pot in data:
         # predict winner
-        model_input = np.array([[red, blue]])
+        model_input = np.array([[red, blue]]).astype(np.int64)
         pred = model.run(None, {"input_1": model_input})[0][0]
         print(pred)
         pred = softmax(pred)

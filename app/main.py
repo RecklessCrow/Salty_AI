@@ -40,7 +40,7 @@ def main():
                     red_idx, blue_idx = db.get_idxs(red, blue, session)
 
                 if None not in [red_idx, blue_idx]:
-                    model_input = np.array([[red_idx, blue_idx]]).astype(np.int32)
+                    model_input = np.array([[red_idx, blue_idx]]).astype(np.int64)
 
                     try:
                         pred = model.run(None, {"input_1": model_input})[0][0]
