@@ -1,5 +1,5 @@
 import copy
-import os
+from functools import partial
 from multiprocessing import pool
 
 import numpy as np
@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session, aliased
 
 import app.utils.database as db
 from app.utils.helper_functions import softmax
+from utils.settings import settings
 
 # Get matches with pots
 with Session(db.engine) as session:
@@ -28,7 +29,7 @@ with Session(db.engine) as session:
         db.Match.id == db.MatchMetadata.match_id
     ).all()
 
-model = ort.InferenceSession(os.getenv("MODEL_PATH"))
+model = ort.InferenceSession(settings.MODEL_PATH)
 
 rng = np.random.default_rng(1)
 
@@ -88,7 +89,7 @@ def calculate_bet_1(confidence, balance):
     return bet_amount
 
 
-def run_sim(idx):
+def run_sim(idx, betting_calculator):
     data = copy.copy(match_data)
     rng.shuffle(data)
 
@@ -99,14 +100,15 @@ def run_sim(idx):
     num_matches = 1
     for red, blue, winner, red_pot, blue_pot in data:
         # predict winner
-        model_input = np.array([[red, blue]]).astype(np.int32)
+        model_input = np.array([[red, blue]])
         pred = model.run(None, {"input_1": model_input})[0][0]
+        print(pred)
         pred = softmax(pred)
         conf = np.max(pred)
         team = 'red' if np.argmax(pred) == 0 else 'blue'
 
         # calc bet
-        bet = calculate_bet_1(conf, balance)
+        bet = betting_calculator(conf, balance)
 
         # add bet amount to team pot
         if team == "red":
@@ -147,14 +149,17 @@ def run_sim(idx):
 
 
 def main():
-    with pool.Pool(32) as p:
-        balances = p.map(run_sim, range(50_000))
-
-    avg_money = np.mean(balances)
-    log_money = np.mean(np.log(balances))
-    print(f"Avg Money:      ${int(np.ceil(avg_money)):,}")
-    print(f"Avg Log Money:  ${int(np.ceil(log_money)):,}")
-    print(f"Max Money       ${int(max(balances)):,}")
+    # n_runs = 50_000
+    # for betting_calculator in [calculate_bet, calculate_bet_1]:
+    #     with pool.Pool(32) as p:
+    #         balances = p.map(partial(run_sim, betting_calculator=betting_calculator), range(n_runs))
+    #
+    #     avg_money = np.mean(balances)
+    #     log_money = np.mean(np.log(balances))
+    #     print(f"Avg Money:      ${int(np.ceil(avg_money)):,}")
+    #     print(f"Avg Log Money:  ${int(np.ceil(log_money)):,}")
+    #     print(f"Max Money       ${int(max(balances)):,}")
+    run_sim(0, calculate_bet)
 
 
 if __name__ == '__main__':

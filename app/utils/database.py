@@ -160,7 +160,5 @@ def get_idxs(red_name, blue_name, session):
     return red, blue
 
 
-print("Loading database... ", end="")
 engine = sqlalchemy.create_engine(settings.PG_DSN, echo=False)
 Base.metadata.create_all(engine)
-print("Done!")

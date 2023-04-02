@@ -15,8 +15,8 @@ RUN pip install --upgrade pip \
  && pip install -r ./deploy.txt
 
 # Move over files
-COPY ./app .
-COPY ./models .
+COPY ./app ./app
+COPY ./models ./models
 
 # Set up environment variables
 ENV MODEL_PATH="./models/2023.04.02-07.20.onnx"
