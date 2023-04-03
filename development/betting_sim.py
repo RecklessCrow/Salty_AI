@@ -7,7 +7,7 @@ import onnxruntime as ort
 from sqlalchemy.orm import Session, aliased
 
 import app.utils.database as db
-from app.utils.helper_functions import softmax
+from app.utils.helper_functions import sigmoid, convert_to_money_str
 from utils.settings import settings
 
 # Get matches with pots
@@ -30,8 +30,6 @@ with Session(db.engine) as session:
     ).all()
 
 model = ort.InferenceSession(settings.MODEL_PATH)
-
-rng = np.random.default_rng(1)
 
 
 def calculate_bet(confidence, balance):
@@ -89,6 +87,13 @@ def calculate_bet_1(confidence, balance):
     return bet_amount
 
 
+def calculate_bet_2(confidence, balance):
+    return round((confidence / 2) * balance)
+
+
+rng = np.random.default_rng()
+
+
 def run_sim(idx, betting_calculator):
     data = copy.copy(match_data)
     rng.shuffle(data)
@@ -101,11 +106,13 @@ def run_sim(idx, betting_calculator):
     for red, blue, winner, red_pot, blue_pot in data:
         # predict winner
         model_input = np.array([[red, blue]]).astype(np.int64)
-        pred = model.run(None, {"input_1": model_input})[0][0]
-        print(pred)
-        pred = softmax(pred)
-        conf = np.max(pred)
-        team = 'red' if np.argmax(pred) == 0 else 'blue'
+        conf = model.run(None, {"input": model_input})[0].sum()  # Works because we only predict one thing
+        pred = round(sigmoid(conf))
+        if pred == 0:
+            team = 'red'
+        else:
+            team = 'blue'
+            conf = 1 - conf
 
         # calc bet
         bet = betting_calculator(conf, balance)
@@ -133,7 +140,7 @@ def run_sim(idx, betting_calculator):
                 # upset win
                 winnings = bet * ratio
 
-            balance += int(np.ceil(winnings))
+            balance += np.ceil(winnings)
 
             num_correct += 1
 
@@ -145,21 +152,22 @@ def run_sim(idx, betting_calculator):
         if balance < initial_balance:
             balance = initial_balance
 
-    return balance
+    return int(balance)
 
 
 def main():
-    # n_runs = 50_000
-    # for betting_calculator in [calculate_bet, calculate_bet_1]:
-    #     with pool.Pool(32) as p:
-    #         balances = p.map(partial(run_sim, betting_calculator=betting_calculator), range(n_runs))
-    #
-    #     avg_money = np.mean(balances)
-    #     log_money = np.mean(np.log(balances))
-    #     print(f"Avg Money:      ${int(np.ceil(avg_money)):,}")
-    #     print(f"Avg Log Money:  ${int(np.ceil(log_money)):,}")
-    #     print(f"Max Money       ${int(max(balances)):,}")
-    run_sim(0, calculate_bet)
+    n_runs = 10000
+    for betting_calculator in [calculate_bet_2]:
+        with pool.Pool(32) as p:
+            balances = p.map(partial(run_sim, betting_calculator=betting_calculator), range(n_runs))
+
+        avg_money = np.mean(balances)
+        max_money = np.max(balances)
+        print(f"Algorithm {betting_calculator.__name__}")
+        print(f"Avg Money:      {convert_to_money_str(avg_money)}")
+        print(f"Max Money       {convert_to_money_str(max_money)}")
+        print("-"*100)
+
 
 
 if __name__ == '__main__':

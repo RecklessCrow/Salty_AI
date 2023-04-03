@@ -60,7 +60,11 @@ def softmax(x: np.array) -> np.array:
     return e_x / e_x.sum(axis=0)  # only difference
 
 
-def int_to_money_str(amount) -> str:
+def sigmoid(x: float):
+    return (np.e ** x) / ((np.e ** x) + 1)
+
+
+def convert_to_money_str(amount) -> str:
     """
     Transforms an integer into a money string. Will maintain equal spacing for values less than or equal to
     999,999,999,999. This function follows the formatting found on excell for accounting. As in, negative values are
@@ -68,15 +72,15 @@ def int_to_money_str(amount) -> str:
 
     Examples
     --------
-    >>> int_to_money_str(1000)
+    >>> convert_to_money_str(1000)
     ' $        1,000'
 
-    >>> int_to_money_str(-1000)
+    >>> convert_to_money_str(-1000)
     '($        1,000)'
 
     # Floating values are rounded
 
-    >>> int_to_money_str(1000.4)
+    >>> convert_to_money_str(1000.4)
     ' $        1,000'
 
     Parameters
@@ -99,40 +103,41 @@ def int_to_money_str(amount) -> str:
     return f" ${amount:>{char_width},}"
 
 
-def calc_bet(balance: int, conf: float) -> int:
-    """
-    Calculates the amount to bet based on the current balance and the development's confidence.
-
-    Parameters
-    ----------
-    balance : int
-        Current amount of money in our balance.
-    conf : float
-        Confidence of our development for the likelihood of a positive outcome.
-
-    Returns
-    -------
-    bet_amount : int
-        Amount to bet on this match.
-    """
-    confidence_slope = -0.12
-    start_incline = 0.25
-    ceiling_slope = -0.05
-    ceiling = 1.0
-    aggressive_factor = 3
-
-    log_balance = min(np.log(balance), 13)
-    confidence_bias = (log_balance - 5) * confidence_slope + (1.0 - start_incline)
-    ceiling_factor = (log_balance - 5) * ceiling_slope + (ceiling / 2)
-    ceiling_factor = max(0, ceiling_factor)
-
-    conf += confidence_bias
-    bet_factor = conf ** aggressive_factor
-    x_crossover = ceiling_factor ** (1 / aggressive_factor)
-    y_crossover = x_crossover ** aggressive_factor
-    if conf > x_crossover:
-        bet_factor = -((x_crossover - (conf - x_crossover)) ** aggressive_factor) + (y_crossover * 2)
-
-    bet_factor = max(min(bet_factor, 1), 0)
-    bet_amount = balance * bet_factor
-    return int(bet_amount)
+def calc_bet(balance: int, confidence: float) -> int:
+    # """
+    # Calculates the amount to bet based on the current balance and the development's confidence.
+    #
+    # Parameters
+    # ----------
+    # balance : int
+    #     Current amount of money in our balance.
+    # confidence : float
+    #     Confidence of our development for the likelihood of a positive outcome.
+    #
+    # Returns
+    # -------
+    # bet_amount : int
+    #     Amount to bet on this match.
+    # """
+    # confidence_slope = -0.12
+    # start_incline = 0.25
+    # ceiling_slope = -0.05
+    # ceiling = 1.0
+    # aggressive_factor = 3
+    #
+    # log_balance = min(np.log(balance), 13)
+    # confidence_bias = (log_balance - 5) * confidence_slope + (1.0 - start_incline)
+    # ceiling_factor = (log_balance - 5) * ceiling_slope + (ceiling / 2)
+    # ceiling_factor = max(0, ceiling_factor)
+    #
+    # confidence += confidence_bias
+    # bet_factor = confidence ** aggressive_factor
+    # x_crossover = ceiling_factor ** (1 / aggressive_factor)
+    # y_crossover = x_crossover ** aggressive_factor
+    # if confidence > x_crossover:
+    #     bet_factor = -((x_crossover - (confidence - x_crossover)) ** aggressive_factor) + (y_crossover * 2)
+    #
+    # bet_factor = max(min(bet_factor, 1), 0)
+    # bet_amount = balance * bet_factor
+    # return int(bet_amount)
+    return round((confidence / 2) * balance)

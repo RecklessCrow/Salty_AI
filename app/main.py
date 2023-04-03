@@ -43,17 +43,22 @@ def main():
                     model_input = np.array([[red_idx, blue_idx]]).astype(np.int64)
 
                     try:
-                        pred = model.run(None, {"input_1": model_input})[0][0]
+                        model_input = np.array([[red, blue]]).astype(np.int64)
                     except InvalidArgument:
                         continue
 
-                    pred = softmax(pred)
-                    conf = np.max(pred)
-                    team = 'red' if np.argmax(pred) == 0 else 'blue'
+                    conf = model.run(None, {"input": model_input})[
+                        0].sum()  # Works because we only predict one thing
+                    pred = round(sigmoid(conf))
+                    if pred == 0:
+                        team = 'red'
+                    else:
+                        team = 'blue'
+                        conf = 1 - conf
 
                     bet_amount = calc_bet(
                         balance=driver.get_current_balance(),
-                        conf=conf,
+                        confidence=conf,
                     )
                     random_choice = False
 
@@ -66,8 +71,8 @@ def main():
                 driver.place_bet(bet_amount, team)
                 print(f"Game Mode: {'Tournament' if driver.is_tournament() else 'Normals'}")
                 print(f"{red} vs. {blue}")
-                print(f"Current Balance: {int_to_money_str(driver.get_current_balance())}")
-                print(f"Placed {int_to_money_str(bet_amount)} on {team.capitalize()} ({conf:.0%} confident)")
+                print(f"Current Balance: {convert_to_money_str(driver.get_current_balance())}")
+                print(f"Placed {convert_to_money_str(bet_amount)} on {team.capitalize()} ({conf:.0%} confident)")
 
             case 2:  # Bets Closed
                 red_odds, blue_odds = driver.get_odds()
@@ -93,10 +98,10 @@ def main():
 
                 print(f"{winner.capitalize()} team wins!")
                 if not driver.is_tournament():
-                    print(f"Match Payout:           {int_to_money_str(match_payout)}")
+                    print(f"Match Payout:           {convert_to_money_str(match_payout)}")
                 else:
-                    print(f"Tournament Winnings:    {int_to_money_str(t_winnings)}")
-                print(f"Session Winnings:       {int_to_money_str(winnings)}")
+                    print(f"Tournament Winnings:    {convert_to_money_str(t_winnings)}")
+                print(f"Session Winnings:       {convert_to_money_str(winnings)}")
                 print(f"Session Accuracy: {match_correct / match_count:.2%} | {match_count} matches")
                 print(settings.LINE_SEPERATOR)
 

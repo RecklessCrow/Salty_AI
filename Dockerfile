@@ -19,7 +19,7 @@ COPY ./app ./app
 COPY ./models ./models
 
 # Set up environment variables
-ENV MODEL_PATH="./models/2023.04.02-07.20.onnx"
+ENV MODEL_PATH="./models/2023.04.02-20.06.onnx"
 ENV SALTYBET_USERNAME=None
 ENV SALTYBET_PASSWORD=None
 ENV PG_DSN=None

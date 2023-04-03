@@ -61,8 +61,18 @@ def main():
 
     file_name = time.strftime("%Y.%m.%d-%H.%M") + ".onnx"
     file_name = os.path.join("..", "models", file_name)
-    torch.onnx.export(model.eval(), inputs, file_name, verbose=True, input_names=["input_1"],
-                      output_names=["output"])
+    torch.onnx.export(
+        model.eval().cpu(),  # model being run
+        torch.tensor([[0, 0]]),  # model input (or a tuple for multiple inputs)
+        file_name,  # where to save the model
+        export_params=True,  # store the trained parameter weights inside the model file
+        do_constant_folding=True,  # whether to execute constant folding for optimization
+        input_names=['input'],  # the model's input names
+        output_names=['output'],  # the model's output names
+        dynamic_axes={'input': {0: 'batch_size'}, 'output': {0: 'batch_size'}}  # variable length axes
+    )
+    # torch.onnx.export(model.eval().cpu(), torch.tensor([[0, 0]]), file_name, verbose=True, input_names=["input_1"],
+    #                   output_names=["output"])
 
 
 if __name__ == '__main__':
