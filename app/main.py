@@ -40,15 +40,13 @@ def main():
                     red_idx, blue_idx = db.get_idxs(red, blue, session)
 
                 if None not in [red_idx, blue_idx]:
-                    model_input = np.array([[red_idx, blue_idx]]).astype(np.int64)
-
                     try:
-                        model_input = np.array([[red, blue]]).astype(np.int64)
+                        model_input = np.array([[red_idx, blue_idx]]).astype(np.int64)
+                        # Works because we only predict one thing
+                        conf = model.run(None, {"input": model_input})[0].sum()
                     except InvalidArgument:
                         continue
 
-                    conf = model.run(None, {"input": model_input})[
-                        0].sum()  # Works because we only predict one thing
                     pred = round(sigmoid(conf))
                     if pred == 0:
                         team = 'red'
