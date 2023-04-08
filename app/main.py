@@ -43,16 +43,16 @@ def main():
                     try:
                         model_input = np.array([[red_idx, blue_idx]]).astype(np.int64)
                         # Works because we only predict one thing
-                        conf = model.run(None, {"input": model_input})[0].sum()
+                        conf = sigmoid(model.run(None, {"input": model_input})[0].sum())
                     except InvalidArgument:
                         continue
 
-                    pred = round(sigmoid(conf))
+                    pred = round(conf)
                     if pred == 0:
                         team = 'red'
+                        conf = 1 - conf
                     else:
                         team = 'blue'
-                        conf = 1 - conf
 
                     bet_amount = calc_bet(
                         balance=driver.get_current_balance(),

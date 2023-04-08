@@ -32,90 +32,54 @@ with Session(db.engine) as session:
 model = ort.InferenceSession(settings.MODEL_PATH)
 
 
-def calculate_bet(confidence, balance):
-    """
-    n = 50,000
-
-    """
-    bailout = 750
-    all_in_confidence = 0.9
-    high_confidence = 0.75
-    factor = 1 / 3
-
-    # Bet all in if we're less than 2x bailout
-    # Bet all in if we're above a certain confidence level
-    if balance < 2 * bailout or confidence >= all_in_confidence:
-        bet_amount = balance * (2 * factor)
-
-    # Bet larger amount on matches with higher confidence
-    elif confidence > high_confidence:
-        bet_amount = balance * factor
-
-    # Normal betting rules
+def calculate_bet_amount(balance, confidence):
+    # Calculate the Kelly criterion percentage
+    kelly_pct = (confidence - (1 - confidence)) / confidence
+    # Limit the Kelly percentage to a maximum of 50% to avoid excessive risk
+    kelly_pct = min(kelly_pct, 0.5)
+    # Calculate the optimal bet amount based on the Kelly percentage and current balance
+    bet_amount = balance * kelly_pct
+    # Use a value betting approach to adjust the bet amount based on the confidence level
+    if confidence < 0.6:
+        bet_amount *= 0.5
+    elif confidence < 0.7:
+        bet_amount *= 0.75
+    elif confidence < 0.8:
+        bet_amount *= 1.25
     else:
-        bet_amount = balance * confidence * factor
-
+        bet_amount *= 1.5
+    # Round the bet amount to the nearest whole number
+    bet_amount = round(bet_amount)
+    # Ensure that the bet amount is not greater than the current balance
+    bet_amount = min(bet_amount, balance)
+    # Return the bet amount
     return bet_amount
 
 
-def calculate_bet_1(confidence, balance):
-    """
-    n = 50,000
-    Avg Money:      $751,933
-    Avg Log Money:  $13
-    """
-    confidence_slope = -0.13
-    start_incline = 0.25
-    ceiling_slope = -0.05
-    ceiling = 1.0
-    aggressive_factor = 10
-
-    log_balance = min(np.log(balance), 13)
-    confidence_bias = (log_balance - 5) * confidence_slope + (1.0 - start_incline)
-    ceiling_factor = (log_balance - 5) * ceiling_slope + (ceiling / 2)
-    ceiling_factor = max(0, ceiling_factor)
-
-    confidence += confidence_bias
-    bet_factor = confidence ** aggressive_factor
-    x_crossover = ceiling_factor ** (1 / aggressive_factor)
-    y_crossover = x_crossover ** aggressive_factor
-    if confidence > x_crossover:
-        bet_factor = -((x_crossover - (confidence - x_crossover)) ** aggressive_factor) + (y_crossover * 2)
-
-    bet_factor = max(min(bet_factor, 1), 0)
-    bet_amount = balance * bet_factor
-    return bet_amount
-
-
-def calculate_bet_2(confidence, balance):
-    return round((confidence / 2) * balance)
-
-
-rng = np.random.default_rng()
-
-
-def run_sim(idx, betting_calculator):
+def run_sim(idx):
     data = copy.copy(match_data)
-    rng.shuffle(data)
+    np.random.shuffle(data)
 
     # Simulate betting
+    balances = []
     initial_balance = 750
     balance = initial_balance
-    num_correct = 0
-    num_matches = 1
+    loss_streak = 0
+
     for red, blue, winner, red_pot, blue_pot in data:
         # predict winner
         model_input = np.array([[red, blue]]).astype(np.int64)
-        conf = model.run(None, {"input": model_input})[0].sum()  # Works because we only predict one thing
-        pred = round(sigmoid(conf))
+        conf = sigmoid(model.run(None, {"input": model_input})[0].sum())  # Works because we only predict one thing
+        pred = round(conf)
         if pred == 0:
             team = 'red'
+            conf = 1 - conf
         else:
             team = 'blue'
-            conf = 1 - conf
 
         # calc bet
-        bet = betting_calculator(conf, balance)
+        profit = balance - initial_balance
+        bet = calculate_bet_amount(balance, conf)
 
         # add bet amount to team pot
         if team == "red":
@@ -124,7 +88,6 @@ def run_sim(idx, betting_calculator):
             blue_pot += bet
 
         # if correct, calc positive return
-        num_matches += 1
         if team == winner:
             ratio = max(red_pot, blue_pot) / min(red_pot, blue_pot)
 
@@ -142,8 +105,6 @@ def run_sim(idx, betting_calculator):
 
             balance += np.ceil(winnings)
 
-            num_correct += 1
-
         # else, subtract bet amount from balance
         else:
             balance -= bet
@@ -152,22 +113,25 @@ def run_sim(idx, betting_calculator):
         if balance < initial_balance:
             balance = initial_balance
 
-    return int(balance)
+        balances.append(balance)
+
+    return balances
 
 
 def main():
-    n_runs = 10000
-    for betting_calculator in [calculate_bet_2]:
-        with pool.Pool(32) as p:
-            balances = p.map(partial(run_sim, betting_calculator=betting_calculator), range(n_runs))
 
-        avg_money = np.mean(balances)
-        max_money = np.max(balances)
-        print(f"Algorithm {betting_calculator.__name__}")
-        print(f"Avg Money:      {convert_to_money_str(avg_money)}")
-        print(f"Max Money       {convert_to_money_str(max_money)}")
-        print("-"*100)
+    balances = []
+    for idx in range(100):
+        balances.append(run_sim(idx))
+    balances = np.array(balances)
 
+    avg_money = np.mean(balances)
+    max_money = np.max(balances)
+
+    print(f"Avg Money:  {convert_to_money_str(avg_money)}")
+    print(f"Max Money:  {convert_to_money_str(max_money)}")
+    print(f"End Money:  {convert_to_money_str(np.mean(balances[:, -1]))}")
+    print("-" * 100)
 
 
 if __name__ == '__main__':

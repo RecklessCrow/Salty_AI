@@ -61,7 +61,7 @@ def softmax(x: np.array) -> np.array:
 
 
 def sigmoid(x: float):
-    return (np.e ** x) / ((np.e ** x) + 1)
+    return 1 / (1 + np.exp(-x))
 
 
 def convert_to_money_str(amount) -> str:
@@ -104,40 +104,39 @@ def convert_to_money_str(amount) -> str:
 
 
 def calc_bet(balance: int, confidence: float) -> int:
-    # """
-    # Calculates the amount to bet based on the current balance and the development's confidence.
-    #
-    # Parameters
-    # ----------
-    # balance : int
-    #     Current amount of money in our balance.
-    # confidence : float
-    #     Confidence of our development for the likelihood of a positive outcome.
-    #
-    # Returns
-    # -------
-    # bet_amount : int
-    #     Amount to bet on this match.
-    # """
-    # confidence_slope = -0.12
-    # start_incline = 0.25
-    # ceiling_slope = -0.05
-    # ceiling = 1.0
-    # aggressive_factor = 3
-    #
-    # log_balance = min(np.log(balance), 13)
-    # confidence_bias = (log_balance - 5) * confidence_slope + (1.0 - start_incline)
-    # ceiling_factor = (log_balance - 5) * ceiling_slope + (ceiling / 2)
-    # ceiling_factor = max(0, ceiling_factor)
-    #
-    # confidence += confidence_bias
-    # bet_factor = confidence ** aggressive_factor
-    # x_crossover = ceiling_factor ** (1 / aggressive_factor)
-    # y_crossover = x_crossover ** aggressive_factor
-    # if confidence > x_crossover:
-    #     bet_factor = -((x_crossover - (confidence - x_crossover)) ** aggressive_factor) + (y_crossover * 2)
-    #
-    # bet_factor = max(min(bet_factor, 1), 0)
-    # bet_amount = balance * bet_factor
-    # return int(bet_amount)
-    return round((confidence / 2) * balance)
+    """
+    Calculates the amount to bet based on the current balance and the development's confidence.
+
+    Parameters
+    ----------
+    balance : int
+        Current amount of money in our balance.
+    confidence : float
+        Confidence of our development for the likelihood of a positive outcome.
+
+    Returns
+    -------
+    bet_amount : int
+        Amount to bet on this match.
+    """
+    # Calculate the Kelly criterion percentage
+    kelly_pct = (confidence - (1 - confidence)) / confidence
+    # Limit the Kelly percentage to a maximum of 50% to avoid excessive risk
+    kelly_pct = min(kelly_pct, 0.5)
+    # Calculate the optimal bet amount based on the Kelly percentage and current balance
+    bet_amount = balance * kelly_pct
+    # Use a value betting approach to adjust the bet amount based on the confidence level
+    if confidence < 0.6:
+        bet_amount *= 0.5
+    elif confidence < 0.7:
+        bet_amount *= 0.75
+    elif confidence < 0.8:
+        bet_amount *= 1.25
+    else:
+        bet_amount *= 1.5
+    # Round the bet amount to the nearest whole number
+    bet_amount = round(bet_amount)
+    # Ensure that the bet amount is not greater than the current balance
+    bet_amount = min(bet_amount, balance)
+    # Return the bet amount
+    return bet_amount
