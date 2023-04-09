@@ -82,7 +82,7 @@ def add_match(match_info: tuple[str, str, str], session, match_metadata=None, mo
         Tuple of (red, blue, winner) for a given match.
     session : Session
         Session object to interface with the database.
-    match_metadata : (str, str)
+    match_metadata : (int, int)
         Tuple of (red_pot, blue_pot).
     model_metadata : tuple
         Tuple of metadata on the development.

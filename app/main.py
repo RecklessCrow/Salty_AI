@@ -8,7 +8,12 @@ from sqlalchemy.orm import Session
 
 import utils.database as db
 from utils.driver import SaltyBetDriver
-from utils.helper_functions import await_next_state, sigmoid, calc_bet, convert_to_money_str
+from utils.helper_functions import (
+    await_next_state,
+    sigmoid,
+    calc_bet,
+    convert_to_money_str
+)
 from utils.settings import settings, States
 
 

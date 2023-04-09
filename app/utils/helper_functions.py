@@ -29,7 +29,7 @@ def await_next_state(driver, last_state):
         while True:
             if driver.get_game_state() == States.BETS_OPEN:
                 return States.BETS_OPEN
-            time.sleep(settings.SLEEP_TIME)
+            time.sleep(settings.WAIT_TIME)
 
     while state == last_state:
         state = driver.get_game_state()

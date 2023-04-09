@@ -1,7 +1,12 @@
 from enum import Enum
 
 import onnx
-from pydantic import BaseSettings, PostgresDsn, FilePath, validator
+from pydantic import (
+    BaseSettings,
+    PostgresDsn,
+    FilePath,
+    validator
+)
 
 
 class States(Enum):
@@ -9,6 +14,7 @@ class States(Enum):
     BETS_OPEN = 1
     BETS_CLOSED = 2
     PAYOUT = 3
+
 
 class Settings(BaseSettings):
     """
@@ -36,7 +42,6 @@ class Settings(BaseSettings):
 
     # Constants
     WAIT_TIME: int = 2
-
     LINE_SEPERATOR = "-" * 100
 
     @validator('MODEL_PATH')
