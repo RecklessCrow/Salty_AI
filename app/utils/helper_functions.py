@@ -2,7 +2,7 @@ import time
 
 import numpy as np
 
-from utils.settings import settings
+from utils.settings import settings, States
 
 
 def await_next_state(driver, last_state):
@@ -25,15 +25,15 @@ def await_next_state(driver, last_state):
     state = last_state
 
     # Base case where the app was just started. Wait for a new match to start.
-    if last_state == settings.STATES["START"]:
+    if last_state == States.START:
         while True:
-            if driver.get_game_state() == settings.STATES["BETS_OPEN"]:
-                return settings.STATES["BETS_OPEN"]
+            if driver.get_game_state() == States.BETS_OPEN:
+                return States.BETS_OPEN
             time.sleep(settings.SLEEP_TIME)
 
     while state == last_state:
         state = driver.get_game_state()
-        time.sleep(settings.SLEEP_TIME)
+        time.sleep(settings.WAIT_TIME)
 
         if state is None:
             state = last_state
@@ -119,24 +119,19 @@ def calc_bet(balance: int, confidence: float) -> int:
     bet_amount : int
         Amount to bet on this match.
     """
-    # Calculate the Kelly criterion percentage
-    kelly_pct = (confidence - (1 - confidence)) / confidence
-    # Limit the Kelly percentage to a maximum of 50% to avoid excessive risk
-    kelly_pct = min(kelly_pct, 0.5)
-    # Calculate the optimal bet amount based on the Kelly percentage and current balance
-    bet_amount = balance * kelly_pct
-    # Use a value betting approach to adjust the bet amount based on the confidence level
-    if confidence < 0.6:
-        bet_amount *= 0.5
-    elif confidence < 0.7:
-        bet_amount *= 0.75
-    elif confidence < 0.8:
-        bet_amount *= 1.25
-    else:
-        bet_amount *= 1.5
-    # Round the bet amount to the nearest whole number
-    bet_amount = round(bet_amount)
-    # Ensure that the bet amount is not greater than the current balance
-    bet_amount = min(bet_amount, balance)
-    # Return the bet amount
-    return bet_amount
+
+    # Set the maximum bet as a fraction of our balance (e.g., 10%)
+    max_bet_fraction = 0.5
+    max_bet = max_bet_fraction * balance
+
+    # Calculate the optimal bet size based on the confidence level
+    bet = max_bet * (2 * confidence - 1)
+
+    # Round the bet to the nearest integer (you can modify this as needed)
+    bet = round(bet)
+
+    # Make sure the bet is within our balance limits
+    bet = min(bet, max_bet)  # don't bet more than we have or can afford
+    bet = max(bet, 750 - balance)  # don't bet less than what we need to reach the minimum balance
+
+    return bet

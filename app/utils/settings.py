@@ -1,6 +1,14 @@
+from enum import Enum
+
 import onnx
 from pydantic import BaseSettings, PostgresDsn, FilePath, validator
 
+
+class States(Enum):
+    START = 0
+    BETS_OPEN = 1
+    BETS_CLOSED = 2
+    PAYOUT = 3
 
 class Settings(BaseSettings):
     """
@@ -27,14 +35,7 @@ class Settings(BaseSettings):
     MODEL_PATH: FilePath = None
 
     # Constants
-    SLEEP_TIME: int = 2
-
-    STATES = {
-        "START": 0,
-        "BETS_OPEN": 1,
-        "BETS_CLOSED": 2,
-        "PAYOUT": 3,
-    }
+    WAIT_TIME: int = 2
 
     LINE_SEPERATOR = "-" * 100
 

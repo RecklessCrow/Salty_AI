@@ -1,10 +1,15 @@
+import sys
+import time
+
+import numpy as np
 import onnxruntime as ort
 from onnxruntime.capi.onnxruntime_pybind11_state import InvalidArgument
 from sqlalchemy.orm import Session
 
 import utils.database as db
 from utils.driver import SaltyBetDriver
-from utils.helper_functions import *
+from utils.helper_functions import await_next_state, sigmoid, calc_bet, convert_to_money_str
+from utils.settings import settings, States
 
 
 def main():
@@ -17,7 +22,7 @@ def main():
     print("Done!")
     print(settings.LINE_SEPERATOR)
 
-    state = settings.STATES["START"]
+    state = States.START
     winnings = 0
     t_winnings = 0
     match_count = 0
@@ -27,11 +32,11 @@ def main():
     while True:
         state = await_next_state(driver, state)
         match state:
-            case 1:  # Bets Open
+            case States.BETS_OPEN:  # Bets Open
                 red, blue = driver.get_fighters()
 
                 if None in (red, blue):  # Names are not available yet...
-                    time.sleep(settings.SLEEP_TIME)
+                    time.sleep(settings.WAIT_TIME)
                     state = settings.STATES["START"]
                     continue
 
@@ -72,11 +77,11 @@ def main():
                 print(f"Current Balance: {convert_to_money_str(driver.get_current_balance())}")
                 print(f"Placed {convert_to_money_str(bet_amount)} on {team.capitalize()} ({conf:.0%} confident)")
 
-            case 2:  # Bets Closed
+            case States.BETS_CLOSED:
                 red_odds, blue_odds = driver.get_odds()
                 print(f"Odds - {red_odds} : {blue_odds}")
 
-            case 3:  # Payout
+            case States.PAYOUT:
                 if (winner := driver.get_winner()) is None:
                     continue
 
@@ -116,4 +121,7 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        sys.exit(-1)

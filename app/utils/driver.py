@@ -2,19 +2,17 @@ import re
 import time
 
 from selenium import webdriver
-from selenium.common.exceptions import StaleElementReferenceException
+from selenium.common.exceptions import StaleElementReferenceException, TimeoutException, WebDriverException
 from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.firefox.options import Options
 
-from utils.settings import settings
+from utils.settings import settings, States
 
 
 class SaltyBetDriver:
     def __init__(self):
-        """
-
-        """
-
         self.last_balance = 0
         self.last_t_balance = 0
 
@@ -25,11 +23,13 @@ class SaltyBetDriver:
         options.add_argument("--headless")
 
         self.driver = webdriver.Firefox(options=options)
+        self.wait = WebDriverWait(self.driver, settings.WAIT_TIME)
 
         # Load into the website
         self.driver.get("https://www.saltybet.com/authenticate?signin=1")
-        time.sleep(settings.SLEEP_TIME)
-        if "Salty Bet" != self.driver.title:
+        try:
+            self.wait.until(EC.title_contains("Salty Bet"))
+        except TimeoutException:
             raise RuntimeError('Failed to load into website. Maybe saltybet.com is down?')
 
         # Login
@@ -43,16 +43,19 @@ class SaltyBetDriver:
 
         self.driver.find_element(By.CLASS_NAME, 'graybutton').click()
 
-        # Check if we are logged in
-        time.sleep(settings.SLEEP_TIME)
-        if "authenticate" in self.driver.current_url.lower():
+        try:
+            self.wait.until_not(EC.url_contains("authenticate"))
+        except TimeoutException:
             raise RuntimeError('Failed to login. Wrong username or password?')
 
     def __del__(self):
         """
         Close the driver on delete.
         """
-        self.driver.close()
+        try:
+            self.driver.close()
+        except WebDriverException:
+            pass
 
     def _get_element_text(self, element_id):
         """
@@ -69,12 +72,13 @@ class SaltyBetDriver:
             The text contents of the element.
 
         """
-        text = self.driver.find_element(By.ID, element_id).text
+        text = ""
 
-        # Got invalid text? Wait until text is valid.
-        while not isinstance(text, str) or text == "":
-            text = self.driver.find_element(By.ID, element_id).text
-            time.sleep(settings.SLEEP_TIME)
+        while not text:
+            try:
+                text = self.driver.find_element(By.ID, element_id).text
+            except (StaleElementReferenceException, AttributeError):
+                pass
 
         return text
 
@@ -109,14 +113,14 @@ class SaltyBetDriver:
         """
         encoded_state = self._get_element_text("betstatus").lower()
 
-        if "locked" in encoded_state:
-            return settings.STATES["BETS_CLOSED"]
-
         if "open" in encoded_state:
-            return settings.STATES["BETS_OPEN"]
+            return States.BETS_OPEN
+
+        if "locked" in encoded_state:
+            return States.BETS_CLOSED
 
         if "payout" in encoded_state:
-            return settings.STATES["PAYOUT"]
+            return States.PAYOUT
 
         return None
 
@@ -131,21 +135,22 @@ class SaltyBetDriver:
         team : str
             Team to bet on. Must be one of ``['red', 'blue']``.
         """
-        if team not in ["red", "blue"]:
-            raise ValueError("Team must be either 'red' or 'blue'")
+        valid_teams = {'red', 'blue'}
+        if team not in valid_teams:
+            raise ValueError(f'Team must be one of {valid_teams}')
 
         if amount <= 0:
-            raise ValueError("Amount must be greater than 0")
+            raise ValueError('Amount must be greater than 0')
 
-        time.sleep(settings.SLEEP_TIME)
-        wager = self.driver.find_element(By.ID, "wager")
-        wager.click()
+        wager = self.driver.find_element(By.ID, 'wager')
         wager.clear()
-        wager.click()
         wager.send_keys(str(amount))
 
-        time.sleep(settings.SLEEP_TIME)
-        self.driver.find_element(By.CLASS_NAME, f"betbutton{team}").click()
+        button_class = f'betbutton{team}'
+        bet_button = self.wait.until(
+            EC.element_to_be_clickable((By.CLASS_NAME, button_class))
+        )
+        bet_button.click()
 
     def get_odds(self):
         """
@@ -159,8 +164,8 @@ class SaltyBetDriver:
         betting_text = self._get_element_text("lastbet")
 
         odds_text = betting_text.split("|")[-1].strip()
-        red, blue = tuple(odds_text.split(":"))
-        return float(red), float(blue)
+        red, blue = tuple(map(float, odds_text.split(":")))
+        return red, blue
 
     def get_fighters(self):
         """
@@ -171,17 +176,20 @@ class SaltyBetDriver:
         (str, str) or None
             Names of the red and blue teams.
         """
-        try:
-            red = self.driver.find_element(By.CLASS_NAME, "redtext").text
-            blue = self.driver.find_element(By.CLASS_NAME, "bluetext").text
-        except StaleElementReferenceException:
-            return None, None
+        red_elements = self.driver.find_elements(By.CLASS_NAME, "redtext")
+        blue_elements = self.driver.find_elements(By.CLASS_NAME, "bluetext")
 
-        if "|" in red:
-            red = red.split('|')[1]
-            blue = blue.split('|')[0]
+        if len(red_elements) > 0 and len(blue_elements) > 0:
+            red = red_elements[0].text
+            blue = blue_elements[0].text
 
-        return red.strip(), blue.strip()
+            if "|" in red:  # Number of betters is in the text. Example blue = "Cci hinako | 56"
+                red = red.split('|')[1]
+                blue = blue.split('|')[0]
+
+            return red.strip(), blue.strip()
+
+        return None, None
 
     def get_current_balance(self):
         """
@@ -224,13 +232,22 @@ class SaltyBetDriver:
         return payout
 
     def get_pots(self):
+        """
+        Gets the amounts of the red and blue pots for the current match.
+
+        Returns
+        -------
+        (int, int)
+            Amounts of the red and blue pots.
+        """
         text = self._get_element_text("odds")
-        amounts = re.findall(r"\$(?:\d|,)+", text)
+
+        amounts = re.findall(r"\$(\d[\d,]*)", text)
 
         if len(amounts) != 2:
             raise RuntimeError(f"Found {len(amounts)} amounts in the pots where we were expecting 2.")
 
-        red_pot, blue_pot = [int(dollars.strip("$").replace(",", "")) for dollars in amounts]
+        red_pot, blue_pot = [int(amount.replace(",", "")) for amount in amounts]
 
         return red_pot, blue_pot
 

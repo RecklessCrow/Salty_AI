@@ -33,27 +33,21 @@ model = ort.InferenceSession(settings.MODEL_PATH)
 
 
 def calculate_bet_amount(balance, confidence):
-    # Calculate the Kelly criterion percentage
-    kelly_pct = (confidence - (1 - confidence)) / confidence
-    # Limit the Kelly percentage to a maximum of 50% to avoid excessive risk
-    kelly_pct = min(kelly_pct, 0.5)
-    # Calculate the optimal bet amount based on the Kelly percentage and current balance
-    bet_amount = balance * kelly_pct
-    # Use a value betting approach to adjust the bet amount based on the confidence level
-    if confidence < 0.6:
-        bet_amount *= 0.5
-    elif confidence < 0.7:
-        bet_amount *= 0.75
-    elif confidence < 0.8:
-        bet_amount *= 1.25
-    else:
-        bet_amount *= 1.5
-    # Round the bet amount to the nearest whole number
-    bet_amount = round(bet_amount)
-    # Ensure that the bet amount is not greater than the current balance
-    bet_amount = min(bet_amount, balance)
-    # Return the bet amount
-    return bet_amount
+    # Set the maximum bet as a fraction of our balance (e.g., 10%)
+    max_bet_fraction = 0.5
+    max_bet = max_bet_fraction * balance
+
+    # Calculate the optimal bet size based on the confidence level
+    bet = max_bet * (2 * confidence - 1)
+
+    # Round the bet to the nearest integer (you can modify this as needed)
+    bet = round(bet)
+
+    # Make sure the bet is within our balance limits
+    bet = min(bet, max_bet)  # don't bet more than we have or can afford
+    bet = max(bet, 750 - balance)  # don't bet less than what we need to reach the minimum balance
+
+    return bet
 
 
 def run_sim(idx):
