@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <meta content="ie=edge" http-equiv="X-UA-Compatible">
+    <title>Salty Bet Dashboard</title>
+    <link href="../static/style.css" rel="stylesheet">
+    <link href="https://fonts.gstatic.com" rel="preconnect">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300&display=swap" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="../static/script.js"></script>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="https://player.twitch.tv/js/embed/v1.js"></script>
+</head>
+<body>
+<header class=title-bar>
+    <span class="title-text">Salty Bet Dashboard</span>
+    <div class="balance-container">
+        <span class="balance-title">Balance:</span>
+        <span class="green-text" id="balance">Loading...</span>
+    </div>
+</header>
+<div class="content">
+    <div class="main-content">
+        <div class="twitch-container">
+            <div id="twitch-embed"></div>
+            <script type="text/javascript">
+                new Twitch.Player("twitch-embed", {
+                    channel: "saltybet",
+                    width: 640,
+                    height: 480
+                });
+            </script>
+        </div>
+        <div class="match-up-container">
+            <div class="match-up">
+                <span class="red-text" id="red-team">Loading...</span>
+                <span class="white-text">VS</span>
+                <span class="blue-text" id="blue-team">Loading...</span>
+            </div>
+            <div class="left-to-right">
+                <span class="left red-text" id="red-pot">Loading...</span>
+                <span class="white-text">|</span>
+                <span class="right blue-text" id="blue-pot">Loading...</span>
+            </div>
+            <div class="left-to-right">
+                <span class="left red-text" id="red-odds">Loading...</span>
+                <span class="white-text">|</span>
+                <span class="right blue-text" id="blue-odds">Loading...</span>
+            </div>
+            <div class="left-to-right">
+                <span class="left white-text" id="bet">Loading...</span>
+                <span class="white-text">→</span>
+                <span class="right white-text" id="potential-payout">Loading...</span>
+            </div>
+        </div>
+        <div class="model-container">
+            <div>
+                <span class="white-text">Accuracy:</span>
+                <span class="white-text" id="accuracy">Loading...</span>
+            </div>
+            <div>
+                <span class="white-text">Confidence:</span>
+                <span class="white-text" id="confidence">Loading...</span>
+            </div>
+        </div>
+    </div>
+    <div class="history-content">
+        <span class="white-text history-title">Match History</span>
+        <div class=match-history>
+            <div class=match-history-element>
+                <div class=match-history-match-up>
+                    <span class="left red-text">Red</span>
+                    <span class="white-text">VS</span>
+                    <span class="right blue-text">Blue</span>
+                </div>
+                <div class=match-history-winner>
+                    <span class="white-text">Winner:</span>
+                    <span class="red-text">Red</span>
+                </div>
+                <div class=match-history-payout>
+                    <span class="white-text">Payout:</span>
+                    <span class="green-text">+$1,000</span>
+                </div>
+            </div>
+            <div class=match-history-element>
+                <div class=match-history-match-up>
+                    <span class="left red-text">Red</span>
+                    <span class="white-text">VS</span>
+                    <span class="right blue-text">Blue</span>
+                </div>
+                <div class=match-history-winner>
+                    <span class="white-text">Winner:</span>
+                    <span class="blue-text">Blue</span>
+                </div>
+                <div class=match-history-payout>
+                    <span class="white-text">Payout:</span>
+                    <span class="red-text">-$1,000</span>
+                </div>
+            </div>
+            <div class=match-history-element>
+                <div class=match-history-match-up>
+                    <span class="left red-text">Red</span>
+                    <span class="white-text">VS</span>
+                    <span class="right blue-text">Blue</span>
+                </div>
+                <div class=match-history-winner>
+                    <span class="white-text">Winner:</span>
+                    <span class="blue-text">Blue</span>
+                </div>
+                <div class=match-history-payout>
+                    <span class="white-text">Payout:</span>
+                    <span class="red-text">-$1,000</span>
+                </div>
+            </div>
+            <div class=match-history-element>
+                <div class=match-history-match-up>
+                    <span class="left red-text">Red</span>
+                    <span class="white-text">VS</span>
+                    <span class="right blue-text">Blue</span>
+                </div>
+                <div class=match-history-winner>
+                    <span class="white-text">Winner:</span>
+                    <span class="blue-text">Blue</span>
+                </div>
+                <div class=match-history-payout>
+                    <span class="white-text">Payout:</span>
+                    <span class="red-text">-$1,000</span>
+                </div>
+            </div>
+            <div class=match-history-element>
+                <div class=match-history-match-up>
+                    <span class="left red-text">Red</span>
+                    <span class="white-text">VS</span>
+                    <span class="right blue-text">Blue</span>
+                </div>
+                <div class=match-history-winner>
+                    <span class="white-text">Winner:</span>
+                    <span class="blue-text">Blue</span>
+                </div>
+                <div class=match-history-payout>
+                    <span class="white-text">Payout:</span>
+                    <span class="red-text">-$1,000</span>
+                </div>
+            </div>
+            <div class=match-history-element>
+                <div class=match-history-match-up>
+                    <span class="left red-text">Red</span>
+                    <span class="white-text">VS</span>
+                    <span class="right blue-text">Blue</span>
+                </div>
+                <div class=match-history-winner>
+                    <span class="white-text">Winner:</span>
+                    <span class="blue-text">Blue</span>
+                </div>
+                <div class=match-history-payout>
+                    <span class="white-text">Payout:</span>
+                    <span class="red-text">-$1,000</span>
+                </div>
+            </div>
+            <div class=match-history-element>
+                <div class=match-history-match-up>
+                    <span class="left red-text">Red</span>
+                    <span class="white-text">VS</span>
+                    <span class="right blue-text">Blue</span>
+                </div>
+                <div class=match-history-winner>
+                    <span class="white-text">Winner:</span>
+                    <span class="blue-text">Blue</span>
+                </div>
+                <div class=match-history-payout>
+                    <span class="white-text">Payout:</span>
+                    <span class="red-text">-$1,000</span>
+                </div>
+            </div>
+            <div class=match-history-element>
+                <div class=match-history-match-up>
+                    <span class="left red-text">Red</span>
+                    <span class="white-text">VS</span>
+                    <span class="right blue-text">Blue</span>
+                </div>
+                <div class=match-history-winner>
+                    <span class="white-text">Winner:</span>
+                    <span class="blue-text">Blue</span>
+                </div>
+                <div class=match-history-payout>
+                    <span class="white-text">Payout:</span>
+                    <span class="red-text">-$1,000</span>
+                </div>
+            </div>
+            <div class=match-history-element>
+                <div class=match-history-match-up>
+                    <span class="left red-text">Red</span>
+                    <span class="white-text">VS</span>
+                    <span class="right blue-text">Blue</span>
+                </div>
+                <div class=match-history-winner>
+                    <span class="white-text">Winner:</span>
+                    <span class="blue-text">Blue</span>
+                </div>
+                <div class=match-history-payout>
+                    <span class="white-text">Payout:</span>
+                    <span class="red-text">-$1,000</span>
+                </div>
+            </div>
+            <div class=match-history-element>
+                <div class=match-history-match-up>
+                    <span class="left red-text">Red</span>
+                    <span class="white-text">VS</span>
+                    <span class="right blue-text">Blue</span>
+                </div>
+                <div class=match-history-winner>
+                    <span class="white-text">Winner:</span>
+                    <span class="blue-text">Blue</span>
+                </div>
+                <div class=match-history-payout>
+                    <span class="white-text">Payout:</span>
+                    <span class="red-text">-$1,000</span>
+                </div>
+            </div>
+            <div class=match-history-element>
+                <div class=match-history-match-up>
+                    <span class="left red-text">Red</span>
+                    <span class="white-text">VS</span>
+                    <span class="right blue-text">Blue</span>
+                </div>
+                <div class=match-history-winner>
+                    <span class="white-text">Winner:</span>
+                    <span class="blue-text">Blue</span>
+                </div>
+                <div class=match-history-payout>
+                    <span class="white-text">Payout:</span>
+                    <span class="red-text">-$1,000</span>
+                </div>
+            </div>
+        </div>
+        <span class="white-text history-title">Balance History</span>
+        <div id="balance-history"></div>
+        <div class="graph"></div>
+    </div>
+</div>
+</body>
+</html>
