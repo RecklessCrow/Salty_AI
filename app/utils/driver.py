@@ -33,6 +33,8 @@ class SaltyBetDriver:
             If the driver fails to log in.
         """
         print("Initializing driver")
+        self.sleep_time = 0.5
+
         self.last_balance = 0
         self.last_balance_tournament = 0
 
@@ -110,7 +112,7 @@ class SaltyBetDriver:
 
             while not text.strip():
                 text = element.text
-                time.sleep(0.5)
+                time.sleep(self.sleep_time)
 
             return text.strip()
 
@@ -173,7 +175,7 @@ class SaltyBetDriver:
         if not isinstance(amount, int):
             amount = floor(amount)
 
-        wager = self.wait.until(EC.presence_of_element_located((By.ID, "wager")))
+        wager = self.wait.until(EC.element_to_be_clickable((By.ID, "wager")))
         wager.clear()
         wager.send_keys(str(amount))
 
@@ -194,8 +196,14 @@ class SaltyBetDriver:
         """
         betting_text = self._get_element_text("lastbet")
 
-        odds_text = betting_text.split("|")[-1].strip()
-        red, blue = tuple(map(float, odds_text.split(":")))
+        # Find all numbers inbetween the ":" i.e. the odds
+        odds = re.findall(r"(?<!\$)\b\d+(?:\.\d+)?\b(?![^:]*\d)", betting_text)
+
+        if len(odds) != 2:
+            logging.warning(f"Failed to parse odds from {betting_text}")
+            return 0.0, 0.0
+
+        red, blue = [float(x) for x in odds]
         return red, blue
 
     def get_match_up(self):
@@ -223,7 +231,7 @@ class SaltyBetDriver:
                     red = red.split("|")[1].strip()
                     blue = blue.split("|")[0].strip()
 
-                time.sleep(0.5)
+                time.sleep(self.sleep_time)
 
             return red, blue
 
@@ -288,7 +296,8 @@ class SaltyBetDriver:
         amounts = re.findall(r"\$(\d[\d,]*)", text)
 
         if len(amounts) != 2:
-            raise RuntimeError(f"Could not parse pots from text: {text}")
+            logging.warning(f"Could not parse pots from text: {text}")
+            return 0, 0
 
         red_pot, blue_pot = [int(amount.replace(",", "")) for amount in amounts]
 

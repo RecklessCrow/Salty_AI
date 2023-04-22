@@ -70,12 +70,8 @@ def main():
                 # Start timer for match duration
                 start_time = time.time()
 
-                try:
-                    red_pot, blue_pot = driver.get_pots()
-                    red_odds, blue_odds = driver.get_odds()
-                except RuntimeError:
-                    red_pot, blue_pot = 0, 0
-                    red_odds, blue_odds = 0, 0
+                red_pot, blue_pot = driver.get_pots()
+                red_odds, blue_odds = driver.get_odds()
 
                 # Get the popular team
                 popular_team = "red" if red_pot > blue_pot else "blue"
