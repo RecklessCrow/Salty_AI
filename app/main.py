@@ -49,7 +49,11 @@ def main():
                 # Calculate the bet amount
                 balance = driver.get_balance()
                 is_tournament = driver.is_tournament()
-                bet = calculate_bet(balance, conf, is_tournament)
+                if conf > 0:
+                    bet = calculate_bet(balance, conf, is_tournament)
+                else:
+                    # Unknown character, just bet $1
+                    bet = 1
 
                 # Place a bet
                 driver.place_bet(bet, team)

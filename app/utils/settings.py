@@ -31,7 +31,7 @@ class Settings(BaseSettings):
     # JSON_PATH: FilePath = None
 
     # How long to wait in while loops (seconds)
-    WAIT_TIME: int = 2
+    WAIT_TIME: int = 5
     STATE_UPDATE_INTERVAL: int = 1
 
     @validator('MODEL_DIR')

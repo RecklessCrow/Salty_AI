@@ -1,6 +1,9 @@
 const eventSource = new EventSource('/stream');
+const storageKey = 'last-event-data';
+
 
 eventSource.addEventListener('update', ({data}) => {
+    console.log(data);
 
     // Parse the data
     const {
@@ -19,52 +22,64 @@ eventSource.addEventListener('update', ({data}) => {
         is_tournament,
     } = JSON.parse(data);
 
-    // Get the elements from the DOM
+    // Get the elements from the DOM using jQuery
     const elements = {
-        balance: document.getElementById('balance'),
-        redTeam: document.getElementById('red-team'),
-        redOdds: document.getElementById('red-odds'),
-        redPot: document.getElementById('red-pot'),
-        blueTeam: document.getElementById('blue-team'),
-        blueOdds: document.getElementById('blue-odds'),
-        bluePot: document.getElementById('blue-pot'),
-        potentialPayout: document.getElementById('potential-payout'),
-        accuracy: document.getElementById('accuracy'),
-        confidence: document.getElementById('confidence'),
-        bet: document.getElementById('bet'),
+        balance: $('#balance'),
+        redTeam: $('#red-team'),
+        redOdds: $('#red-odds'),
+        redPot: $('#red-pot'),
+        blueTeam: $('#blue-team'),
+        blueOdds: $('#blue-odds'),
+        bluePot: $('#blue-pot'),
+        potentialPayout: $('#potential-payout'),
+        accuracy: $('#accuracy'),
+        confidence: $('#confidence'),
+        bet: $('#bet'),
     };
 
     // Set the text of the elements
     const loading = 'Loading...';
-    elements.balance.innerHTML = balance || loading;
-    elements.redTeam.innerHTML = red || loading;
-    elements.redOdds.innerHTML = red_odds || loading;
-    elements.redPot.innerHTML = red_pot || loading;
-    elements.blueTeam.innerHTML = blue || loading;
-    elements.blueOdds.innerHTML = blue_odds || loading;
-    elements.bluePot.innerHTML = blue_pot || loading;
-    elements.potentialPayout.innerHTML = potential_payout || loading;
-    elements.accuracy.innerHTML = accuracy || loading;
-    elements.confidence.innerHTML = confidence || loading;
+    elements.balance.text(balance || loading);
+    elements.redTeam.text(red || loading);
+    elements.redOdds.text(red_odds || loading);
+    elements.redPot.text(red_pot || loading);
+    elements.blueTeam.text(blue || loading);
+    elements.blueOdds.text(blue_odds || loading);
+    elements.bluePot.text(blue_pot || loading);
+    elements.potentialPayout.text(potential_payout || loading);
+    elements.accuracy.text(accuracy || loading);
+    elements.confidence.text(confidence || loading);
 
     // Set the color of the bet element based on the team being bet on
-    elements.bet.innerHTML = bet;
+    elements.bet.text(bet);
     if (team_bet_on === 'red') {
-        elements.bet.classList.remove('white-text');
-        elements.bet.classList.add('red-text');
+        elements.bet.removeClass('white-text');
+        elements.bet.addClass('red-text');
     } else if (team_bet_on === 'blue') {
-        elements.bet.classList.remove('white-text');
-        elements.bet.classList.add('blue-text');
+        elements.bet.removeClass('white-text');
+        elements.bet.addClass('blue-text');
     }
 
     // Set the color of balance based on whether it's a tournament or not
-    elements.balance.classList.remove('green-text', 'purple-text');
-    elements.potentialPayout.classList.remove('green-text', 'purple-text');
+    elements.balance.removeClass('green-text purple-text');
+    elements.potentialPayout.removeClass('green-text purple-text');
     if (is_tournament) {
-        elements.balance.classList.add('purple-text');
-        elements.potentialPayout.classList.add('purple-text');
+        elements.balance.addClass('purple-text');
+        elements.potentialPayout.addClass('purple-text');
     } else {
-        elements.balance.classList.add('green-text');
-        elements.potentialPayout.classList.add('green-text');
+        elements.balance.addClass('green-text');
+        elements.potentialPayout.addClass('green-text');
+    }
+
+    // Save the last event data to localStorage
+    localStorage.setItem(storageKey, data);
+});
+
+// If there is last event data, use it to populate the website when it loads
+$(document).ready(function () {
+    // Retrieve the last event data from localStorage
+    const lastEventData = JSON.parse(localStorage.getItem(storageKey));
+    if (lastEventData) {
+        eventSource.dispatchEvent(new MessageEvent('update', {data: JSON.stringify(lastEventData)}));
     }
 });

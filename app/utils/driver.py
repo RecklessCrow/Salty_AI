@@ -4,8 +4,11 @@ import time
 from math import floor
 
 from selenium import webdriver
-from selenium.common.exceptions import TimeoutException, WebDriverException, \
+from selenium.common.exceptions import (
+    TimeoutException,
+    WebDriverException,
     NoSuchElementException
+)
 from selenium.webdriver.common.by import By
 from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.support import expected_conditions as EC
@@ -51,15 +54,15 @@ class SaltyBetDriver:
             raise RuntimeError
 
         # Login
-        username_element = self.driver.find_element(By.ID, "email")
+        username_element = self.wait.until(EC.presence_of_element_located((By.ID, "email")))
         username_element.clear()
         username_element.send_keys(settings.SALTYBET_USERNAME)
 
-        password_element = self.driver.find_element(By.NAME, "pword")
+        password_element = self.wait.until(EC.presence_of_element_located((By.ID, "pword")))
         password_element.clear()
         password_element.send_keys(settings.SALTYBET_PASSWORD)
 
-        self.driver.find_element(By.CLASS_NAME, 'graybutton').click()
+        self.wait.until(EC.element_to_be_clickable((By.CLASS_NAME, "graybutton"))).click()
 
         try:
             self.wait.until_not(EC.url_contains("authenticate"))
@@ -103,14 +106,19 @@ class SaltyBetDriver:
         """
         try:
             element = self.wait.until(EC.presence_of_element_located((By.ID, element_id)))
-            text = None
+            text = ""
 
-            while not text or not text.strip():
+            while not text.strip():
                 text = element.text
+                time.sleep(0.5)
 
             return text.strip()
 
-        except (NoSuchElementException, TimeoutException):
+        except NoSuchElementException:
+            logging.warning(f"Failed to get element text for {element_id}")
+            return None
+        except TimeoutException:
+            logging.warning(f"Timeout while waiting for element {element_id} to load")
             return None
 
     def get_winner(self):
@@ -165,7 +173,7 @@ class SaltyBetDriver:
         if not isinstance(amount, int):
             amount = floor(amount)
 
-        wager = self.driver.find_element(By.ID, 'wager')
+        wager = self.wait.until(EC.presence_of_element_located((By.ID, "wager")))
         wager.clear()
         wager.send_keys(str(amount))
 
@@ -199,20 +207,32 @@ class SaltyBetDriver:
         (str, str) or None
             Names of the red and blue teams.
         """
-        red_elements = self.driver.find_elements(By.CLASS_NAME, "redtext")
-        blue_elements = self.driver.find_elements(By.CLASS_NAME, "bluetext")
+        try:
+            red_element = self.wait.until(EC.presence_of_element_located((By.ID, "sbettors1")))
+            red_element = red_element.find_element(By.CLASS_NAME, "redtext")
+            blue_element = self.wait.until(EC.presence_of_element_located((By.ID, "sbettors2")))
+            blue_element = blue_element.find_element(By.CLASS_NAME, "bluetext")
+            red = ''
+            blue = ''
 
-        if len(red_elements) > 0 and len(blue_elements) > 0:
-            red = red_elements[0].text
-            blue = blue_elements[0].text
+            while not red.strip() or not blue.strip():
+                red = red_element.text
+                blue = blue_element.text
 
-            if "|" in red:  # Number of betters is in the text. Example blue = "Cci hinako | 56"
-                red = red.split('|')[1]
-                blue = blue.split('|')[0]
+                if "|" in red or "|" in blue:
+                    red = red.split("|")[1].strip()
+                    blue = blue.split("|")[0].strip()
 
-            return red.strip(), blue.strip()
+                time.sleep(0.5)
 
-        return None, None
+            return red, blue
+
+        except NoSuchElementException:
+            logging.warning("Failed to get match up")
+            return None
+        except TimeoutException:
+            logging.warning("Timeout while waiting for match up to load")
+            return None
 
     def get_balance(self):
         """
@@ -275,7 +295,7 @@ class SaltyBetDriver:
         return red_pot, blue_pot
 
     def is_tournament(self):
-        balance = self.driver.find_element(By.ID, "balance")
+        balance = self.wait.until(EC.presence_of_element_located((By.ID, "balance")))
         return "purple" in balance.get_attribute("class").lower()
 
 
@@ -283,5 +303,5 @@ driver = SaltyBetDriver()
 
 if __name__ == '__main__':
     for i in range(1000):
-        print(driver.is_tournament())
-        time.sleep(settings.SLEEP_TIME)
+        print(driver.get_match_up())
+        time.sleep(1)
