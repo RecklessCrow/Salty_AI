@@ -115,14 +115,17 @@ def main():
                 red, blue = web_json["red"], web_json["blue"]
                 pots = money_to_int(web_json["red_pot"]), money_to_int(web_json["blue_pot"])
                 web_json = {
-                    "last_red": red,
-                    "last_blue": blue,
-                    "winner": winner,
-                    "payout": int_to_money(payout),
                     "session_winnings": int_to_money(session_winnings),
                     "match_duration": f"{match_duration:.2f}",
                     "accuracy": f"{accuracy:.2%}",
                 }
+
+                webserver.update_match_history({
+                    "red": red,
+                    "blue": blue,
+                    "winner": winner,
+                    "payout": int_to_money(payout),
+                })
 
                 if settings.PG_DSN is not None and ("Team" not in red or "Team" not in blue):
                     # Add the match to the database if we have a DSN

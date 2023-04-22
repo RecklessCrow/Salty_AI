@@ -178,7 +178,6 @@ function build_match_history_element(match_json) {
 }
 
 eventSource.addEventListener('history_update', ({match_json}) => {
-
     const matchElement = build_match_history_element(match_json);
 
     // Prepend the new element to the beginning of the div

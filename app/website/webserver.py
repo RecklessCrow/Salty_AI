@@ -43,3 +43,7 @@ class WebServer:
     def publish_event(self, web_data: dict):
         with self.app.app_context():
             sse.publish(web_data, type='update')
+
+    def update_match_history(self, match_json: dict):
+        with self.app.app_context():
+            sse.publish(match_json, type='history_update')
