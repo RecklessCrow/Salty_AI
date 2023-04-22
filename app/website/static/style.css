@@ -60,10 +60,14 @@ body {
     flex-direction: column;
     background-color: #2C2C2EFF;
     border-radius: 20px;
-    width: 340px;
-    height: 900px;
-    overflow-y: scroll;
+
+    flex: 10%;
+
+    height: 400px;
+    overflow-y:auto;
     overflow-x: hidden;
+    position:relative;
+    border-radius: 5px;
 }
 
 .graph {
