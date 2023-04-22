@@ -26,14 +26,6 @@ def main():
     webserver = WebServer()
     webserver.start()
 
-    for _ in range(25):
-        webserver.publish({
-            "red": "red",
-            "blue": "blue",
-            "winner": "red",
-            "payout": int_to_money(1),
-        }, event_type="history")
-
     # Initialize the session variables
     session_winnings = 0
     web_json = {}
