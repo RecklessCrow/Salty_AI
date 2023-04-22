@@ -1,4 +1,3 @@
-import asyncio
 import time
 
 from utils.driver import driver
@@ -27,12 +26,13 @@ def main():
     webserver = WebServer()
     webserver.start()
 
-    # webserver.publish({
-    #     "red": "red",
-    #     "blue": "blue",
-    #     "winner": "red",
-    #     "payout": int_to_money(100),
-    # }, event_type="history")
+    for _ in range(25):
+        webserver.publish({
+            "red": "red",
+            "blue": "blue",
+            "winner": "red",
+            "payout": int_to_money(1),
+        }, event_type="history")
 
     # Initialize the session variables
     session_winnings = 0
@@ -40,6 +40,7 @@ def main():
     start_time = None
     num_matches = 0
     num_correct = 0
+    bets_started = False
 
     while True:
         web_json["balance"] = int_to_money(driver.get_balance())
@@ -48,6 +49,7 @@ def main():
 
         match state:
             case states.BETS_OPEN:
+                bets_started = True
                 # Get the current match up
                 red, blue = driver.get_match_up()
 
@@ -75,6 +77,8 @@ def main():
                 web_json["is_tournament"] = is_tournament
 
             case states.BETS_CLOSED:
+                if not bets_started:
+                    continue
                 # Start timer for match duration
                 start_time = time.time()
 
@@ -101,6 +105,8 @@ def main():
                 web_json["potential_payout"] = int_to_money(payout)
 
             case states.PAYOUT:
+                if not bets_started:
+                    continue
                 # Calculate the match duration
                 match_duration = time.time() - start_time
 
@@ -139,6 +145,9 @@ def main():
                     # Add the match to the database if we have a DSN
                     # And if the match is not an exhibition match
                     db.add_match(red, blue, winner, pots)
+
+                # Reset the bets started flag
+                bets_started = False
 
 
 if __name__ == '__main__':

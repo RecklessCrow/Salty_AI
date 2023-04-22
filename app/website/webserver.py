@@ -11,13 +11,23 @@ class WebServer:
     def start(self):
         print(f"Starting web server on {self.host}:{self.port}")
         self.eel.init(os.path.dirname(__file__), allowed_extensions=['.js', '.html'])
-        self.eel('templates/index.html', host=self.host, port=self.port, mode='chrome-app', block=False)
+        self.eel.start(
+            'templates/index.html',
+            host=self.host,
+            port=self.port,
+            templates="templates",
+            mode='chrome-app',
+            block=False
+        )
+        self.eel.sleep(1)
 
     def publish(self, content, event_type):
-        if event_type == 'main':
-            self.update_main(content)
-        elif event_type == 'history':
-            self.update_history(content)
+        match event_type:
+            case 'main':
+                self.update_main(content)
+            case 'history':
+                self.update_history(content)
+        self.eel.sleep(1)
 
     def update_main(self, content):
         self.eel.updateMain(content)

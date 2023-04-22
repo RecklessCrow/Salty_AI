@@ -21,7 +21,7 @@ function updateMain(data) {
         bet,
         team_bet_on,
         is_tournament,
-    } = JSON.parse(data);
+    } = data;
 
     // Get the elements from the DOM using jQuery
     const elements = {
@@ -83,12 +83,16 @@ function updateMain(data) {
 
 eel.expose(updateHistory);
 function updateHistory(history_data) {
-    console.log("Got event data for 'update1':", history_data);
+    console.log("Received history event:", history_data);
     const matchElement = build_match_history_element(history_data);
 
     // Prepend the new element to the beginning of the div
-    const div = document.getElementsByClassName('match-history');
+    const div = document.getElementById('match-history');
+    // if (div.firstChild) {
     div.insertBefore(matchElement, div.firstChild);
+    // } else {
+    //     div.appendChild(matchElement);
+    // }
 
     // Check if there are more than 10 elements in the div
     if (div.children.length > 10) {
@@ -100,9 +104,9 @@ function updateHistory(history_data) {
 // If there is last event data, use it to populate the website when it loads
 $(document).ready(function () {
     // Retrieve the last event data from localStorage
-    const lastEventData = JSON.parse(localStorage.getItem(storageKey));
+    const lastEventData = localStorage.getItem(storageKey);
     if (lastEventData) {
-        updateMain(JSON.stringify(lastEventData));
+        updateMain(lastEventData);
     }
 });
 
@@ -115,17 +119,17 @@ function build_match_history_element(match_json) {
         blue,
         winner,
         payout,
-    } = JSON.parse(match_json);
+    } = match_json;
 
     // Create the main container div
     const container = document.createElement('div');
     container.className = 'match-history-element';
 
-// Create the match-up div
+    // Create the match-up div
     const matchUp = document.createElement('div');
     matchUp.className = 'match-history-match-up';
 
-// Create the left and right span elements for the match-up div
+    // Create the left and right span elements for the match-up div
     const leftSpan = document.createElement('span');
     leftSpan.className = 'left red-text';
     leftSpan.textContent = 'Red';
@@ -138,16 +142,16 @@ function build_match_history_element(match_json) {
     rightSpan.className = 'right blue-text';
     rightSpan.textContent = 'Blue';
 
-// Append the left, middle, and right spans to the match-up div
+    // Append the left, middle, and right spans to the match-up div
     matchUp.appendChild(leftSpan);
     matchUp.appendChild(middleSpan);
     matchUp.appendChild(rightSpan);
 
-// Create the winner div
+    // Create the winner div
     const winnerDiv = document.createElement('div');
     winnerDiv.className = 'match-history-winner';
 
-// Create the "Winner:" and winner span elements for the winner div
+    // Create the "Winner:" and winner span elements for the winner div
     const winnerLabel = document.createElement('span');
     winnerLabel.className = 'white-text';
     winnerLabel.textContent = 'Winner:';
@@ -161,15 +165,15 @@ function build_match_history_element(match_json) {
         winnerName.textContent = blue;
     }
 
-// Append the winner label and winner name to the winner div
+    // Append the winner label and winner name to the winner div
     winnerDiv.appendChild(winnerLabel);
     winnerDiv.appendChild(winnerName);
 
-// Create the payout div
+    // Create the payout div
     const payoutDiv = document.createElement('div');
     payoutDiv.className = 'match-history-payout';
 
-// Create the "Payout:" and payout amount span elements for the payout div
+    // Create the "Payout:" and payout amount span elements for the payout div
     const payoutLabel = document.createElement('span');
     payoutLabel.className = 'white-text';
     payoutLabel.textContent = 'Payout:';
@@ -183,11 +187,11 @@ function build_match_history_element(match_json) {
 
     payoutAmount.textContent = payout;
 
-// Append the payout label and payout amount to the payout div
+    // Append the payout label and payout amount to the payout div
     payoutDiv.appendChild(payoutLabel);
     payoutDiv.appendChild(payoutAmount);
 
-// Append the match-up, winner, and payout divs to the main container div
+    // Append the match-up, winner, and payout divs to the main container div
     container.appendChild(matchUp);
     container.appendChild(winnerDiv);
     container.appendChild(payoutDiv);
