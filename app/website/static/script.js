@@ -1,9 +1,9 @@
-const eventSource = new EventSource('/stream');
 const storageKey = 'last-event-data';
+const socket = io.connect('http://' + document.domain + ':' + location.port);
 
 
-eventSource.addEventListener('update', ({data}) => {
-    console.log(data);
+socket.on('update', (data) => {
+    console.log('Received update event: ', data);
 
     // Parse the data
     const {
@@ -80,6 +80,21 @@ eventSource.addEventListener('update', ({data}) => {
     localStorage.setItem(storageKey, data);
 });
 
+socket.on('history', ({match_json}) => {
+    console.log("Got event data for 'update1':", match_json);
+    const matchElement = build_match_history_element(match_json);
+
+    // Prepend the new element to the beginning of the div
+    const div = document.getElementsByClassName('match-history');
+    div.insertBefore(matchElement, div.firstChild);
+
+    // Check if there are more than 10 elements in the div
+    if (div.children.length > 10) {
+        // If there are, remove the last element in the div
+        div.removeChild(div.lastChild);
+    }
+});
+
 // If there is last event data, use it to populate the website when it loads
 $(document).ready(function () {
     // Retrieve the last event data from localStorage
@@ -92,6 +107,7 @@ $(document).ready(function () {
 
 function build_match_history_element(match_json) {
 
+    console.log(match_json);
     const {
         red,
         blue,
@@ -177,16 +193,3 @@ function build_match_history_element(match_json) {
     return container;
 }
 
-eventSource.addEventListener('history_update', ({match_json}) => {
-    const matchElement = build_match_history_element(match_json);
-
-    // Prepend the new element to the beginning of the div
-    const div = document.getElementsByClassName('match-history');
-    div.insertBefore(matchElement, div.firstChild);
-
-    // Check if there are more than 10 elements in the div
-    if (div.children.length > 10) {
-        // If there are, remove the last element in the div
-        div.removeChild(div.lastChild);
-    }
-});

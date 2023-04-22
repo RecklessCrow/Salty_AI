@@ -26,6 +26,14 @@ def main():
     webserver = WebServer()
     webserver.start()
 
+    time.sleep(5)
+    webserver.publish({
+        "red": "red",
+        "blue": "blue",
+        "winner": "red",
+        "payout": int_to_money(100),
+    }, "history")
+
     # Initialize the session variables
     session_winnings = 0
     web_json = {}
@@ -35,7 +43,7 @@ def main():
 
     while True:
         web_json["balance"] = int_to_money(driver.get_balance())
-        webserver.publish_event(web_json)
+        webserver.publish(web_json, "update")
         state = machine.await_next_state()
 
         match state:
@@ -79,11 +87,15 @@ def main():
                 popular_odds = red_odds if popular_team == "red" else blue_odds
 
                 # Calculate the payout
-                bet = money_to_int(web_json["bet"])
-                if web_json["team_bet_on"] == popular_team:
-                    payout = bet / popular_odds
-                else:
-                    payout = bet * popular_odds
+                try:
+                    bet = money_to_int(web_json["bet"])
+                    if web_json["team_bet_on"] == popular_team:
+                        payout = bet / popular_odds
+                    else:
+                        payout = bet * popular_odds
+                except KeyError:
+                    # No bet was placed
+                    payout = 0
 
                 # Update the web json with the new data
                 web_json["red_pot"] = int_to_money(red_pot)
@@ -120,12 +132,12 @@ def main():
                     "accuracy": f"{accuracy:.2%}",
                 }
 
-                webserver.update_match_history({
+                webserver.publish({
                     "red": red,
                     "blue": blue,
                     "winner": winner,
                     "payout": int_to_money(payout),
-                })
+                }, "history")
 
                 if settings.PG_DSN is not None and ("Team" not in red or "Team" not in blue):
                     # Add the match to the database if we have a DSN

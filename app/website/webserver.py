@@ -2,7 +2,7 @@ import os
 import threading
 
 from flask import Flask, render_template
-from flask_sse import sse
+from flask_socketio import SocketIO, emit
 
 dir_path = os.path.dirname(__file__)
 app = Flask(
@@ -10,8 +10,7 @@ app = Flask(
     template_folder=os.path.join(dir_path, 'templates'),
     static_folder=os.path.join(dir_path, 'static')
 )
-app.config['REDIS_URL'] = 'redis://redis:6379/0'
-app.register_blueprint(sse, url_prefix='/stream')
+socketio = SocketIO(app)
 
 
 @app.route('/')
@@ -33,17 +32,13 @@ class WebServer:
     def __init__(self, host='0.0.0.0', port=8000):
         self.app = app
         self.thread = threading.Thread(
-            target=lambda: self.app.run(host=host, port=port),
+            target=lambda: socketio.run(self.app, host=host, port=port),
             daemon=True
         )
 
     def start(self):
         self.thread.start()
 
-    def publish_event(self, web_data: dict):
-        with self.app.app_context():
-            sse.publish(web_data, type='update')
-
-    def update_match_history(self, match_json: dict):
-        with self.app.app_context():
-            sse.publish(match_json, type='history_update')
+    @socketio.on('publisher')
+    def publish(self, content, socket_id):
+        emit(socket_id, content)

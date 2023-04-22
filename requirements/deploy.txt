@@ -6,4 +6,4 @@ onnx~=1.13.1
 pydantic~=1.10.7
 psycopg2~=2.9.6
 flask~=2.2.3
-flask_sse~=1.0.0
+flask_socketio~=5.3.3
