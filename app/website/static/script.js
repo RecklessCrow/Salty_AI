@@ -1,8 +1,9 @@
 const storageKey = 'last-event-data';
-const socket = io.connect('http://' + document.domain + ':' + location.port);
 
 
-socket.on('update', (data) => {
+eel.expose(updateMain);
+function updateMain(data) {
+
     console.log('Received update event: ', data);
 
     // Parse the data
@@ -78,11 +79,12 @@ socket.on('update', (data) => {
 
     // Save the last event data to localStorage
     localStorage.setItem(storageKey, data);
-});
+}
 
-socket.on('history', ({match_json}) => {
-    console.log("Got event data for 'update1':", match_json);
-    const matchElement = build_match_history_element(match_json);
+eel.expose(updateHistory);
+function updateHistory(history_data) {
+    console.log("Got event data for 'update1':", history_data);
+    const matchElement = build_match_history_element(history_data);
 
     // Prepend the new element to the beginning of the div
     const div = document.getElementsByClassName('match-history');
@@ -93,14 +95,14 @@ socket.on('history', ({match_json}) => {
         // If there are, remove the last element in the div
         div.removeChild(div.lastChild);
     }
-});
+}
 
 // If there is last event data, use it to populate the website when it loads
 $(document).ready(function () {
     // Retrieve the last event data from localStorage
     const lastEventData = JSON.parse(localStorage.getItem(storageKey));
     if (lastEventData) {
-        eventSource.dispatchEvent(new MessageEvent('update', {data: JSON.stringify(lastEventData)}));
+        updateMain(JSON.stringify(lastEventData));
     }
 });
 

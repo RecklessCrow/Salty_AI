@@ -27,12 +27,6 @@ def main():
     webserver.start()
 
     time.sleep(5)
-    webserver.publish({
-        "red": "red",
-        "blue": "blue",
-        "winner": "red",
-        "payout": int_to_money(100),
-    }, "history")
 
     # Initialize the session variables
     session_winnings = 0
@@ -43,7 +37,7 @@ def main():
 
     while True:
         web_json["balance"] = int_to_money(driver.get_balance())
-        webserver.publish(web_json, "update")
+        webserver.publish(web_json, event_type="main")
         state = machine.await_next_state()
 
         match state:
@@ -132,12 +126,13 @@ def main():
                     "accuracy": f"{accuracy:.2%}",
                 }
 
+
                 webserver.publish({
                     "red": red,
                     "blue": blue,
                     "winner": winner,
                     "payout": int_to_money(payout),
-                }, "history")
+                }, event_type="history")
 
                 if settings.PG_DSN is not None and ("Team" not in red or "Team" not in blue):
                     # Add the match to the database if we have a DSN
