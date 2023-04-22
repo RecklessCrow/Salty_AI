@@ -124,8 +124,9 @@ def main():
                     "accuracy": f"{accuracy:.2%}",
                 }
 
-                if settings.PG_DSN is not None:
-                    # Add the match to the database
+                if settings.PG_DSN is not None and ("Team" not in red or "Team" not in blue):
+                    # Add the match to the database if we have a DSN
+                    # And if the match is not an exhibition match
                     db.add_match(red, blue, winner, pots)
 
 

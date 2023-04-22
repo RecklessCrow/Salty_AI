@@ -78,7 +78,7 @@ def calculate_bet(balance, confidence, is_tournament):
     balance : int
         The current balance.
     confidence : float
-        The confidence in the prediction. Should be between 0 and 1.
+        The confidence in the prediction. Should be between 0.5 and 1.
     is_tournament : bool
         Whether we're in a tournament.
 
@@ -87,16 +87,38 @@ def calculate_bet(balance, confidence, is_tournament):
     bet_amount : int
         The amount to bet.
     """
-    BUY_IN = 750
-    BUY_IN_TOURNAMENT = 1250
-
     if is_tournament:
-        # If we're in a tournament, always bet all in
-        return balance
+        # Set the minimum bet amount to the tournament buy-in
+        min_bet = 1250
 
-    f_star = (confidence - (1 - confidence)) / 2
-    bet_amount = round(balance * f_star)
-    return min(bet_amount, balance)
+        # Determine the risk level based on the confidence value
+        risk = np.exp(3 * (confidence - 1))
+
+        # Calculate the maximum proportion of the balance we want to bet based on the balance
+        max_proportion = 1
+
+    else:
+        # Set the minimum bet amount to regular buy-in
+        min_bet = 750
+
+        # Determine the risk level based on the confidence value
+        risk = np.exp(6 * (confidence - 1)) / 1.5
+
+        # Calculate the maximum proportion of the balance we want to bet based on the balance
+        max_proportion = 1 / (balance / 1000)
+
+    # Calculate the bet amount as a percentage of the balance
+    bet_amount = round(balance * risk)
+
+    # Limit the bet amount to the maximum proportion of the balance we want to bet
+    bet_amount = min(bet_amount, round(balance * max_proportion))
+
+    # Limit the bet amount to the available balance and the minimum bet amount
+    bet_amount = max(bet_amount, min_bet)
+    bet_amount = min(bet_amount, balance)
+
+    return bet_amount
+
 
 
 def int_to_money(money):

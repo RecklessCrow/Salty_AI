@@ -46,7 +46,7 @@ num_characters = len(vocab)
 
 train, val, test = random_split(dataset, [0.7, 0.1, 0.2], torch.Generator().manual_seed(42))
 
-batch_size = 2 ** 12
+batch_size = 2 ** 10
 production_loader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
 train_loader = DataLoader(train, batch_size=batch_size, shuffle=True)
 val_loader = DataLoader(val, batch_size=batch_size)

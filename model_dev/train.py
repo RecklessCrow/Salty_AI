@@ -23,7 +23,7 @@ def main():
     scaler = torch.cuda.amp.GradScaler()
     num_accumulation_steps = 4
 
-    epochs = 5
+    epochs = 100
 
     for epoch in range(epochs):
         losses = []
@@ -67,10 +67,13 @@ def main():
                 )
 
     dir_name = time.strftime("%Y.%m.%d-%H.%M")
-    os.makedirs(f"../models/{dir_name}")
+    dir_path = os.path.abspath(os.path.dirname(__file__))
+    dir_path = os.path.join(dir_path, "..", "app", "models", dir_name)
+    os.makedirs(dir_path, exist_ok=True)
+    print(f"Saving model to {dir_path}")
 
     # Save the model
-    file_name = f"../models/{dir_name}/model.onnx"
+    file_name = os.path.join(dir_path, "model.onnx")
     torch.onnx.export(
         model.eval().cpu(),  # model being run
         torch.tensor([[0, 0]]),  # model input (or a tuple for multiple inputs)
@@ -83,7 +86,7 @@ def main():
     )
 
     # Save the "vocab" file for the characters the model was trained on
-    file_name = f"../models/{dir_name}/vocab.json"
+    file_name = os.path.join(dir_path, "vocab.json")
     with open(file_name, "w") as f:
         json.dump(production_loader.dataset.vocab, f)
 

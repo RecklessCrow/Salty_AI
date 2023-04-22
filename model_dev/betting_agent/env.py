@@ -2,13 +2,11 @@ from random import shuffle
 
 import gym
 import numpy as np
-import onnxruntime as ort
 from gym import spaces
 from sqlalchemy.orm import Session, aliased
 
 import app.utils.database as db
-from app.utils.helper_functions import sigmoid
-from app.utils.settings import settings
+from app.utils.helper_functions import predict_winner
 
 INITIAL_BALANCE = 750
 
@@ -20,8 +18,8 @@ class SaltyBetEnv(gym.Env):
             blue = aliased(db.Character)
 
             match_data = session.query(
-                red.id,
-                blue.id,
+                red.name,
+                blue.name,
                 db.Match.winner,
                 db.MatchMetadata.red_pot,
                 db.MatchMetadata.blue_pot
@@ -33,13 +31,12 @@ class SaltyBetEnv(gym.Env):
                 db.Match.id == db.MatchMetadata.match_id
             ).all()
 
-            self.model = ort.InferenceSession(settings.MODEL_PATH)
             self.match_data = match_data
             self.match_idx = 0
 
             self.observation_space = spaces.Dict({
                 'confidence': spaces.Box(low=0.5, high=1.0, shape=(1,), dtype='float32'),
-                'balance': spaces.Box(low=0, high=float('inf'), shape=(1,), dtype='float32')
+                'balance': spaces.Box(low=INITIAL_BALANCE, high=float('inf'), shape=(1,), dtype='float32')
             })
 
             self.action_space = spaces.Box(low=0.01, high=1, shape=(1,), dtype='float32')
@@ -50,8 +47,8 @@ class SaltyBetEnv(gym.Env):
         self.match_idx = 0
         shuffle(self.match_data)
         self.balance = INITIAL_BALANCE
-        model_in = np.array([[self.match_data[self.match_idx][0], self.match_data[self.match_idx][1]]]).astype(np.int64)
-        conf = sigmoid(self.model.run(None, {"input": model_in})[0][0][0])
+        red, blue, winner, red_pot, blue_pot = self.match_data[self.match_idx]
+        conf, team = predict_winner(red, blue)
         return {
             'confidence': conf,
             'balance': self.balance
@@ -60,31 +57,28 @@ class SaltyBetEnv(gym.Env):
     def step(self, action):
         bet = int(action * self.balance)
         red, blue, winner, red_pot, blue_pot = self.match_data[self.match_idx]
-        model_in = np.array([[red, blue]]).astype(np.int64)
-        conf = sigmoid(self.model.run(None, {"input": model_in})[0][0][0])
-        pred = round(conf)
-        pred = "red" if pred == 0 else "blue"
-        if winner == pred:
+        conf, team = predict_winner(red, blue)
+        balance_prior = self.balance
+
+        if winner == team:
             ratio = max(red_pot, blue_pot) / min(red_pot, blue_pot)
             popular_team = 'red' if max(red_pot, blue_pot) == red_pot else 'blue'
-            winnings = bet / ratio if pred == popular_team else bet * ratio
+            winnings = bet / ratio if team == popular_team else bet * ratio
             self.balance += np.ceil(winnings)
         else:
             self.balance -= bet
 
+        reward = self.balance - balance_prior
+
         if self.balance < INITIAL_BALANCE:
             self.balance = INITIAL_BALANCE
-
-        profit = self.balance - INITIAL_BALANCE
-        reward = np.log(profit + 1)
 
         done = self.match_idx + 1 == len(self.match_data)
         self.match_idx += 1
 
         if not done:
             red, blue, winner, red_pot, blue_pot = self.match_data[self.match_idx]
-            model_in = np.array([[red, blue]]).astype(np.int64)
-            conf = sigmoid(self.model.run(None, {"input": model_in})[0][0][0])
+            conf, team = predict_winner(red, blue)
         else:
             conf = 0.5
 
@@ -98,15 +92,18 @@ class SaltyBetEnv(gym.Env):
 
 if __name__ == '__main__':
     from stable_baselines3.common.vec_env import DummyVecEnv
-    from stable_baselines3 import PPO
+    from stable_baselines3 import PPO, A2C
     from stable_baselines3.ppo import MultiInputPolicy
     from stable_baselines3.common.evaluation import evaluate_policy
 
     env = DummyVecEnv([lambda: SaltyBetEnv()])
-    model = PPO(MultiInputPolicy, env, verbose=1)
-    model.learn(total_timesteps=100_000)
+    model = PPO(MultiInputPolicy, env, verbose=1, batch_size=2 ** 10)
+    model.learn(total_timesteps=2**20)
+
+    # Save the trained model
+    model.save("betting_strategy_model")
 
     # Evaluate the policy for 10 episodes
-    mean_reward, std_reward = evaluate_policy(model, env, n_eval_episodes=100)
+    mean_reward, std_reward = evaluate_policy(model, env, n_eval_episodes=10)
 
     print(f"Mean reward: {mean_reward:.2f} +/- {std_reward:.2f}")

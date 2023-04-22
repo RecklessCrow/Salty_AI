@@ -14,6 +14,20 @@ class Base(DeclarativeBase):
 
 
 class Character(Base):
+    """
+    SQL table for characters.
+
+    Attributes
+    ----------
+    id : int
+        ID of the row.
+    name : str
+        Name of the character.
+    num_wins : int
+        Number of wins the character has.
+    num_matches : int
+        Number of matches the character has been in.
+    """
     __tablename__ = 'characters'
 
     id: Mapped[int] = mapped_column(Identity())
@@ -24,7 +38,18 @@ class Character(Base):
 
 class Match(Base):
     """
+    SQL table for matches.
 
+    Attributes
+    ----------
+    id : int
+        ID of the row.
+    red : str
+        Name of the red team.
+    blue : str
+        Name of the blue team.
+    winner : str
+        Name of the winning team.
     """
     __tablename__ = 'matches'
 
@@ -63,7 +88,25 @@ class MatchMetadata(Base):
 
 class ModelMetadata(Base):
     """
+    SQL table for metadata on matches. Not all matches have this information recorded, thus the need for a
+    separate table.
 
+    Attributes
+    ----------
+    id : int
+        ID of the row.
+    model_id : str
+        ID of the model that made the prediction.
+    match_id : int
+        ID of the mapped match.
+    confidence : float
+        Confidence of the prediction.
+    bet_on : str
+        Team the model bet on.
+    amount_bet : float
+        Amount of money the model bet.
+    payout : int
+        Amount of money the model won.
     """
     __tablename__ = "model_metadata"
 
@@ -74,6 +117,17 @@ class ModelMetadata(Base):
     bet_on: Mapped[str] = mapped_column(nullable=False)
     amount_bet: Mapped[float] = mapped_column(nullable=False)
     payout: Mapped[int] = mapped_column(nullable=False)
+
+
+def update_character(session: Session, name: str, is_winner: bool):
+    try:
+        character = session.query(Character).filter_by(name=name).one()
+        character.num_wins += int(is_winner)
+        character.num_matches += 1
+    except NoResultFound:
+        # Character does not exist in database, so add it
+        character = Character(name=name, num_wins=int(is_winner), num_matches=1)
+        session.add(character)
 
 
 def add_match(red, blue, winner, pots=None, commit=True, num_retries=3):
@@ -90,6 +144,8 @@ def add_match(red, blue, winner, pots=None, commit=True, num_retries=3):
         Name of the winning character.
     pots : tuple[int, int], default=None
         Tuple of (red_pot, blue_pot) for the match.
+    commit : bool, default=True
+        Whether to commit the changes to the database.
     num_retries: int, default=3
         Number of times to retry the operation if there is a disconnection error.
     """
@@ -99,15 +155,7 @@ def add_match(red, blue, winner, pots=None, commit=True, num_retries=3):
             with Session(engine) as session:
                 # Add character into database
                 for name, is_winner in zip((red, blue), (winner == 'red', winner == 'blue')):
-
-                    try:
-                        character = session.query(Character).filter_by(name=name).one()
-                        character.num_wins += int(is_winner)
-                        character.num_matches += 1
-                    except NoResultFound:
-                        # Character does not exist in database, so add it
-                        character = Character(name=name, num_wins=int(is_winner), num_matches=1)
-                        session.add(character)
+                    update_character(session, name, is_winner)
 
                 # Add match into database
                 session.add(Match(red=red, blue=blue, winner=winner))
@@ -125,6 +173,7 @@ def add_match(red, blue, winner, pots=None, commit=True, num_retries=3):
                 if commit:
                     session.commit()
 
+                logging.info(f"Added match successfully.")
                 return  # No error, so return
 
         except OperationalError as e:
@@ -133,7 +182,7 @@ def add_match(red, blue, winner, pots=None, commit=True, num_retries=3):
                 raise e
 
             # Otherwise, retry after a short wait
-            wait_time = 2 ** i
+            wait_time = 2 ** (i - 1)
             logging.warning(f"OperationalError: {e}. Retrying in {wait_time} seconds...")
             time.sleep(wait_time)
 

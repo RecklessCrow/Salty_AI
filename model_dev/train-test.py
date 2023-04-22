@@ -51,8 +51,11 @@ def main():
                 torch.cuda.empty_cache()
                 _ = gc.collect()
 
-                correct += (torch.round(torch.sigmoid(outputs)) == labels).sum().item()
-                count += len(labels)
+                # Calculate Accuracy
+                count += inputs.shape[0]
+                truth_mask = torch.argmax(outputs, dim=1) == torch.argmax(labels, dim=1)
+                correct += torch.sum(truth_mask).item()
+
                 tepoch.set_postfix(
                     loss=np.mean(losses),
                     accuracy=f"{correct / count:.2%}",
@@ -73,8 +76,10 @@ def main():
                             loss = loss_fn(outputs, labels)
                         val_losses.append(loss.item())
 
-                        val_correct += (torch.round(torch.sigmoid(outputs)) == labels).sum().item()
-                        val_count += len(labels)
+                        # Calculate Accuracy
+                        val_count += inputs.shape[0]
+                        truth_mask = torch.argmax(outputs, dim=1) == torch.argmax(labels, dim=1)
+                        val_correct += torch.sum(truth_mask).item()
 
                         tepoch.set_postfix(
                             loss=train_loss,

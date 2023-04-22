@@ -4,9 +4,10 @@ from torch.nn import (
     Module,
     Embedding,
     Sequential,
-    Linear,
     Flatten,
 )
+
+import torchbnn as bnn
 
 time_stamp = datetime.now().strftime('%m-%d_%H-%M-%S')
 
@@ -22,9 +23,15 @@ class BetBot(Module):
             embedding_dim=e_dim,
         )
 
+        # Set up a bayesian network for the logits
         self.logits = Sequential(
             Flatten(),
-            Linear(e_dim * 2, 2),
+            bnn.BayesLinear(
+                in_features=e_dim * 2,
+                out_features=2,
+                prior_mu=0,
+                prior_sigma=0.1,
+            ),
         )
 
     def forward(self, x):
