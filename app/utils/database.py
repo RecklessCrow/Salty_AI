@@ -1,5 +1,6 @@
 import sqlalchemy
 from sqlalchemy import ForeignKey, select, Identity
+from sqlalchemy.exc import NoResultFound
 from sqlalchemy.orm import Mapped, DeclarativeBase, mapped_column, Session
 
 from app.utils.settings import settings
@@ -91,17 +92,15 @@ def add_match(red, blue, winner, pots=None, commit=True):
     with Session(engine) as session:
         # Add character into database
         for name, is_winner in zip((red, blue), (winner == 'red', winner == 'blue')):
-            stmt = select(Character).where(Character.name == name)
-            result = session.execute(stmt).first()
 
-            if result is None:
-                # Character does not exist in database, so add it
-                session.add(Character(name=name, num_wins=int(is_winner), num_matches=1))
-            else:
-                # Character exists in database, so update it
-                character = result[0]
+            try:
+                character = session.query(Character).filter_by(name=name).one()
                 character.num_wins += int(is_winner)
                 character.num_matches += 1
+            except NoResultFound:
+                # Character does not exist in database, so add it
+                character = Character(name=name, num_wins=int(is_winner), num_matches=1)
+                session.add(character)
 
         # Add match into database
         session.add(Match(red=red, blue=blue, winner=winner))

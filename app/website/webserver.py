@@ -30,17 +30,16 @@ def serve_js():
 
 
 class WebServer:
-    def __init__(self):
+    def __init__(self, host='0.0.0.0', port=8000):
         self.app = app
-        self.sse = sse
-        self.thread = threading.Thread(target=self.run, daemon=True)
-
-    def run(self):
-        self.app.run(host="0.0.0.0", port=8000)
+        self.thread = threading.Thread(
+            target=lambda: self.app.run(host=host, port=port),
+            daemon=True
+        )
 
     def start(self):
         self.thread.start()
 
     def publish_event(self, web_data: dict):
         with self.app.app_context():
-            self.sse.publish(web_data, type='update')
+            sse.publish(web_data, type='update')

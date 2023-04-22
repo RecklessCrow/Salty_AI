@@ -103,8 +103,12 @@ class SaltyBetDriver:
         """
         try:
             element = self.wait.until(EC.presence_of_element_located((By.ID, element_id)))
-            text = self.wait.until(lambda _: element.text.strip())
-            return text
+            text = None
+
+            while not text or not text.strip():
+                text = element.text
+
+            return text.strip()
 
         except (NoSuchElementException, TimeoutException):
             return None

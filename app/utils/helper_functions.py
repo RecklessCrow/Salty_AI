@@ -53,7 +53,7 @@ def predict_winner(red, blue):
             logging.warning(f"Unknown character: {blue}")
 
         # If we don't have a character in our vocab, just return a random prediction
-        return DEFAULT_CONFIDENCE, random.choice([red, blue])
+        return DEFAULT_CONFIDENCE, random.choice(["red", "blue"])
 
     model_input = np.array([[red_idx, blue_idx]]).astype(np.int64)
     output = model.run(None, {'input': model_input})[0][0]

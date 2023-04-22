@@ -13,7 +13,7 @@ class StateMachine:
         BETS_CLOSED = 2
         PAYOUT = 3
 
-    STATE_UPDATE_INTERVAL = 2  # seconds
+    STATE_UPDATE_INTERVAL = 1  # seconds
 
     def __init__(self):
         """
@@ -23,7 +23,7 @@ class StateMachine:
         self._last_state = self.States.START
         self._lock = threading.Lock()
         self._condition = threading.Condition(self._lock)
-        self._thread = threading.Thread(target=self.update_state, daemon=True)
+        self._thread = threading.Thread(target=self._update_state, daemon=True)
 
     def _decode_state_text(self, text: str):
         """
@@ -41,7 +41,7 @@ class StateMachine:
         logging.error(f"Unknown state text: {text}")
         raise ValueError
 
-    def update_state(self):
+    def _update_state(self):
         """
         Updates the state of the state machine.
         """
