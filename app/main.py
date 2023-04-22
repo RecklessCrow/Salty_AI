@@ -17,7 +17,7 @@ if settings.PG_DSN is not None:
     import utils.database as db
 
 
-async def main():
+def main():
     # Start the state machine
     machine = StateMachine()
     machine.start()
@@ -25,7 +25,7 @@ async def main():
 
     # Start the web server
     webserver = WebServer()
-    await webserver.start()
+    webserver.start()
 
     # webserver.publish({
     #     "red": "red",
@@ -43,7 +43,7 @@ async def main():
 
     while True:
         web_json["balance"] = int_to_money(driver.get_balance())
-        await webserver.publish(web_json, event_type="main")
+        webserver.publish(web_json, event_type="main")
         state = machine.await_next_state()
 
         match state:
@@ -128,7 +128,7 @@ async def main():
                     "accuracy": f"{accuracy:.2%}",
                 }
 
-                await webserver.publish({
+                webserver.publish({
                     "red": red,
                     "blue": blue,
                     "winner": winner,
@@ -143,7 +143,7 @@ async def main():
 
 if __name__ == '__main__':
     try:
-        asyncio.run(main())
+        main()
     except Exception as e:
         driver.__del__()  # Close the browser
         raise e

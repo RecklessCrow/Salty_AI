@@ -1,5 +1,4 @@
 import os
-import asyncio
 import eel
 
 
@@ -9,28 +8,22 @@ class WebServer:
         self.host = host
         self.port = port
 
-    async def start(self):
+    def start(self):
         print(f"Starting web server on {self.host}:{self.port}")
         self.eel.init(os.path.dirname(__file__), allowed_extensions=['.js', '.html'])
-        await self.eel.spawn('templates/index.html', host=self.host, port=self.port, mode='chrome-app')
+        self.eel('templates/index.html', host=self.host, port=self.port, mode='chrome-app', block=False)
 
-    async def publish(self, content, event_type):
+    def publish(self, content, event_type):
         if event_type == 'main':
-            await self.update_main(content)
+            self.update_main(content)
         elif event_type == 'history':
-            await self.update_history(content)
+            self.update_history(content)
 
-    async def update_main(self, content):
-        await self.eel.updateMain(content)
+    def update_main(self, content):
+        self.eel.updateMain(content)
 
-    async def update_history(self, content):
-        await self.eel.updateHistory(content)
+    def update_history(self, content):
+        self.eel.updateHistory(content)
 
 
-async def main():
-    server = WebServer()
-    await server.start()
-
-if __name__ == '__main__':
-    asyncio.run(main())
 
