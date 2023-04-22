@@ -1,6 +1,9 @@
+import logging
+import time
+
 import sqlalchemy
 from sqlalchemy import ForeignKey, select, Identity
-from sqlalchemy.exc import NoResultFound
+from sqlalchemy.exc import NoResultFound, OperationalError
 from sqlalchemy.orm import Mapped, DeclarativeBase, mapped_column, Session
 
 from app.utils.settings import settings
@@ -73,7 +76,7 @@ class ModelMetadata(Base):
     payout: Mapped[int] = mapped_column(nullable=False)
 
 
-def add_match(red, blue, winner, pots=None, commit=True):
+def add_match(red, blue, winner, pots=None, commit=True, num_retries=3):
     """
     Add a match to the database.
 
@@ -87,36 +90,52 @@ def add_match(red, blue, winner, pots=None, commit=True):
         Name of the winning character.
     pots : tuple[int, int], default=None
         Tuple of (red_pot, blue_pot) for the match.
+    num_retries: int, default=3
+        Number of times to retry the operation if there is a disconnection error.
     """
 
-    with Session(engine) as session:
-        # Add character into database
-        for name, is_winner in zip((red, blue), (winner == 'red', winner == 'blue')):
+    for i in range(num_retries):
+        try:
+            with Session(engine) as session:
+                # Add character into database
+                for name, is_winner in zip((red, blue), (winner == 'red', winner == 'blue')):
 
-            try:
-                character = session.query(Character).filter_by(name=name).one()
-                character.num_wins += int(is_winner)
-                character.num_matches += 1
-            except NoResultFound:
-                # Character does not exist in database, so add it
-                character = Character(name=name, num_wins=int(is_winner), num_matches=1)
-                session.add(character)
+                    try:
+                        character = session.query(Character).filter_by(name=name).one()
+                        character.num_wins += int(is_winner)
+                        character.num_matches += 1
+                    except NoResultFound:
+                        # Character does not exist in database, so add it
+                        character = Character(name=name, num_wins=int(is_winner), num_matches=1)
+                        session.add(character)
 
-        # Add match into database
-        session.add(Match(red=red, blue=blue, winner=winner))
+                # Add match into database
+                session.add(Match(red=red, blue=blue, winner=winner))
 
-        # Add match metadata into database
-        if pots is not None and (pots[0] != 0 and pots[1] != 0):
-            red_pot, blue_pot = pots
-            match_id = max(session.execute(select(Match.id)).scalars())
-            session.add(MatchMetadata(
-                match_id=match_id,
-                red_pot=red_pot,
-                blue_pot=blue_pot
-            ))
+                # Add match metadata into database
+                if pots is not None and (pots[0] != 0 and pots[1] != 0):
+                    red_pot, blue_pot = pots
+                    match_id = max(session.execute(select(Match.id)).scalars())
+                    session.add(MatchMetadata(
+                        match_id=match_id,
+                        red_pot=red_pot,
+                        blue_pot=blue_pot
+                    ))
 
-        if commit:
-            session.commit()
+                if commit:
+                    session.commit()
+
+                return  # No error, so return
+
+        except OperationalError as e:
+            if i == num_retries - 1:
+                # Final retry, raise the exception
+                raise e
+
+            # Otherwise, retry after a short wait
+            wait_time = 2 ** i
+            logging.warning(f"OperationalError: {e}. Retrying in {wait_time} seconds...")
+            time.sleep(wait_time)
 
 
 engine = sqlalchemy.create_engine(settings.PG_DSN, echo=False)

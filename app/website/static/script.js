@@ -71,6 +71,11 @@ eventSource.addEventListener('update', ({data}) => {
         elements.potentialPayout.addClass('green-text');
     }
 
+    // If the confidence is less than 0, set it to NaN
+    if (confidence < 0) {
+        elements.confidence.text('NaN');
+    }
+
     // Save the last event data to localStorage
     localStorage.setItem(storageKey, data);
 });

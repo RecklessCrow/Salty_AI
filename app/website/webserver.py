@@ -1,7 +1,7 @@
 import os
 import threading
 
-from flask import Flask, render_template, jsonify
+from flask import Flask, render_template
 from flask_sse import sse
 
 dir_path = os.path.dirname(__file__)

@@ -32,7 +32,8 @@ class SaltyBetDriver:
             If the driver fails to load the website.
             If the driver fails to log in.
         """
-        print("Initializing driver")
+        logging.info("Initializing driver")
+
         self.sleep_time = 0.5
 
         self.last_balance = 0
@@ -72,7 +73,7 @@ class SaltyBetDriver:
             logging.error("Failed to login. Wrong username or password?")
             raise RuntimeError
 
-        print("Driver initialized")
+        logging.info("Driver initialized")
 
     def __del__(self):
         """
@@ -80,12 +81,13 @@ class SaltyBetDriver:
 
         This will close the browser window.
         """
-        print("Closing driver")
+        logging.info("Closing driver")
         try:
             self.driver.quit()
         except WebDriverException:
-            pass
-        print("Driver closed")
+            logging.warning("Failed to call driver.quit()")
+        
+        logging.info("Driver closed")
 
     def _get_element_text(self, element_id):
         """
