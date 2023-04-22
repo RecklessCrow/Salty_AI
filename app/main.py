@@ -1,4 +1,3 @@
-import threading
 import time
 
 from utils.driver import driver
@@ -7,10 +6,10 @@ from utils.helper_functions import (
     calculate_bet,
     int_to_money,
     money_to_int,
-    update_json
 )
 from utils.settings import settings
 from utils.state_machine import StateMachine
+from website.webserver import WebServer
 
 # Import the database if we have a DSN
 if settings.PG_DSN is not None:
@@ -20,9 +19,12 @@ if settings.PG_DSN is not None:
 def main():
     # Start the state machine
     machine = StateMachine()
+    machine.start()
     states = machine.States
-    update_thread = threading.Thread(target=machine.update_state, daemon=True)
-    update_thread.start()
+
+    # Start the web server
+    webserver = WebServer()
+    webserver.start()
 
     # Initialize the session variables
     session_winnings = 0
@@ -33,7 +35,7 @@ def main():
 
     while True:
         web_json["balance"] = int_to_money(driver.get_balance())
-        update_json(web_json)
+        webserver.publish_event(web_json)
         state = machine.await_next_state()
 
         match state:

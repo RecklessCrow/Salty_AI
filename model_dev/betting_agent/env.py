@@ -6,9 +6,9 @@ import onnxruntime as ort
 from gym import spaces
 from sqlalchemy.orm import Session, aliased
 
-import utils.database as db
-from utils.helper_functions import sigmoid
-from utils.settings import settings
+import app.utils.database as db
+from app.utils.helper_functions import sigmoid
+from app.utils.settings import settings
 
 INITIAL_BALANCE = 750
 

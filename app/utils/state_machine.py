@@ -3,7 +3,7 @@ import threading
 import time
 from enum import Enum
 
-from utils.driver import driver
+from app.utils.driver import driver
 
 
 class StateMachine:
@@ -23,6 +23,7 @@ class StateMachine:
         self._last_state = self.States.START
         self._lock = threading.Lock()
         self._condition = threading.Condition(self._lock)
+        self._thread = threading.Thread(target=self.update_state, daemon=True)
 
     def _decode_state_text(self, text: str):
         """
@@ -66,3 +67,9 @@ class StateMachine:
             self._last_state = self._state
 
         return self._state
+
+    def start(self):
+        """
+        Starts the state machine.
+        """
+        self._thread.start()

@@ -4,9 +4,9 @@ import numpy as np
 import onnxruntime as ort
 from sqlalchemy.orm import Session, aliased
 
-import utils.database as db
-from utils.helper_functions import sigmoid, convert_to_money_str
-from utils.settings import settings
+import app.utils.database as db
+from app.utils.helper_functions import sigmoid, convert_to_money_str
+from app.utils.settings import settings
 
 # Get matches with pots
 with Session(db.engine) as session:

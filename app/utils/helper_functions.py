@@ -7,7 +7,7 @@ import re
 import numpy as np
 import onnxruntime as ort
 
-from utils.settings import settings
+from app.utils.settings import settings
 
 # Load the model
 if settings.MODEL_DIR:

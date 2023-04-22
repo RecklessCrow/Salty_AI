@@ -2,7 +2,7 @@ import torch
 from sqlalchemy.orm import Session, aliased
 from torch.utils.data import DataLoader, Dataset, random_split
 
-import utils.database as db
+import app.utils.database as db
 
 
 class SaltybetDataset(Dataset):

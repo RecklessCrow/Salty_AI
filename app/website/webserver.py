@@ -1,18 +1,16 @@
-import json
 import os
+import threading
 
 from flask import Flask, render_template, jsonify
 from flask_sse import sse
 
-from utils.websettings import settings
-
 dir_path = os.path.dirname(__file__)
-print(dir_path)
 app = Flask(
     __name__,
     template_folder=os.path.join(dir_path, 'templates'),
     static_folder=os.path.join(dir_path, 'static')
 )
+app.config['REDIS_URL'] = 'redis://redis:6379/0'
 app.register_blueprint(sse, url_prefix='/stream')
 
 
@@ -31,16 +29,18 @@ def serve_js():
     return app.send_static_file("script.js")
 
 
-def publish_event(data):
-    sse.publish(data, type='update')
+class WebServer:
+    def __init__(self):
+        self.app = app
+        self.sse = sse
+        self.thread = threading.Thread(target=self.run, daemon=True)
 
+    def run(self):
+        self.app.run(host="0.0.0.0", port=8000)
 
-@app.route('/data')
-def data():
-    with open(settings.JSON_PATH) as f:
-        data = json.load(f)
-    return jsonify(data)
+    def start(self):
+        self.thread.start()
 
-
-if __name__ == '__main__':
-    app.run(host="0.0.0.0", port=8000, debug=True)
+    def publish_event(self, web_data: dict):
+        with self.app.app_context():
+            self.sse.publish(web_data, type='update')

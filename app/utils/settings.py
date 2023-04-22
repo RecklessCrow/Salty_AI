@@ -3,7 +3,7 @@ from pydantic import (
     PostgresDsn,
     DirectoryPath,
     FilePath,
-    validator
+    validator,
 )
 
 
@@ -28,7 +28,7 @@ class Settings(BaseSettings):
 
     # Files
     MODEL_DIR: DirectoryPath = None
-    JSON_PATH: FilePath = None
+    # JSON_PATH: FilePath = None
 
     # How long to wait in while loops (seconds)
     WAIT_TIME: int = 2

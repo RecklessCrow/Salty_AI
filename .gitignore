@@ -2,3 +2,4 @@
 geckodriver.log
 /venv/
 /.idea
+/app/test/
