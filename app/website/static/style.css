@@ -1,8 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300&display=swap');
 
-font-family {
-'Roboto', sans-serif;
-}
 
 body {
     font-family: 'Roboto', sans-serif;
@@ -55,19 +52,37 @@ body {
     padding-bottom: 16px;
 }
 
+.match-history::-webkit-scrollbar {
+  display: none;
+}
+
 .match-history {
-    display: flex;
-    flex-direction: column;
+    /*display: flex;*/
+    /*flex-direction: column;*/
     background-color: #2C2C2EFF;
     border-radius: 20px;
 
-    flex: 10%;
-
+    width: 340px;
     height: 400px;
     overflow-y:auto;
     overflow-x: hidden;
     position:relative;
-    border-radius: 5px;
+    scrollbar-width: none;
+}
+
+.match-history-row{
+    display: flex;
+    flex-direction: row;
+    width: 95%;
+}
+
+.match-left {
+}
+
+.match-right {
+    /*flex-direction: row;*/
+    width: 80%;
+    text-align: right;
 }
 
 .graph {
@@ -82,10 +97,13 @@ body {
 .match-history-element {
     display: flex;
     flex-direction: column;
+
+    margin: 2px 5px 2px 5px;
+    /*text-align: center;*/
     align-items: center;
     justify-content: space-evenly;
     width: 100%;
-    height: 240px;
+    height: 90px;
     border-bottom: 1px solid #3c3f40;
 }
 

@@ -149,19 +149,19 @@ function build_match_history_element(match_json) {
 
     // Create the winner div
     const winnerDiv = document.createElement('div');
-    winnerDiv.className = 'match-history-winner';
+    winnerDiv.className = 'match-history-row';
 
     // Create the "Winner:" and winner span elements for the winner div
     const winnerLabel = document.createElement('span');
-    winnerLabel.className = 'white-text';
+    winnerLabel.className = 'white-text match-left';
     winnerLabel.textContent = 'Winner:';
 
     const winnerName = document.createElement('span');
     if (winner === 'red') {
-        winnerName.className = 'red-text';
+        winnerName.className = 'red-text match-right';
         winnerName.textContent = red;
     } else {
-        winnerName.className = 'blue-text';
+        winnerName.className = 'blue-text match-right';
         winnerName.textContent = blue;
     }
 
@@ -171,18 +171,18 @@ function build_match_history_element(match_json) {
 
     // Create the payout div
     const payoutDiv = document.createElement('div');
-    payoutDiv.className = 'match-history-payout';
+    payoutDiv.className = 'match-history-row';
 
     // Create the "Payout:" and payout amount span elements for the payout div
     const payoutLabel = document.createElement('span');
-    payoutLabel.className = 'white-text';
+    payoutLabel.className = 'white-text match-left';
     payoutLabel.textContent = 'Payout:';
 
     const payoutAmount = document.createElement('span');
-    if (payout.includes('+')) {
-        payoutAmount.className = 'green-text';
+    if (payout.includes('-')) {
+        payoutAmount.className = 'red-text  match-right';
     } else {
-        payoutAmount.className = 'red-text';
+        payoutAmount.className = 'green-text match-right';
     }
 
     payoutAmount.textContent = payout;
