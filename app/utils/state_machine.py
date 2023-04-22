@@ -29,7 +29,7 @@ class StateMachine:
         """
         Decodes the state text from the website.
         """
-        if "open" in text:
+        if "open!" in text:
             return self.States.BETS_OPEN
 
         if "locked" in text:

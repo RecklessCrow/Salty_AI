@@ -1,3 +1,4 @@
+import asyncio
 import time
 
 from utils.driver import driver
@@ -16,7 +17,7 @@ if settings.PG_DSN is not None:
     import utils.database as db
 
 
-def main():
+async def main():
     # Start the state machine
     machine = StateMachine()
     machine.start()
@@ -24,9 +25,14 @@ def main():
 
     # Start the web server
     webserver = WebServer()
-    webserver.start()
+    await webserver.start()
 
-    time.sleep(5)
+    # webserver.publish({
+    #     "red": "red",
+    #     "blue": "blue",
+    #     "winner": "red",
+    #     "payout": int_to_money(100),
+    # }, event_type="history")
 
     # Initialize the session variables
     session_winnings = 0
@@ -37,7 +43,7 @@ def main():
 
     while True:
         web_json["balance"] = int_to_money(driver.get_balance())
-        webserver.publish(web_json, event_type="main")
+        await webserver.publish(web_json, event_type="main")
         state = machine.await_next_state()
 
         match state:
@@ -81,15 +87,11 @@ def main():
                 popular_odds = red_odds if popular_team == "red" else blue_odds
 
                 # Calculate the payout
-                try:
-                    bet = money_to_int(web_json["bet"])
-                    if web_json["team_bet_on"] == popular_team:
-                        payout = bet / popular_odds
-                    else:
-                        payout = bet * popular_odds
-                except KeyError:
-                    # No bet was placed
-                    payout = 0
+                bet = money_to_int(web_json["bet"])
+                if web_json["team_bet_on"] == popular_team:
+                    payout = bet / popular_odds
+                else:
+                    payout = bet * popular_odds
 
                 # Update the web json with the new data
                 web_json["red_pot"] = int_to_money(red_pot)
@@ -126,8 +128,7 @@ def main():
                     "accuracy": f"{accuracy:.2%}",
                 }
 
-
-                webserver.publish({
+                await webserver.publish({
                     "red": red,
                     "blue": blue,
                     "winner": winner,
@@ -142,7 +143,7 @@ def main():
 
 if __name__ == '__main__':
     try:
-        main()
+        asyncio.run(main())
     except Exception as e:
         driver.__del__()  # Close the browser
         raise e
