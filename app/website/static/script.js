@@ -1,5 +1,7 @@
-const storageKey = 'last-event-data';
+// Imports
+// import { build_match_history_element } from './utils/helper_functions.js';
 
+const storageKey = 'last-event-data';
 
 eel.expose(updateMain);
 function updateMain(data) {
@@ -88,11 +90,7 @@ function updateHistory(history_data) {
 
     // Prepend the new element to the beginning of the div
     const div = document.getElementById('match-history');
-    // if (div.firstChild) {
     div.insertBefore(matchElement, div.firstChild);
-    // } else {
-    //     div.appendChild(matchElement);
-    // }
 
     // Check if there are more than 10 elements in the div
     if (div.children.length > 10) {
@@ -109,7 +107,6 @@ $(document).ready(function () {
         updateMain(lastEventData);
     }
 });
-
 
 function build_match_history_element(match_json) {
     const {
@@ -130,7 +127,7 @@ function build_match_history_element(match_json) {
     // Create the left and right span elements for the match-up div
     const leftSpan = document.createElement('span');
     leftSpan.className = 'left red-text';
-    leftSpan.textContent = 'Red';
+    leftSpan.textContent = red;
 
     const middleSpan = document.createElement('span');
     middleSpan.className = 'white-text';
@@ -138,7 +135,7 @@ function build_match_history_element(match_json) {
 
     const rightSpan = document.createElement('span');
     rightSpan.className = 'right blue-text';
-    rightSpan.textContent = 'Blue';
+    rightSpan.textContent = blue;
 
     // Append the left, middle, and right spans to the match-up div
     matchUp.appendChild(leftSpan);
@@ -179,11 +176,12 @@ function build_match_history_element(match_json) {
     const payoutAmount = document.createElement('span');
     if (payout.includes('-')) {
         payoutAmount.className = 'red-text  match-right';
+        payoutAmount.textContent = payout;
     } else {
         payoutAmount.className = 'green-text match-right';
+        // Add a + sign to the payout amount if it's positive
+        payoutAmount.textContent = '+' + payout;
     }
-
-    payoutAmount.textContent = payout;
 
     // Append the payout label and payout amount to the payout div
     payoutDiv.appendChild(payoutLabel);
@@ -196,4 +194,3 @@ function build_match_history_element(match_json) {
 
     return container;
 }
-
