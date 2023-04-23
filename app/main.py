@@ -1,4 +1,7 @@
+import logging
 import time
+
+from selenium.common import TimeoutException
 
 from utils.driver import driver
 from utils.helper_functions import (
@@ -25,6 +28,13 @@ def main():
     # Start the web server
     webserver = WebServer()
     webserver.start()
+
+    webserver.publish({
+        "red": "red",
+        "blue": "blue",
+        "winner": "red",
+        "payout": "$15",
+    }, event_type="history")
 
     # Initialize the session variables
     session_winnings = 0
@@ -58,7 +68,18 @@ def main():
                     bet = 1
 
                 # Place a bet
-                driver.place_bet(bet, team)
+                flag = False
+                num_retrys = 3
+                for i in range(num_retrys):
+                    try:
+                        driver.place_bet(bet, team)
+                    except TimeoutException as e:
+                        if i == num_retrys - 1:
+                            # We have retried too many times, skip this match
+                            logging.error(f"Failed to place bet: {e}")
+                            flag = True
+                if flag:
+                    continue
 
                 # Update the web json with the new data
                 web_json["red"] = red

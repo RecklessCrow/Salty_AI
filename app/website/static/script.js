@@ -112,8 +112,6 @@ $(document).ready(function () {
 
 
 function build_match_history_element(match_json) {
-
-    console.log(match_json);
     const {
         red,
         blue,
