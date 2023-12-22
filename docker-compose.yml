@@ -9,6 +9,7 @@ services:
     volumes:
       - ./app:/app
       - ./data:/data
+      - ./models:/models
     env_file:
       - .env
     ports:
