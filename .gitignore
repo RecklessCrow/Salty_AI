@@ -3,3 +3,5 @@ geckodriver.log
 /venv/
 /.idea
 /app/test/
+/models/
+/data/

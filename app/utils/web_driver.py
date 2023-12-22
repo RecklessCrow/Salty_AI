@@ -1,8 +1,8 @@
 import logging
 import re
 import time
-from math import floor
 
+from math import floor
 from selenium import webdriver
 from selenium.common.exceptions import (
     TimeoutException,
@@ -14,10 +14,10 @@ from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
-from app.utils.settings import settings
+from utils.config import config
 
 
-class SaltyBetDriver:
+class WebDriver:
     VALID_TEAMS = {"red", "blue"}
 
     def __init__(self):
@@ -32,7 +32,8 @@ class SaltyBetDriver:
             If the driver fails to load the website.
             If the driver fails to log in.
         """
-        logging.info("Initializing driver")
+        self.logger = logging.getLogger("WebDriver")
+        self.logger.info("Initializing driver")
 
         self.sleep_time = 0.5
 
@@ -46,7 +47,7 @@ class SaltyBetDriver:
         options.add_argument("--headless")
 
         self.driver = webdriver.Firefox(options=options)
-        self.wait = WebDriverWait(self.driver, settings.WAIT_TIME)
+        self.wait = WebDriverWait(self.driver, config.WAIT_TIME)
 
         # Load into the website
         self.driver.get("https://www.saltybet.com/authenticate?signin=1")
@@ -59,11 +60,11 @@ class SaltyBetDriver:
         # Login
         username_element = self.wait.until(EC.presence_of_element_located((By.ID, "email")))
         username_element.clear()
-        username_element.send_keys(settings.SALTYBET_USERNAME)
+        username_element.send_keys(config.SALTYBET_USERNAME)
 
         password_element = self.wait.until(EC.presence_of_element_located((By.ID, "pword")))
         password_element.clear()
-        password_element.send_keys(settings.SALTYBET_PASSWORD)
+        password_element.send_keys(config.SALTYBET_PASSWORD)
 
         self.wait.until(EC.element_to_be_clickable((By.CLASS_NAME, "graybutton"))).click()
 
@@ -81,12 +82,12 @@ class SaltyBetDriver:
 
         This will close the browser window.
         """
-        logging.info("Closing driver")
+        self.logger.info("Closing driver")
         try:
             self.driver.quit()
         except WebDriverException:
             logging.warning("Failed to call driver.quit()")
-        
+
         logging.info("Driver closed")
 
     def _get_element_text(self, element_id):
@@ -108,6 +109,7 @@ class SaltyBetDriver:
         The text is invalid if it is empty or contains only whitespace.
         This function blocks until the text is valid.
         """
+        # self.logger.info(f"Getting element text for {element_id}")
         try:
             element = self.wait.until(EC.presence_of_element_located((By.ID, element_id)))
             text = ""
@@ -119,10 +121,10 @@ class SaltyBetDriver:
             return text.strip()
 
         except NoSuchElementException:
-            logging.warning(f"Failed to get element text for {element_id}")
+            self.logger.warning(f"Failed to get element text for {element_id}")
             return None
         except TimeoutException:
-            logging.warning(f"Timeout while waiting for element {element_id} to load")
+            self.logger.warning(f"Timeout while waiting for element {element_id} to load")
             return None
 
     def get_winner(self):
@@ -134,7 +136,7 @@ class SaltyBetDriver:
         winner : str or None
             The winning team. None if there was a tie.
         """
-
+        self.logger.info("Getting winner")
         payout_message = self._get_element_text("betstatus").lower()
 
         if "red" in payout_message:
@@ -154,6 +156,7 @@ class SaltyBetDriver:
         state : str
             The current state of the game.
         """
+        self.logger.info("Getting bet status")
         return self._get_element_text("betstatus").lower()
 
     def place_bet(self, amount, team):
@@ -167,6 +170,7 @@ class SaltyBetDriver:
         team : str
             Team to bet on. Must be one of ``['red', 'blue']``.
         """
+        self.logger.info(f"Placing bet of {amount} on {team}")
 
         if team not in self.VALID_TEAMS:
             raise ValueError(f'Team must be one of {self.VALID_TEAMS}')
@@ -187,6 +191,19 @@ class SaltyBetDriver:
         )
         bet_button.click()
 
+    def place_bet_with_retry(self, wager, bet_on, num_retries=3):
+        """
+        Places a bet on a SaltyBet match.
+        """
+        for idx in range(num_retries):
+            try:
+                self.place_bet(wager, bet_on)
+                return  True  # Indicate success
+            except TimeoutException as e:
+                if idx == num_retries - 1:
+                    self.logger.error(f"Failed to place bet: {e}")
+                    return False  # Indicate failure
+
     def get_odds(self):
         """
         Get the odds of the current match.
@@ -196,6 +213,7 @@ class SaltyBetDriver:
         (float, float)
             Betting odds of the current match.
         """
+        self.logger.info("Getting odds")
         betting_text = self._get_element_text("lastbet")
 
         # Find all numbers inbetween the ":" i.e. the odds
@@ -217,6 +235,7 @@ class SaltyBetDriver:
         (str, str) or None
             Names of the red and blue teams.
         """
+        self.logger.info("Getting match up")
         try:
             red_element = self.wait.until(EC.presence_of_element_located((By.ID, "sbettors1")))
             red_element = red_element.find_element(By.CLASS_NAME, "redtext")
@@ -238,10 +257,10 @@ class SaltyBetDriver:
             return red, blue
 
         except NoSuchElementException:
-            logging.warning("Failed to get match up")
+            self.logger.warning("Failed to get match up")
             return None
         except TimeoutException:
-            logging.warning("Timeout while waiting for match up to load")
+            self.logger.warning("Timeout while waiting for match up to load")
             return None
 
     def get_balance(self):
@@ -253,6 +272,7 @@ class SaltyBetDriver:
         balance : int
             Current balance.
         """
+        self.logger.info("Getting balance")
         balance_text = self._get_element_text("balance")
 
         balance = int(balance_text.replace(",", ""))
@@ -271,6 +291,7 @@ class SaltyBetDriver:
         payout : int
             The payout for the last match.
         """
+        self.logger.info("Getting payout")
         balance = self.get_balance()
 
         if self.is_tournament():
@@ -293,6 +314,7 @@ class SaltyBetDriver:
         (int, int)
             Amounts of the red and blue pots.
         """
+        self.logger.info("Getting pots")
         text = self._get_element_text("odds")
 
         amounts = re.findall(r"\$(\d[\d,]*)", text)
@@ -306,11 +328,12 @@ class SaltyBetDriver:
         return red_pot, blue_pot
 
     def is_tournament(self):
+        self.logger.info("Checking if tournament")
         balance = self.wait.until(EC.presence_of_element_located((By.ID, "balance")))
         return "purple" in balance.get_attribute("class").lower()
 
 
-driver = SaltyBetDriver()
+driver = WebDriver()
 
 if __name__ == '__main__':
     for i in range(1000):

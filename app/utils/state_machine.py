@@ -3,7 +3,7 @@ import threading
 import time
 from enum import Enum
 
-from app.utils.driver import driver
+from utils.web_driver import driver
 
 
 class StateMachine:
@@ -19,6 +19,7 @@ class StateMachine:
         """
         Initializes the state machine.
         """
+        self.logger = logging.getLogger("StateMachine")
         self._state = self.States.START
         self._last_state = self.States.START
         self._lock = threading.Lock()
@@ -38,13 +39,14 @@ class StateMachine:
         if "payout" in text:
             return self.States.PAYOUT
 
-        logging.error(f"Unknown state text: {text}")
+        self.logger.error(f"Unknown state text: {text}")
         raise ValueError
 
     def _update_state(self):
         """
         Updates the state of the state machine.
         """
+        self.logger.info("Checking for state changes")
         while True:
             time.sleep(self.STATE_UPDATE_INTERVAL)
             state_text = driver.get_bet_status()
@@ -59,6 +61,7 @@ class StateMachine:
         """
         Waits for the next state change and returns the new state.
         """
+        self.logger.info("Waiting for next state")
         with self._condition:
             if self._state != self.States.START:
                 self._condition.wait_for(lambda: self._state != self._last_state)

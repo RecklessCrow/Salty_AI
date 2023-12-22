@@ -3,90 +3,80 @@ import time
 
 from selenium.common import TimeoutException
 
-from utils.driver import driver
-from utils.helper_functions import (
-    predict_winner,
-    calculate_bet,
-    int_to_money,
-    money_to_int,
-)
-from utils.settings import settings
+from utils.config import config
+from utils.db_driver import db
+from utils.betting_module import betting_module
 from utils.state_machine import StateMachine
-from website.webserver import WebServer
+from utils.web_driver import driver
 
-# Import the database if we have a DSN
-if settings.PG_DSN is not None:
-    import utils.database as db
+
+
 
 
 def main():
     # Start the state machine
     machine = StateMachine()
     machine.start()
-    states = machine.States
-
-    # Start the web server
-    webserver = WebServer()
-    webserver.start()
 
     # Initialize the session variables
     session_winnings = 0
-    web_json = {}
-    start_time = None
     num_matches = 0
     num_correct = 0
     bets_started = False
 
+    match_info = {}
+
     while True:
-        web_json["balance"] = int_to_money(driver.get_balance())
-        webserver.publish(web_json, event_type="main")
         state = machine.await_next_state()
 
         match state:
-            case states.BETS_OPEN:
+            case machine.States.BETS_OPEN:
                 bets_started = True
                 # Get the current match up
                 red, blue = driver.get_match_up()
 
                 # Predict the winner
-                conf, team = predict_winner(red, blue)
+                conf, team = betting_module.predict_winner(red, blue)
+                red_conf = conf if team == "red" else 1 - conf
+                blue_conf = 1 - red_conf
 
-                # Calculate the bet amount
+                # Calculate the wager amount
                 balance = driver.get_balance()
                 is_tournament = driver.is_tournament()
-                if conf > 0:
-                    bet = calculate_bet(balance, conf, is_tournament)
-                else:
-                    # Unknown character, just bet $1
-                    bet = 1
+                wager, bet_upset = betting_module.get_wager(conf, balance, is_tournament)
 
-                # Place a bet
-                flag = False
-                num_retrys = 3
-                for i in range(num_retrys):
-                    try:
-                        driver.place_bet(bet, team)
-                    except TimeoutException as e:
-                        if i == num_retrys - 1:
-                            # We have retried too many times, skip this match
-                            logging.error(f"Failed to place bet: {e}")
-                            flag = True
-                if flag:
+                if bet_upset:
+                    # Invert the team
+                    bet_on = "red" if team == "blue" else "blue"
+                else:
+                    bet_on = team
+
+                result = driver.place_bet_with_retry(wager, bet_on)
+                if not result:
+                    # If the bet was not placed, skip this iteration
+                    match_info = None
                     continue
 
-                # Update the web json with the new data
-                web_json["red"] = red
-                web_json["blue"] = blue
-                web_json["bet"] = int_to_money(bet)
-                web_json["team_bet_on"] = team
-                web_json["confidence"] = f"{conf:.2%}"
-                web_json["is_tournament"] = is_tournament
+                match_info = {
+                    "red": red,
+                    "blue": blue,
+                    "wager": wager,
+                    "team_bet_on": bet_on,
+                    "model": config.MODEL_PATH.split("/")[-1],
+                    "model_prediction": team,
+                    "red_confidence": red_conf,
+                    "blue_confidence": blue_conf,
+                    "is_tournament": is_tournament,
+                }
 
-            case states.BETS_CLOSED:
+            case machine.States.BETS_CLOSED:
+                # Case where we start the program while bets are closed
                 if not bets_started:
                     continue
-                # Start timer for match duration
-                start_time = time.time()
+
+                # Case where the driver failed to place the bet
+                if not match_info:
+                    continue
 
                 red_pot, blue_pot = driver.get_pots()
                 red_odds, blue_odds = driver.get_odds()
@@ -97,24 +87,21 @@ def main():
                 popular_odds = red_odds if popular_team == "red" else blue_odds
 
                 # Calculate the payout
-                bet = money_to_int(web_json["bet"])
-                if web_json["team_bet_on"] == popular_team:
-                    payout = bet / popular_odds
+                wager = betting_module.money_to_int(match_info["wager"])
+                if match_info["team_bet_on"] == popular_team:
+                    payout = wager / popular_odds
                 else:
-                    payout = bet * popular_odds
+                    payout = wager * popular_odds
 
-                # Update the web json with the new data
-                web_json["red_pot"] = int_to_money(red_pot)
-                web_json["blue_pot"] = int_to_money(blue_pot)
-                web_json["red_odds"] = red_odds
-                web_json["blue_odds"] = blue_odds
-                web_json["potential_payout"] = int_to_money(payout)
+                # Update the match info
+                match_info["red_pot"] = red_pot
+                match_info["blue_pot"] = blue_pot
+                match_info["payout"] = payout
 
-            case states.PAYOUT:
+            case machine.States.PAYOUT:
+                # Case where we start the program while in the payout state
                 if not bets_started:
                     continue
-                # Calculate the match duration
-                match_duration = time.time() - start_time
 
                 # Get the winner
                 winner = driver.get_winner()
@@ -127,30 +114,16 @@ def main():
 
                 # Calculate running average for model accuracy
                 num_matches += 1
-                if web_json["team_bet_on"] == winner:
+                if match_info["model_prediction"] == winner:
                     num_correct += 1
                 accuracy = num_correct / num_matches
 
-                # Reset the web json and update it with the new data
-                red, blue = web_json["red"], web_json["blue"]
-                pots = money_to_int(web_json["red_pot"]), money_to_int(web_json["blue_pot"])
-                web_json = {
-                    "session_winnings": int_to_money(session_winnings),
-                    "match_duration": f"{match_duration:.2f}",
-                    "accuracy": f"{accuracy:.2%}",
-                }
-
-                webserver.publish({
-                    "red": red,
-                    "blue": blue,
-                    "winner": winner,
-                    "payout": int_to_money(payout),
-                }, event_type="history")
-
-                if settings.PG_DSN is not None and ("Team" not in red or "Team" not in blue):
-                    # Add the match to the database if we have a DSN
-                    # And if the match is not an exhibition match
-                    db.add_match(red, blue, winner, pots)
+                red, blue = match_info["red"], match_info["blue"]
+                if "Team" not in red or "Team" not in blue:
+                    # Add if the match is not an exhibition match
+                    red_pot, blue_pot = match_info["red_pot"], match_info["blue_pot"]
+                    db.add_match(red, blue, winner, red_pot, blue_pot)
+                    db.add
 
                 # Reset the bets started flag
                 bets_started = False

@@ -2,15 +2,16 @@ version: "3.7"
 
 services:
   betting:
+    container_name: betting
     build:
         context: .
         dockerfile: Dockerfile
     volumes:
-      - ./app:/workspace/app
+      - ./app:/app
+      - ./data:/data
     env_file:
       - .env
-    network_mode: "bridge"
     ports:
       - "8000:8000"
-    # Command to keep the container running
-#    command: tail -f /dev/null
+    command: sleep infinity
+

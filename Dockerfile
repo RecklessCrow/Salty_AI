@@ -1,6 +1,4 @@
-FROM python:3.10
-
-WORKDIR /workspace
+FROM python:3.10-slim-buster
 
 # Install Firefox and Geckodriver
 RUN apt-get update \
@@ -10,19 +8,14 @@ RUN apt-get update \
  && apt-get purge -y ca-certificates curl
 
 # Install Python dependencies
-COPY requirements/deploy.txt .
+COPY requirements.txt .
 RUN pip install --upgrade pip \
- && pip install -r deploy.txt
-
-# Set environment variables
-ENV MODEL_DIR=None
-ENV SALTYBET_USERNAME=None
-ENV SALTYBET_PASSWORD=None
-ENV PG_DSN=None
-ENV PYTHONPATH=/workspace
+ && pip install -r requirements.txt \
+ && rm requirements.txt
 
 # Copy source code
-COPY ./app ./app
+COPY ./app /app
+COPY ./models /models
 
 # Run the app
-CMD ["python", "./app/main.py"]
+CMD ["python", "/app/main.py"]
