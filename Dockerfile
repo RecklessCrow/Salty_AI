@@ -1,11 +1,20 @@
-FROM python:3.10-slim-buster
+FROM pytorch/pytorch:2.1.2-cuda12.1-cudnn8-devel as dev
 
-# Install Firefox and Geckodriver
-RUN apt-get update \
- && apt-get install -y --no-install-recommends ca-certificates curl firefox-esr\
- && rm -fr /var/lib/apt/lists/* \
- && curl -L https://github.com/mozilla/geckodriver/releases/download/v0.33.0/geckodriver-v0.33.0-linux64.tar.gz | tar xz -C /usr/local/bin \
- && apt-get purge -y ca-certificates curl
+USER root
+
+# Install Python dependencies
+COPY requirements.txt .
+RUN pip install --upgrade pip \
+ && pip install -r requirements.txt \
+ && rm requirements.txt
+
+# Copy source code
+WORKDIR /app
+COPY ./app /app
+COPY ./models /models
+
+
+FROM selenium/standalone-firefox:latest as prod
 
 # Install Python dependencies
 COPY requirements.txt .
@@ -15,6 +24,7 @@ RUN pip install --upgrade pip \
 
 # Copy source code
 COPY ./app /app
+RUN rm -r /app/models
 COPY ./models /models
 
 # Run the app

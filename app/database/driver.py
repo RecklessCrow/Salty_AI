@@ -3,7 +3,7 @@ import logging
 from mongoengine import connect
 
 from utils.config import config
-from utils.db_models import MatchUp, Fighter, BetInfo
+from database.models import MatchUp, Fighter, BetInfo
 from datetime import datetime
 
 
@@ -82,7 +82,7 @@ class DBHandler:
             The number of tokens in the database.
         """
         self.logger.info("Getting number of tokens")
-        return Fighter.objects.max_value('token')
+        return Fighter.objects.count()
 
     def add_match(self, red: Fighter or str, blue: Fighter or str, winner: str, red_pot: int = None,
                   blue_pot: int = None, is_tournament: bool = False, timestamp: datetime = None) -> MatchUp:
@@ -164,7 +164,7 @@ class DBHandler:
         self.logger.info("Adding match ups")
         MatchUp.objects.insert(match_ups)
 
-    def get_match_ups(self) -> list[MatchUp]:
+    def get_match_ups(self, num=None) -> list[MatchUp]:
         """
         Gets all match ups from the database.
 
@@ -174,7 +174,62 @@ class DBHandler:
             A list of all match ups.
         """
         self.logger.info("Getting match ups")
+
+        if num is not None:
+            return MatchUp.objects[:num]
+
         return MatchUp.objects()
+
+    def get_training_data(self):
+        self.logger.info("Getting training data")
+
+        matchups_info = []
+
+        # Use MongoDB's aggregate framework to "join" MatchUp and Fighter documents
+        pipeline = [
+            {
+                "$lookup": {
+                    "from": "fighter",  # Name of the Fighter collection
+                    "localField": "red",
+                    "foreignField": "_id",
+                    "as": "red_fighter"
+                }
+            },
+            {
+                "$lookup": {
+                    "from": "fighter",
+                    "localField": "blue",
+                    "foreignField": "_id",
+                    "as": "blue_fighter"
+                }
+            },
+            {
+                "$project": {
+                    "red_id": "$red_fighter._id",
+                    "blue_id": "$blue_fighter._id",
+                    "winner": 1
+                }
+            }
+        ]
+
+        # Execute the aggregation pipeline
+        cursor = MatchUp.objects.aggregate(*pipeline)
+
+        # Iterate over the result cursor
+        for result in cursor:
+            red_id = result["red_id"][0]
+            blue_id = result["blue_id"][0]
+            winner = result["winner"]
+
+            if winner == "n/a":
+                continue
+
+            winner = [1, 0] if winner == 'red' else [0, 1]
+
+            matchups_info.append((red_id, blue_id, winner))
+
+        return matchups_info
+
 
     def get_fighters(self) -> list[Fighter]:
         """

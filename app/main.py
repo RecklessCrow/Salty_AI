@@ -1,10 +1,5 @@
-import logging
-import time
-
-from selenium.common import TimeoutException
-
 from utils.config import config
-from utils.db_driver import db
+from database.driver import db
 from utils.betting_module import betting_module
 from utils.state_machine import StateMachine
 from utils.web_driver import driver

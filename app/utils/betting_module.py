@@ -7,7 +7,7 @@ import numpy as np
 import onnxruntime as ort
 
 from utils.config import config
-from utils.db_driver import db
+from database.driver import db
 
 
 class BettingModule:
