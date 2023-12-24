@@ -3,7 +3,7 @@ import threading
 import time
 from enum import Enum
 
-from utils.web_driver import driver
+from utils.web_driver import saltybet
 
 
 class StateMachine:
@@ -49,7 +49,7 @@ class StateMachine:
         self.logger.info("Checking for state changes")
         while True:
             time.sleep(self.STATE_UPDATE_INTERVAL)
-            state_text = driver.get_bet_status()
+            state_text = saltybet.get_bet_status()
             state = self._decode_state_text(state_text)
             if state != self._state:
                 with self._condition:

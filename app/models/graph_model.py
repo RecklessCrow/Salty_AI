@@ -1,7 +1,7 @@
-import torch.nn as nn
 import torch
-from torch_geometric.nn import GCNConv, global_add_pool, GraphConv
-from torch_geometric.data import Data
+import torch.nn as nn
+from torch_geometric.nn import GraphConv
+
 
 class CharacterGNN(nn.Module):
     def __init__(self, num_nodes, embedding_dim, hidden_dim, num_classes):

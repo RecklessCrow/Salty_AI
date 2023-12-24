@@ -19,6 +19,7 @@ class Settings(BaseSettings):
 
     # Files
     MODEL_PATH: FilePath
+    FIREFOX_BIN: FilePath
 
     # How long to wait in while loops (seconds)
     WAIT_TIME: int = 5

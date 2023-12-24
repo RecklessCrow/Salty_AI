@@ -1,11 +1,10 @@
 import logging
+from datetime import datetime
 
 from mongoengine import connect
 
-from utils.config import config
 from database.models import MatchUp, Fighter, BetInfo
-from datetime import datetime
-
+from utils.config import config
 
 connect(host=str(config.DB_DSN))
 
@@ -120,7 +119,7 @@ class DBHandler:
 
         return match_up
 
-    def add_bet(self, match_up: MatchUp, team_bet_on: str, amount_bet: int, model: str, red_confidence: float,
+    def add_bet(self, match_up: MatchUp, team_bet_on: str, model: str, red_confidence: float,
                 blue_confidence: float) -> BetInfo:
         """
         Adds a bet to the database.
@@ -144,9 +143,9 @@ class DBHandler:
         -------
         bet_info : BetInfo
         """
-        self.logger.info(f"Adding bet on {match_up} for {team_bet_on} with amount {amount_bet} and model {model}")
-        bet_info = BetInfo(match_up=match_up, team_bet_on=team_bet_on, amount_bet=amount_bet, model=model,
-            red_confidence=red_confidence, blue_confidence=blue_confidence)
+        self.logger.info(f"Adding bet on {match_up} for {team_bet_on} and model {model}")
+        bet_info = BetInfo(match_up=match_up, team_bet_on=team_bet_on, model=model,
+                           red_confidence=red_confidence, blue_confidence=blue_confidence)
 
         bet_info.save()
 
@@ -229,7 +228,6 @@ class DBHandler:
             matchups_info.append((red_id, blue_id, winner))
 
         return matchups_info
-
 
     def get_fighters(self) -> list[Fighter]:
         """

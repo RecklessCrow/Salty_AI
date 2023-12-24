@@ -1,8 +1,11 @@
+import logging
+
+import torch
 from torch.utils.data import DataLoader
+
 from database.driver import db
 from models.data import MatchDataset
-import torch
-import logging
+
 
 def load_data(batch_size, train_percentage=0.8, split=True):
     # Get data
@@ -38,6 +41,7 @@ def load_data(batch_size, train_percentage=0.8, split=True):
 
     return dataloader_train, dataloader_validation
 
+
 def training_epoch(pb, model, loss_fn, optimizer, device):
     model.train()
     num_matches = 0
@@ -65,6 +69,7 @@ def training_epoch(pb, model, loss_fn, optimizer, device):
             loss=total_loss / len(pb),
             accuracy=num_correct / num_matches
         )
+
 
 def validation_epoch(dataloader_validation, model, loss_fn, device):
     model.eval()

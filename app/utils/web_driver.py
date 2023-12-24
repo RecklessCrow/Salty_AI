@@ -10,14 +10,13 @@ from selenium.common.exceptions import (
     NoSuchElementException
 )
 from selenium.webdriver.common.by import By
-from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
 from utils.config import config
 
 
-class WebDriver:
+class SaltyBetWebInterface:
     VALID_TEAMS = {"red", "blue"}
 
     def __init__(self):
@@ -27,7 +26,7 @@ class WebDriver:
         This will load the website and login.
 
         Raises
-        ------
+        ------F
         RuntimeError
             If the driver fails to load the website.
             If the driver fails to log in.
@@ -43,9 +42,9 @@ class WebDriver:
         self.winnings = 0
         self.winnings_tournament = 0
 
-        options = Options()
+        options = webdriver.FirefoxOptions()
         options.add_argument("--headless")
-
+        options.binary_location = str(config.FIREFOX_BIN)
         self.driver = webdriver.Firefox(options=options)
         self.wait = WebDriverWait(self.driver, config.WAIT_TIME)
 
@@ -54,7 +53,7 @@ class WebDriver:
         try:
             self.wait.until(EC.title_contains("Salty Bet"))
         except TimeoutException:
-            logging.error("Failed to load into website. Maybe saltybet.com is down?")
+            self.logger.error("Failed to load into website. Maybe saltybet.com is down?")
             raise RuntimeError
 
         # Login
@@ -71,10 +70,10 @@ class WebDriver:
         try:
             self.wait.until_not(EC.url_contains("authenticate"))
         except TimeoutException:
-            logging.error("Failed to login. Wrong username or password?")
+            self.logger.error("Failed to login. Wrong username or password?")
             raise RuntimeError
 
-        logging.info("Driver initialized")
+        self.logger.info("Driver initialized")
 
     def __del__(self):
         """
@@ -86,9 +85,13 @@ class WebDriver:
         try:
             self.driver.quit()
         except WebDriverException:
-            logging.warning("Failed to call driver.quit()")
+            self.logger.warning("Failed to call driver.quit()")
+            return
+        except AttributeError:
+            self.logger.warning("Driver does not exist")
+            return
 
-        logging.info("Driver closed")
+        self.logger.info("Driver closed")
 
     def _get_element_text(self, element_id):
         """
@@ -136,7 +139,7 @@ class WebDriver:
         winner : str or None
             The winning team. None if there was a tie.
         """
-        self.logger.info("Getting winner")
+        self.logger.debug("Getting winner")
         payout_message = self._get_element_text("betstatus").lower()
 
         if "red" in payout_message:
@@ -156,7 +159,7 @@ class WebDriver:
         state : str
             The current state of the game.
         """
-        self.logger.info("Getting bet status")
+        self.logger.debug("Getting bet status")
         return self._get_element_text("betstatus").lower()
 
     def place_bet(self, amount, team):
@@ -170,7 +173,7 @@ class WebDriver:
         team : str
             Team to bet on. Must be one of ``['red', 'blue']``.
         """
-        self.logger.info(f"Placing bet of {amount} on {team}")
+        self.logger.debug(f"Placing bet of {amount} on {team}")
 
         if team not in self.VALID_TEAMS:
             raise ValueError(f'Team must be one of {self.VALID_TEAMS}')
@@ -198,7 +201,7 @@ class WebDriver:
         for idx in range(num_retries):
             try:
                 self.place_bet(wager, bet_on)
-                return  True  # Indicate success
+                return True  # Indicate success
             except TimeoutException as e:
                 if idx == num_retries - 1:
                     self.logger.error(f"Failed to place bet: {e}")
@@ -213,14 +216,14 @@ class WebDriver:
         (float, float)
             Betting odds of the current match.
         """
-        self.logger.info("Getting odds")
+        self.logger.debug("Getting odds")
         betting_text = self._get_element_text("lastbet")
 
         # Find all numbers inbetween the ":" i.e. the odds
         odds = re.findall(r"(?<!\$)\b\d+(?:\.\d+)?\b(?![^:]*\d)", betting_text)
 
         if len(odds) != 2:
-            logging.warning(f"Failed to parse odds from {betting_text}")
+            self.logger.warning(f"Failed to parse odds from {betting_text}")
             return 0.0, 0.0
 
         red, blue = [float(x) for x in odds]
@@ -235,7 +238,7 @@ class WebDriver:
         (str, str) or None
             Names of the red and blue teams.
         """
-        self.logger.info("Getting match up")
+        self.logger.debug("Getting match up")
         try:
             red_element = self.wait.until(EC.presence_of_element_located((By.ID, "sbettors1")))
             red_element = red_element.find_element(By.CLASS_NAME, "redtext")
@@ -272,7 +275,7 @@ class WebDriver:
         balance : int
             Current balance.
         """
-        self.logger.info("Getting balance")
+        self.logger.debug("Getting balance")
         balance_text = self._get_element_text("balance")
 
         balance = int(balance_text.replace(",", ""))
@@ -291,7 +294,7 @@ class WebDriver:
         payout : int
             The payout for the last match.
         """
-        self.logger.info("Getting payout")
+        self.logger.debug("Getting payout")
         balance = self.get_balance()
 
         if self.is_tournament():
@@ -314,13 +317,13 @@ class WebDriver:
         (int, int)
             Amounts of the red and blue pots.
         """
-        self.logger.info("Getting pots")
+        self.logger.debug("Getting pots")
         text = self._get_element_text("odds")
 
         amounts = re.findall(r"\$(\d[\d,]*)", text)
 
         if len(amounts) != 2:
-            logging.warning(f"Could not parse pots from text: {text}")
+            self.logger.warning(f"Could not parse pots from text: {text}")
             return 0, 0
 
         red_pot, blue_pot = [int(amount.replace(",", "")) for amount in amounts]
@@ -328,14 +331,14 @@ class WebDriver:
         return red_pot, blue_pot
 
     def is_tournament(self):
-        self.logger.info("Checking if tournament")
+        self.logger.debug("Checking if tournament")
         balance = self.wait.until(EC.presence_of_element_located((By.ID, "balance")))
         return "purple" in balance.get_attribute("class").lower()
 
 
-driver = WebDriver()
+saltybet = SaltyBetWebInterface()
 
 if __name__ == '__main__':
     for i in range(1000):
-        print(driver.get_match_up())
+        print(saltybet.get_match_up())
         time.sleep(1)

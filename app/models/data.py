@@ -1,11 +1,10 @@
-from copy import copy
 from random import random
-
-from database.models import MatchUp
 from typing import List
 
 import torch
 from torch.utils.data import Dataset
+
+from database.models import MatchUp
 
 
 class MatchDataset(Dataset):
@@ -42,4 +41,3 @@ class MatchDataset(Dataset):
     def transform(self, data):
         # Add any additional transformations if needed
         return data
-

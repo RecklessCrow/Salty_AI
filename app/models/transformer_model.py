@@ -1,6 +1,7 @@
 import torch.nn as nn
 import torch.onnx
 
+
 class OutcomePredictor(nn.Module):
     def __init__(self, num_tokens, e_dim=1024, dropout=0.1):
         super(OutcomePredictor, self).__init__()
@@ -85,7 +86,8 @@ class OutcomePredictor(nn.Module):
             do_constant_folding=True,
             input_names=['input'],  # Provide input names for better interpretability
             output_names=['output'],  # Provide output names for better interpretability
-            dynamic_axes={'input': {0: 'batch_size', 1: 'sequence_length'},  # Dynamic axes for variable-length sequences
+            dynamic_axes={'input': {0: 'batch_size', 1: 'sequence_length'},
+                          # Dynamic axes for variable-length sequences
                           'output': {0: 'batch_size', 1: 'sequence_length'}}
         )
 

@@ -1,13 +1,12 @@
 import logging
-import os
 import random
 import re
 
 import numpy as np
 import onnxruntime as ort
 
-from utils.config import config
 from database.driver import db
+from utils.config import config
 
 
 class BettingModule:
@@ -20,7 +19,7 @@ class BettingModule:
         self.min_balance_tournament = 2 * self.min_balance
 
         # Load the model
-        self.model = ort.InferenceSession(os.path.join(config.MODEL_DIR, 'model.onnx'))
+        self.model = ort.InferenceSession(str(config.MODEL_PATH))
 
     def predict_winner(self, red, blue):
         """
@@ -51,7 +50,7 @@ class BettingModule:
             return 0, random.choice(["red", "blue"])
 
         # Use the model to predict the winner
-        input_data = np.array([[red_token, blue_token]], dtype=np.float32)
+        input_data = np.array([[red_token, blue_token]], dtype=np.int64)
         pred = self.model.run(None, {"input": input_data})[0][0][0]
 
         # Convert the prediction to a confidence value

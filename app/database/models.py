@@ -17,6 +17,7 @@ class Fighter(Document):
     def __str__(self):
         return self.__to_str()
 
+
 class MatchUp(Document):
     red = ReferenceField(Fighter)
     blue = ReferenceField(Fighter)
@@ -39,7 +40,6 @@ class MatchUp(Document):
 class BetInfo(Document):
     match_up = ReferenceField(MatchUp)
     team_bet_on = StringField(required=True, choices=['red', 'blue'])
-    amount_bet = IntField(required=True)
     model = StringField(required=True)
     red_confidence = FloatField(required=True, min_value=0, max_value=1)
     blue_confidence = FloatField(required=True, min_value=0, max_value=1)
@@ -53,6 +53,7 @@ class BetInfo(Document):
 
     def __str__(self):
         return self.__to_str()
+
 
 Fighter.register_delete_rule(MatchUp, 'red', NULLIFY)
 Fighter.register_delete_rule(MatchUp, 'blue', NULLIFY)

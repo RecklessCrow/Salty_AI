@@ -1,7 +1,9 @@
-from models.transformer_model import OutcomePredictor
-from models.graph_model import CharacterGNN
-from tqdm import tqdm
 from datetime import datetime
+
+import pytz
+from tqdm import tqdm
+
+from models.transformer_model import OutcomePredictor
 from models.utils import *
 
 logging.basicConfig(level=logging.INFO)
@@ -20,8 +22,8 @@ optimizer = torch.optim.Adam(model.parameters(), lr=0.0001)
 scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.1)
 
 validate = True
-batch_size=2**14
-train_percentage=0.8
+batch_size = 2 ** 14
+train_percentage = 0.8
 epochs = 6
 
 if validate:
@@ -50,9 +52,6 @@ else:
         # scheduler.step()
 
 # Save your model
-dt = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
+tz = pytz.timezone('America/New_York')
+dt = datetime.now(tz=tz).strftime("%Y-%m-%d-%H-%M-%S")
 model.save_model(f"/models/{dt}.onnx")
-
-
-
-
