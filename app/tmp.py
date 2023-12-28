@@ -1,5 +1,6 @@
 from utils.betting_module import betting_module
 
-red = "009"
-blu = "Antman"
-print(betting_module.predict_winner(red, blu))
+# logging.basicConfig(level=logging.DEBUG)
+# Scarlet devil
+amount, team = betting_module.get_wager("Mech zangief", "Chizuru kagura", 1_000_000, False)
+print(amount, team)

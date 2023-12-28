@@ -1,24 +1,18 @@
 import logging
 
-from database.driver import db
+from database.interface import db
 from utils.betting_module import betting_module
-from utils.config import config
 from utils.state_machine import StateMachine
 from utils.web_driver import saltybet
 
 
-
-
 def main(logger):
-
     # Start the state machine
     machine = StateMachine()
     machine.start()
 
     # Initialize the session variables
     session_winnings = 0
-    num_matches = 0
-    num_correct = 0
     bets_started = False
 
     match_info = {}
@@ -32,21 +26,10 @@ def main(logger):
                 # Get the current match up
                 red, blue = saltybet.get_match_up()
 
-                # Predict the winner
-                conf, team = betting_module.predict_winner(red, blue)
-                red_conf = conf if team == "red" else 1 - conf
-                blue_conf = 1 - red_conf
-
                 # Calculate the wager amount
                 balance = saltybet.get_balance()
                 is_tournament = saltybet.is_tournament()
-                wager, bet_upset = betting_module.get_wager(conf, balance, is_tournament)
-
-                if bet_upset:
-                    # Invert the team
-                    bet_on = "red" if team == "blue" else "blue"
-                else:
-                    bet_on = team
+                wager, bet_on = betting_module.get_wager(red, blue, balance, is_tournament)
 
                 result = saltybet.place_bet_with_retry(wager, bet_on)
                 if not result:
@@ -57,16 +40,17 @@ def main(logger):
                 match_info = {
                     "red": red,
                     "blue": blue,
+                    "balance": balance,
                     "wager": wager,
                     "team_bet_on": bet_on,
-                    "model": str(config.MODEL_PATH).split("/")[-1],
-                    "model_prediction": team,
-                    "red_confidence": red_conf,
-                    "blue_confidence": blue_conf,
                     "is_tournament": is_tournament,
                 }
 
-                logger.info(f"Match Info: {match_info}")
+                logger.info(
+                    f"{red} vs {blue}\n"
+                    f"          Bet on: {bet_on}\n"
+                    f"          Wager:              {betting_module.int_to_money(wager)}"
+                )
 
             case machine.States.BETS_CLOSED:
                 # Case where we start the program while bets are closed
@@ -78,30 +62,22 @@ def main(logger):
                     continue
 
                 red_pot, blue_pot = saltybet.get_pots()
-                red_odds, blue_odds = saltybet.get_odds()
-
-                # Get the popular team
-                popular_team = "red" if red_pot > blue_pot else "blue"
-                # Get the odds of the popular team
-                popular_odds = red_odds if popular_team == "red" else blue_odds
-
-                # Calculate the payout
-                wager = match_info["wager"]
-                if match_info["team_bet_on"] == popular_team:
-                    payout = wager / popular_odds
-                else:
-                    payout = wager * popular_odds
 
                 # Update the match info
                 match_info["red_pot"] = red_pot
                 match_info["blue_pot"] = blue_pot
-                match_info["payout"] = payout
 
-                logger.info(f"Match Info: {match_info}")
+                logger.info(
+                    f"Red pot:            {betting_module.int_to_money(red_pot)}\n"
+                    f"          Blue pot:           {betting_module.int_to_money(blue_pot)}"
+                )
 
             case machine.States.PAYOUT:
                 # Case where we start the program while in the payout state
                 if not bets_started:
+                    continue
+
+                if not match_info:
                     continue
 
                 # Get the winner
@@ -112,32 +88,24 @@ def main(logger):
 
                 # Add the payout to the session winnings
                 session_winnings += payout
-
-                # Calculate running average for model accuracy
-                num_matches += 1
-                if match_info["model_prediction"] == winner:
-                    num_correct += 1
-                accuracy = num_correct / num_matches
-                match_info["accuracy"] = accuracy
+                match_info["session_winnings"] = session_winnings
 
                 red, blue = match_info["red"], match_info["blue"]
                 if "Team" not in red or "Team" not in blue:
                     # Add if the match is not an exhibition match
                     red_pot, blue_pot = match_info["red_pot"], match_info["blue_pot"]
                     is_tournament = match_info["is_tournament"]
-                    matchup = db.add_match(red, blue, winner, red_pot, blue_pot, is_tournament)
-                    db.add_bet(
-                        matchup,
-                        match_info["team_bet_on"],
-                        match_info["model"],
-                        match_info["red_confidence"],
-                        match_info["blue_confidence"]
-                    )
+                    db.add_match(red, blue, winner, red_pot, blue_pot, is_tournament)
 
                 # Reset the bets started flag
                 bets_started = False
 
-                logger.info(f"Match Info: {match_info}")
+                logger.info(
+                    f"Winner: {winner}\n"
+                    f"          Payout:             {betting_module.int_to_money(payout)}\n"
+                    f"          Balance:            {betting_module.int_to_money(saltybet.get_balance())}\n"
+                    f"          Session winnings:   {betting_module.int_to_money(session_winnings)}"
+                )
 
 
 if __name__ == '__main__':

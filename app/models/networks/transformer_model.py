@@ -1,9 +1,11 @@
 import torch.nn as nn
 import torch.onnx
 
+from models.networks.bayesian import BayesianLinearLayer
+
 
 class OutcomePredictor(nn.Module):
-    def __init__(self, num_tokens, e_dim=1024, dropout=0.1):
+    def __init__(self, num_tokens, e_dim=512, dropout=0.5):
         super(OutcomePredictor, self).__init__()
 
         self.char_embedding = nn.Embedding(num_tokens, e_dim)
@@ -29,10 +31,13 @@ class OutcomePredictor(nn.Module):
             ),
             num_layers=2
         )
-        self.match_fc = nn.Linear(e_dim, e_dim // 2)
+        self.match_fc = BayesianLinearLayer(e_dim, e_dim // 2)
+        self.fc = BayesianLinearLayer(e_dim * 3, e_dim)
+        self.logits = BayesianLinearLayer(e_dim, 2)
 
-        self.fc = nn.Linear(e_dim * 3, e_dim)
-        self.logits = nn.Linear(e_dim, 2)
+        # self.match_fc = nn.Linear(e_dim, e_dim // 2)
+        # self.fc = nn.Linear(e_dim * 3, e_dim)
+        # self.logits = nn.Linear(e_dim, 2)
 
         self.activation = nn.GELU()
 
@@ -58,38 +63,14 @@ class OutcomePredictor(nn.Module):
         x = x.flatten(start_dim=1)
         x = self.dropout(x)
 
+        # Combine and encode the information into a single vector
         x = torch.cat([red, blu, x], dim=1)
-
         x = self.fc(x)
         x = self.activation(x)
         x = self.dropout(x)
 
+        # Get the logits
         return self.logits(x)
-
-    def save_model(self, path):
-        # Ensure the model is on the cpu
-        self.cpu()
-
-        # Ensure the model is in evaluation mode
-        self.eval()
-
-        # Provide an example input tensor (you may need to adjust the shape)
-        example_input = torch.zeros((1, 2), dtype=torch.long)
-
-        # Export the model to ONNX format
-        torch.onnx.export(
-            self,
-            example_input,
-            path,
-            export_params=True,
-            # opset_version=11,  # You may need to adjust this based on your system's ONNX version
-            do_constant_folding=True,
-            input_names=['input'],  # Provide input names for better interpretability
-            output_names=['output'],  # Provide output names for better interpretability
-            dynamic_axes={'input': {0: 'batch_size', 1: 'sequence_length'},
-                          # Dynamic axes for variable-length sequences
-                          'output': {0: 'batch_size', 1: 'sequence_length'}}
-        )
 
 
 if __name__ == '__main__':

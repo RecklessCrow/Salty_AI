@@ -3,7 +3,7 @@ from datetime import datetime
 
 from mongoengine import connect
 
-from database.models import MatchUp, Fighter, BetInfo
+from database.models import MatchUp, Fighter
 from utils.config import config
 
 connect(host=str(config.DB_DSN))
@@ -26,7 +26,7 @@ class DBHandler:
         -------
         None
         """
-        self.logger.info(f"Adding fighter {name}")
+        self.logger.debug(f"Adding fighter {name}")
         fighter = Fighter(name=name)
         fighter.save()
 
@@ -44,7 +44,7 @@ class DBHandler:
         fighter : Fighter
             The fighter object.
         """
-        self.logger.info(f"Getting or creating fighter {name}")
+        self.logger.debug(f"Getting or creating fighter {name}")
         fighter = Fighter.objects(name=name).first()
         if fighter is None:
             fighter = Fighter(name=name)
@@ -65,7 +65,7 @@ class DBHandler:
         token : int or None
             The token for the character, or None if the character is not in the database.
         """
-        self.logger.info(f"Getting token for {name}")
+        self.logger.debug(f"Getting token for {name}")
         fighter = Fighter.objects(name=name).first()
         if fighter is None:
             return None
@@ -80,7 +80,7 @@ class DBHandler:
         num_tokens : int
             The number of tokens in the database.
         """
-        self.logger.info("Getting number of tokens")
+        self.logger.debug("Getting number of tokens")
         return Fighter.objects.count()
 
     def add_match(self, red: Fighter or str, blue: Fighter or str, winner: str, red_pot: int = None,
@@ -105,7 +105,7 @@ class DBHandler:
         timestamp : datetime
             The timestamp of the match.
         """
-        self.logger.info(f"Adding match {red} vs {blue} with winner {winner} and pots {red_pot} {blue_pot}")
+        self.logger.debug(f"Adding match {red} vs {blue} with winner {winner} and pots {red_pot} {blue_pot}")
 
         if isinstance(red, str):
             red = self.get_or_create_fighter(red)
@@ -119,38 +119,6 @@ class DBHandler:
 
         return match_up
 
-    def add_bet(self, match_up: MatchUp, team_bet_on: str, model: str, red_confidence: float,
-                blue_confidence: float) -> BetInfo:
-        """
-        Adds a bet to the database.
-
-        Parameters
-        ----------
-        match_up : MatchUp
-            The match up.
-        team_bet_on : str
-            The team bet on.
-        amount_bet : int
-            The amount bet.
-        model : str
-            The model used.
-        red_confidence : float
-            The confidence in the red team.
-        blue_confidence : float
-            The confidence in the blue team.
-
-        Returns
-        -------
-        bet_info : BetInfo
-        """
-        self.logger.info(f"Adding bet on {match_up} for {team_bet_on} and model {model}")
-        bet_info = BetInfo(match_up=match_up, team_bet_on=team_bet_on, model=model,
-                           red_confidence=red_confidence, blue_confidence=blue_confidence)
-
-        bet_info.save()
-
-        return bet_info
-
     def add_match_ups(self, match_ups: list[MatchUp]) -> None:
         """
         Adds a list of match ups to the database.
@@ -160,7 +128,7 @@ class DBHandler:
         match_ups : list of MatchUp
             The match ups to add.
         """
-        self.logger.info("Adding match ups")
+        self.logger.debug("Adding match ups")
         MatchUp.objects.insert(match_ups)
 
     def get_match_ups(self, num=None) -> list[MatchUp]:
@@ -172,7 +140,7 @@ class DBHandler:
         match_ups : list of MatchUp
             A list of all match ups.
         """
-        self.logger.info("Getting match ups")
+        self.logger.debug("Getting match ups")
 
         if num is not None:
             return MatchUp.objects[:num]
@@ -180,7 +148,7 @@ class DBHandler:
         return MatchUp.objects()
 
     def get_training_data(self):
-        self.logger.info("Getting training data")
+        self.logger.debug("Getting training data")
 
         matchups_info = []
 
@@ -238,14 +206,14 @@ class DBHandler:
         fighters : list of Fighter
             A list of all fighters.
         """
-        self.logger.info("Getting fighters")
+        self.logger.debug("Getting fighters")
         return Fighter.objects()
 
     def delete_all_match_ups(self) -> None:
         """
         Deletes all match ups from the database.
         """
-        self.logger.info("Deleting all match ups")
+        self.logger.debug("Deleting all match ups")
         MatchUp.drop_collection()
 
     def delete_all_fighters(self) -> None:
@@ -257,14 +225,58 @@ class DBHandler:
         # database = _get_db()
         # database["mongoengine.counter"].drop()
 
-        self.logger.info("Deleting all fighters")
+        self.logger.debug("Deleting all fighters")
         Fighter.drop_collection()
+
+    def get_matchup_odds(self, red, blue):
+        self.logger.debug(f"Getting matchup odds for {red} vs {blue}")
+
+        red = self.get_or_create_fighter(red)
+        blue = self.get_or_create_fighter(blue)
+        matchups = MatchUp.objects(red=red, blue=blue)
+
+        red_pot = 0
+        blue_pot = 0
+        count = len(matchups)
+        for matchup in matchups:
+            if matchup.red_pot is None or matchup.blue_pot is None:
+                count -= 1
+                continue
+            red_pot += matchup.red_pot
+            blue_pot += matchup.blue_pot
+
+        matchups = MatchUp.objects(red=blue, blue=red)
+        count += len(matchups)
+        for matchup in matchups:
+            if matchup.red_pot is None or matchup.blue_pot is None:
+                count -= 1
+                continue
+            red_pot += matchup.blue_pot
+            blue_pot += matchup.red_pot
+
+        if count == 0:
+            self.logger.debug(f"No matchups found for {red} vs {blue}")
+            return None, None
+
+        # Average the pots and calculate the odds
+        red_pot /= count
+        blue_pot /= count
+
+        # Odds should be a ratio of the potential payout to the amount bet
+        if red_pot < blue_pot:
+            red_odds = blue_pot / red_pot
+            blue_odds = 1
+        else:
+            red_odds = 1
+            blue_odds = red_pot / blue_pot
+
+        return round(red_odds, 1), round(blue_odds, 1)
 
     def nuke_database(self) -> None:
         """
         Deletes all data from the database.
         """
-        self.logger.info("Nuking database")
+        self.logger.debug("Nuking database")
         self.delete_all_fighters()
         self.delete_all_match_ups()
 

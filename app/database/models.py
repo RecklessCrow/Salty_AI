@@ -1,7 +1,7 @@
 from datetime import datetime
 
-from mongoengine import Document, StringField, IntField, ReferenceField, SequenceField, DateTimeField, FloatField, \
-    BooleanField, NULLIFY
+from mongoengine import Document, StringField, IntField, ReferenceField, SequenceField, DateTimeField, BooleanField, \
+    NULLIFY
 
 
 class Fighter(Document):
@@ -28,25 +28,13 @@ class MatchUp(Document):
     timestamp = DateTimeField(default=datetime.utcnow)
 
     def __to_str(self):
-        return f"MatchUp(red={self.red}, blue={self.blue}, winner={self.winner}, timestamp={self.timestamp})"
-
-    def __repr__(self):
-        return self.__to_str()
-
-    def __str__(self):
-        return self.__to_str()
-
-
-class BetInfo(Document):
-    match_up = ReferenceField(MatchUp)
-    team_bet_on = StringField(required=True, choices=['red', 'blue'])
-    model = StringField(required=True)
-    red_confidence = FloatField(required=True, min_value=0, max_value=1)
-    blue_confidence = FloatField(required=True, min_value=0, max_value=1)
-
-    def __to_str(self):
-        return (f"BetInfo(match_up={self.match_up}, team_bet_on={self.team_bet_on}, amount_bet={self.amount_bet}, "
-                f"model={self.model}, red_confidence={self.red_confidence}, blue_confidence={self.blue_confidence})")
+        string = f"MatchUp(red={self.red}, blue={self.blue}, winner={self.winner}, timestamp={self.timestamp}"
+        if self.red_pot:
+            string += f", red_pot={self.red_pot}"
+        if self.blue_pot:
+            string += f", blue_pot={self.blue_pot}"
+        string += ")"
+        return string
 
     def __repr__(self):
         return self.__to_str()
@@ -57,4 +45,4 @@ class BetInfo(Document):
 
 Fighter.register_delete_rule(MatchUp, 'red', NULLIFY)
 Fighter.register_delete_rule(MatchUp, 'blue', NULLIFY)
-MatchUp.register_delete_rule(BetInfo, 'match_up', NULLIFY)
+# MatchUp.register_delete_rule(BalanceHistory, 'match_up', NULLIFY)

@@ -10,9 +10,13 @@ RUN pip install --upgrade pip \
 
 # Copy source code
 WORKDIR /app
-COPY ./app /app
-COPY ./models /models
 
+# Set dummy environment variables
+COPY ./models/dummy.onnx /models/dummy.onnx
+ENV MODEL_PATH="/models/dummy.onnx"
+ENV FIREFOX_BIN="/models/dummy.onnx"
+
+CMD ["python", "/app/train_model.py"]
 
 FROM python:3.10-slim-buster as prod
 
@@ -20,8 +24,7 @@ USER root
 
 # Install firefox
 RUN apt-get update \
- && apt-get install -y --no-install-recommends \
-    firefox-esr \
+ && apt-get install -y --no-install-recommends firefox-esr \
  && rm -rf /var/lib/apt/lists/*
 ENV FIREFOX_BIN="/usr/bin/firefox-esr"
 
@@ -33,8 +36,10 @@ RUN pip install --upgrade pip \
 
 # Copy source code
 COPY ./app /app
-COPY ./models /models
-ENV MODEL_PATH="/models/2023-12-23-15-54-30.onnx"
+
+# Copy model file into container
+ENV MODEL_PATH="/models/SimpleShared-2023-12-25-17-05-48.onnx"
+COPY ./models/SimpleShared-2023-12-25-17-05-48.onnx /models/SimpleShared-2023-12-25-17-05-48.onnx
 
 # Run the app
 CMD ["python", "/app/main.py"]

@@ -46,7 +46,7 @@ class StateMachine:
         """
         Updates the state of the state machine.
         """
-        self.logger.info("Checking for state changes")
+        self.logger.debug("Checking for state changes")
         while True:
             time.sleep(self.STATE_UPDATE_INTERVAL)
             state_text = saltybet.get_bet_status()
@@ -55,13 +55,13 @@ class StateMachine:
                 with self._condition:
                     self._state = state
                     self._condition.notify_all()
-                    logging.debug(f"State changed to {state.name}")
+                    self.logger.debug(f"State changed to {state.name}")
 
     def await_next_state(self):
         """
         Waits for the next state change and returns the new state.
         """
-        self.logger.info("Waiting for next state")
+        self.logger.debug("Waiting for next state")
         with self._condition:
             if self._state != self.States.START:
                 self._condition.wait_for(lambda: self._state != self._last_state)

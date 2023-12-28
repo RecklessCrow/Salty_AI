@@ -6,3 +6,4 @@ mongoengine
 pydantic
 pydantic-settings
 tqdm
+torchbnn

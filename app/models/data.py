@@ -1,20 +1,17 @@
 from random import random
-from typing import List
 
 import torch
 from torch.utils.data import Dataset
 
-from database.models import MatchUp
-
 
 class MatchDataset(Dataset):
-    def __init__(self, match_info: List[MatchUp]):
+    def __init__(self, x, y):
         self.data = []
         self.labels = []
 
-        for red, blue, winner in match_info:
+        for (red, blue), _y in zip(x, y):
             x = torch.tensor([red, blue], dtype=torch.long)
-            y = torch.tensor(winner, dtype=torch.float32)
+            y = torch.tensor(_y, dtype=torch.float32)
 
             self.data.append(x)
             self.labels.append(y)
