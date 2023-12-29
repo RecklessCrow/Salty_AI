@@ -6,7 +6,8 @@ USER root
 COPY requirements.txt .
 RUN pip install --upgrade pip \
  && pip install -r requirements.txt \
- && rm requirements.txt
+ && pip install torchbnn blitz-bayesian-pytorch \
+ && rm requirements.txt \
 
 # Copy source code
 WORKDIR /app
@@ -38,8 +39,8 @@ RUN pip install --upgrade pip \
 COPY ./app /app
 
 # Copy model file into container
-ENV MODEL_PATH="/models/SimpleShared-2023-12-25-17-05-48.onnx"
-COPY ./models/SimpleShared-2023-12-25-17-05-48.onnx /models/SimpleShared-2023-12-25-17-05-48.onnx
+ENV MODEL_PATH="/models/SimpleShared-2023-12-28-15-46-30.onnx"
+COPY ./models/SimpleShared-2023-12-28-15-46-30.onnx /models/SimpleShared-2023-12-28-15-46-30.onnx
 
 # Run the app
 CMD ["python", "/app/main.py"]

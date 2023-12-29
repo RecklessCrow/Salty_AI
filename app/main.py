@@ -22,9 +22,16 @@ def main(logger):
 
         match state:
             case machine.States.BETS_OPEN:
-                bets_started = True
                 # Get the current match up
                 red, blue = saltybet.get_match_up()
+
+                if "team" in red.lower() or "team" in blue.lower():
+                    # Skip if the match is an exhibition match
+                    logger.info("Exhibition match, skipping...")
+                    continue
+
+                # Set the bets started flag
+                bets_started = True
 
                 # Calculate the wager amount
                 balance = saltybet.get_balance()

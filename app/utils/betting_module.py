@@ -97,12 +97,7 @@ class BettingModule:
         # Get the prediction
         p_red, p_blu = self.predict_winner(red, blue)
         self.logger.debug(f"Prediction: {p_red} : {p_blu}")
-        if p_red > p_blu:
-            p_red = 2 / 3
-            p_blu = 1 / 3
-        else:
-            p_red = 1 / 3
-            p_blu = 2 / 3
+        p_red, p_blu = (0.7, 0.3) if p_red > p_blu else (0.3, 0.7)
 
         # If the confidence is 0, this means the model could not predict a winner
         # In this case, we bet a dollar

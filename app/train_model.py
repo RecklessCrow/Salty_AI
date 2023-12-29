@@ -8,13 +8,18 @@ from models.utils import *
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("TrainingLoop")
 
+# Define device
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+# device = torch.device("cpu")
+logger.info(f"Using device {device}")
+
 # Variables
 label_smoothing = 0
 learning_rate = 0.0001
 
-epochs = 9
-batch_size = 2 ** 15
-train_percentage = 0
+epochs = 30
+batch_size = 2 ** 14
+train_percentage = 0.0
 
 # Load the data
 dataloader_train, dataloader_validation = load_data(
@@ -23,20 +28,15 @@ dataloader_train, dataloader_validation = load_data(
     workers=8
 )
 
-# Define device
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-logger.info(f"Using device {device}")
-
 # Define loss function
 loss_fn = torch.nn.CrossEntropyLoss(label_smoothing=label_smoothing)
-# loss_fn = torch.nn.MSELoss()
 
 best_results = {}
 model = Simple(
-    num_tokens=db.get_num_tokens() + 1,
+    num_tokens=db.get_num_tokens(),
     num_classes=2,
     e_dim=1024,
-    dropout=0.3,
+    dropout=0.1,
 ).to(device)
 key = str(model)
 best_results[key] = {"loss": float("inf")}
@@ -66,3 +66,4 @@ if train_percentage > 0:
 tz = pytz.timezone('America/New_York')
 dt = datetime.now(tz=tz).strftime("%Y-%m-%d-%H-%M-%S")
 model.save_model(f"/models/{model}-{dt}.onnx")
+logger.info(f"Saved model to /models/{model}-{dt}.onnx")

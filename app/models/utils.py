@@ -10,25 +10,12 @@ from models.data import MatchDataset
 
 
 def load_data(batch_size, train_percentage=0.8, workers=0):
-    data_file = "/data/matches.csv"
+    data_file = "/data/training_data.csv"
     if not os.path.exists(data_file):
-        existing_matchups = {}
-        with open(data_file, "w") as f:
+        with open(data_file, "w+") as f:
             matchups = db.get_training_data()
             for red, blu, (r_win, b_win) in tqdm(matchups, desc="Loading data"):
-                if (red, blu) in existing_matchups:
-                    existing_matchups[red, blu][0] += r_win
-                    existing_matchups[red, blu][1] += b_win
-                elif (blu, red) in existing_matchups:
-                    existing_matchups[blu, red][0] += b_win
-                    existing_matchups[blu, red][1] += r_win
-                else:
-                    existing_matchups[red, blu] = [r_win, b_win]
-
-            for (red, blu), (red_count, blu_count) in tqdm(existing_matchups.items(), desc="Calculating winrates"):
-                red_winrate = red_count / (red_count + blu_count)
-                blu_winrate = blu_count / (red_count + blu_count)
-                f.write(f"{red},{blu},{red_winrate},{blu_winrate}\n")
+                f.write(f"{red},{blu},{r_win},{b_win}\n")
 
     with open(data_file, "r") as f:
         x = []

@@ -3,7 +3,7 @@ from torch.nn import Module, Embedding, EmbeddingBag, Dropout
 
 
 class BaseModel(Module):
-    def __init__(self, num_tokens, e_dim=512, e_mode=None, num_classes=2, dropout=0.0):
+    def __init__(self, num_tokens, e_dim=1024, e_mode=None, num_classes=2, dropout=0.0):
         super(BaseModel, self).__init__()
 
         self.e_dim = e_dim

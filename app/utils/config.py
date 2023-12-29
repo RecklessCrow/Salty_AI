@@ -1,8 +1,3 @@
-import os
-
-# Set the environment variable
-os.environ["MODEL_PATH"] = "/models/SimpleShared-2023-12-24-23-41-05.onnx"
-
 from pydantic import FilePath, MongoDsn
 from pydantic_settings import BaseSettings
 

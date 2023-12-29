@@ -81,7 +81,9 @@ class DBHandler:
             The number of tokens in the database.
         """
         self.logger.debug("Getting number of tokens")
-        return Fighter.objects.count()
+        fighters = Fighter.objects()
+        fighters = fighters.order_by("-token")
+        return fighters[0].token + 1
 
     def add_match(self, red: Fighter or str, blue: Fighter or str, winner: str, red_pot: int = None,
                   blue_pot: int = None, is_tournament: bool = False, timestamp: datetime = None) -> MatchUp:
@@ -184,9 +186,13 @@ class DBHandler:
 
         # Iterate over the result cursor
         for result in cursor:
-            red_id = result["red_id"][0]
-            blue_id = result["blue_id"][0]
-            winner = result["winner"]
+            try:
+                red_id = result["red_id"][0]
+                blue_id = result["blue_id"][0]
+                winner = result["winner"]
+            except IndexError:
+                print(result)
+                continue
 
             if winner == "n/a":
                 continue
