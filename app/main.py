@@ -13,6 +13,7 @@ def main(logger):
 
     # Initialize the session variables
     session_winnings = 0
+    session_winnings_t = 0
     bets_started = False
 
     match_info = {}
@@ -94,14 +95,19 @@ def main(logger):
                 payout = saltybet.get_payout()
 
                 # Add the payout to the session winnings
-                session_winnings += payout
-                match_info["session_winnings"] = session_winnings
+                is_tournament = match_info["is_tournament"]
+                if is_tournament:
+                    session_winnings_t += payout
+                    match_info["session_winnings"] = session_winnings_t
+                else:
+                    session_winnings_t = 0
+                    session_winnings += payout
+                    match_info["session_winnings"] = session_winnings
 
                 red, blue = match_info["red"], match_info["blue"]
                 if "Team" not in red or "Team" not in blue:
                     # Add if the match is not an exhibition match
                     red_pot, blue_pot = match_info["red_pot"], match_info["blue_pot"]
-                    is_tournament = match_info["is_tournament"]
                     db.add_match(red, blue, winner, red_pot, blue_pot, is_tournament)
 
                 # Reset the bets started flag

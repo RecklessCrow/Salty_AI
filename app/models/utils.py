@@ -10,26 +10,14 @@ from models.data import MatchDataset
 
 
 def load_data(batch_size, train_percentage=0.8, workers=0):
-    data_file = "/data/training_data.csv"
-    if not os.path.exists(data_file):
-        with open(data_file, "w+") as f:
-            matchups = db.get_training_data()
-            for red, blu, (r_win, b_win) in tqdm(matchups, desc="Loading data"):
-                f.write(f"{red},{blu},{r_win},{b_win}\n")
-
-    with open(data_file, "r") as f:
-        x = []
-        y = []
-        for line in tqdm(f, desc="Loading data"):
-            red, blu, red_winrate, blu_winrate = line.strip().split(",")
-            red = int(red)
-            blu = int(blu)
-            red_winrate = float(red_winrate)
-            blu_winrate = float(blu_winrate)
-            _x = (red, blu)
-            _y = (red_winrate, blu_winrate)
-            x.append(_x)
-            y.append(_y)
+    matchups = db.get_training_data()
+    x = []
+    y = []
+    for red, blu, (r_win, b_win) in tqdm(matchups, desc="Loading data"):
+        _x = (red, blu)
+        _y = (r_win, b_win)
+        x.append(_x)
+        y.append(_y)
 
     dataset = MatchDataset(x, y)
 

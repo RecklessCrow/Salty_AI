@@ -39,8 +39,8 @@ RUN pip install --upgrade pip \
 COPY ./app /app
 
 # Copy model file into container
-ENV MODEL_PATH="/models/SimpleShared-2023-12-28-15-46-30.onnx"
-COPY ./models/SimpleShared-2023-12-28-15-46-30.onnx /models/SimpleShared-2023-12-28-15-46-30.onnx
+ENV MODEL_PATH="/models/model.onnx"
+COPY ./models/SimpleShared-2024-01-04-06-45-24.onnx /models/model.onnx
 
 # Run the app
 CMD ["python", "/app/main.py"]

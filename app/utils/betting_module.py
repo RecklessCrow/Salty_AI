@@ -3,6 +3,7 @@ import re
 
 import numpy as np
 import onnxruntime as ort
+from onnxruntime.capi.onnxruntime_pybind11_state import InvalidArgument
 
 from database.interface import db
 from utils.config import config
@@ -14,8 +15,14 @@ class BettingModule:
         self.logger = logging.getLogger("BettingModule")
         self.logger.info("Initializing betting module")
 
+        # Minimum balance we need before we stop going all in
         self.min_balance = 10_000
         self.min_balance_tournament = 2 * self.min_balance
+
+        # Risk adjustment factors
+        self.max_risk = 0.30  # Maximum risk adjustment
+        self.min_risk = 0.01  # Minimum risk adjustment
+        self.threshold_balance = 100_000_000  # Balance where risk adjustment becomes minimal
 
         # Load the model
         self.model = ort.InferenceSession(str(config.MODEL_PATH))
@@ -49,11 +56,15 @@ class BettingModule:
             return -1, -1
 
         # Use the model to predict the winner
-        input_data = np.array([[red_token, blue_token]], dtype=np.int64)
-        pred = self.model.run(None, {"input": input_data})[0][0]
-        softmax = np.exp(pred) / np.sum(np.exp(pred))
-        # conf = np.max(softmax)
-        # team = np.where(np.argmax(softmax) == 0, "red", "blue")
+        try:
+            input_data = np.array([[red_token, blue_token]], dtype=np.int64)
+            pred = self.model.run(None, {"input": input_data})[0][0]
+            softmax = np.exp(pred) / np.sum(np.exp(pred))
+        except InvalidArgument:
+            # If the model throws an InvalidArgument exception, this means the model was not
+            # trained on one of the characters.
+            self.logger.error(f"Invalid argument for {red} vs {blue}")
+            return -1, -1
 
         return softmax
 
@@ -91,13 +102,10 @@ class BettingModule:
         is_tournament : bool
             Whether the match is a tournament match.
         """
-
-        logging.basicConfig(level=logging.DEBUG)
-
         # Get the prediction
         p_red, p_blu = self.predict_winner(red, blue)
         self.logger.debug(f"Prediction: {p_red} : {p_blu}")
-        p_red, p_blu = (0.7, 0.3) if p_red > p_blu else (0.3, 0.7)
+        # p_red, p_blu = (0.7, 0.3) if p_red > p_blu else (0.3, 0.7)
 
         # If the confidence is 0, this means the model could not predict a winner
         # In this case, we bet a dollar
@@ -138,13 +146,18 @@ class BettingModule:
         if balance < self.min_balance_tournament and is_tournament:
             return balance, team
 
+        # Percent of balance to wager. This approaches 0 as our balance approaches infinity.
+        risk_adjustment = self.max_risk - (self.max_risk - self.min_risk) * (balance / self.threshold_balance)
+        risk_adjustment = round(risk_adjustment, 3)
+        risk_adjustment = max(risk_adjustment, self.min_risk)
+        risk_adjustment = min(risk_adjustment, self.max_risk)
+        self.logger.debug(f"Risk adjustment: {risk_adjustment}")
+
         # Calculate the wager
-        risk_adjustment = 0.25  # Percent of balance to wager
         p_balance = balance * risk_adjustment
         wager = p_balance * k_red if team == "red" else p_balance * k_blu
 
-        # Set wager to 3 sig figs
-        # wager = round(wager, 3 - int(np.floor(np.log10(abs(wager)))) - 1)
+        # Make sure the wager is between 1 and the balance
         wager = min(max(wager, 1), balance)
         wager = int(wager)
 
